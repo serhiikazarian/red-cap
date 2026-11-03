@@ -161,12 +161,12 @@ function floorBuilt(i) {
   buildLevel(i);
   warmUp();
 }
-// behind the scrap (under the ink): a few real frames of the new floor, timed to the GPU. If this machine cannot draw them in CAL_MS, play
-// starts at the resolution it can hold, the one the controller would otherwise reach a step a second into the floor (which made a retry
-// feel lighter than a first visit). If it was lowered before (at 60 Hz the controller never climbs back), the screen's full ratio is tried
-// first and kept when the floor's views fit; otherwise it only lowers. The controller goes on adapting from there
+// behind the scrap (under the ink): real frames of the new floor, timed to the GPU, from its opening view and CAL_VIEWS more spread
+// over the floor. Each floor starts from the screen's full ratio with double ink lines; if the second-slowest view takes longer than
+// CAL_MS, single ink lines first, then the ratio it can hold. The heaviest moments (thick smoke, the fog wall) are left to the
+// controller (02-render), which steps down while they last and back up after
 const CAL_MS = 13,
-  CAL_HEAVY_MS = 18, // floor three's worst views; the controller steps down only past 21 ms a frame
+  CAL_VIEWS = 4,
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
   FIRST_SCRAP_MS = 1400, // and before floor one (its first build is the longest)
   SNIP_SLACK = 3, // the cut's own course is this many times its plan, easing out, so a long build never leaves it stuck at the end
@@ -182,71 +182,65 @@ function calibrate() {
     return performance.now() - t0;
   };
   const mid3 = () => [timed(), timed(), timed()].sort((a, b) => a - b)[1];
-  const fit = (limit, view) => {
-    for (let n = 0; n < 3; n++) {
-      const cur = Math.min(resScale, cap),
-        ms = view();
-      if (ms <= limit || cur <= RES_LOW) return;
-      if (!post.uniforms.lite.value) {
-        post.uniforms.lite.value = 1; // single ink lines first
-        continue;
-      }
-      resScale = Math.max(resFloor(cur), Math.floor(cur * Math.sqrt(limit / ms) * 20) / 20); // pixels cost by area
+  post.uniforms.lite.value = 0;
+  resScale = cap;
+  resize();
+  updCamera(1 / 60); // the floor's opening view
+  const views = [[camera.position.clone(), camera.quaternion.clone()], ...calViews(CAL_VIEWS)];
+  const slow = () => {
+    const ms = views.map(([p, q]) => {
+      camera.position.copy(p);
+      camera.quaternion.copy(q);
+      camera.updateMatrixWorld();
+      timed(); // anything this view needs that is still unready
+      return mid3();
+    });
+    return ms.sort((a, b) => b - a)[Math.min(1, ms.length - 1)];
+  };
+  for (let n = 0; n < 4; n++) {
+    const cur = Math.min(resScale, cap),
+      ms = slow();
+    if (ms <= CAL_MS || cur <= RES_LOW) break;
+    if (!post.uniforms.lite.value) post.uniforms.lite.value = 1;
+    else {
+      resScale = Math.max(resFloor(cur), Math.floor(cur * Math.sqrt(CAL_MS / ms) * 20) / 20); // pixels cost by area
       resize();
     }
-  };
-  post.uniforms.lite.value = 0;
-  updCamera(1 / 60); // the floor's opening view
-  timed(); // anything still unready
-  // floor three's heavy moments: the fog wall filling the view (from 5 m, the way Red Cap comes), and a full cloud of smoke in front of him
-  const p0 = camera.position.clone(),
-    q0 = camera.quaternion.clone(),
-    ahead = camera.getWorldDirection(new THREE.Vector3()),
-    cloud = [];
-  if (floorIdx === 2)
-    for (let k = 0; k < PUFF_MAX; k++) {
-      const sp = { position: p0.clone().addScaledVector(ahead, rand(3, 9)), scale: new THREE.Vector3().setScalar(rand(3, 4.5)) };
-      sp.position.x += rand(-2.5, 2.5);
-      sp.position.y += rand(-1.2, 1.2);
-      sp.position.z += rand(-2.5, 2.5);
-      sp.material = { opacity: 0.6, rotation: rand(0, TAU) };
-      sp.visible = true;
-      cloud.push({ s: sp });
-    }
-  const heavy = () => {
-    let ms = 0;
-    if (G.fogWall) {
-      G.fogWall.g.children.find(c => c.userData.core).getWorldPosition(seeA);
-      camera.position.set(seeA.x, 2.6, seeA.z + 5);
-      camera.lookAt(seeA.x, 1.6, seeA.z);
-      ms = mid3();
-    }
-    camera.position.copy(p0);
-    camera.quaternion.copy(q0);
-    puffs.push(...cloud);
-    ms = Math.max(ms, mid3());
-    puffs.length -= cloud.length;
-    return ms;
-  };
-  // lowered before: the screen's full ratio, if this floor's views fit in it
-  if (Math.min(resScale, cap) < cap) {
-    const was = resScale;
-    resScale = cap;
-    resize();
-    timed(); // the new size's first frame
-    if (mid3() <= CAL_MS && (floorIdx !== 2 || heavy() <= CAL_HEAVY_MS)) {
-      resCeil = Math.max(resCeil, cap);
-      return;
-    }
-    resScale = was;
-    resize();
-    timed();
   }
-  fit(CAL_MS, mid3);
-  if (floorIdx !== 2) return;
-  fit(CAL_HEAVY_MS, heavy);
-  camera.position.copy(p0);
-  camera.quaternion.copy(q0);
+  camera.position.copy(views[0][0]);
+  camera.quaternion.copy(views[0][1]);
+  resFresh();
+}
+// n views spread over the floor for calibrate: from open cells taken evenly through the map, Red Cap's eye height above the
+// ground, looking down the longest clear run of cells
+function calViews(n) {
+  const cells = [],
+    out = [];
+  for (let z = 1; z < G.h - 1; z++) for (let x = 1; x < G.w - 1; x++) if (G.map[z][x] === '.') cells.push([x, z]);
+  for (let k = 0; k < n && cells.length; k++) {
+    const [x, z] = cells[Math.floor(((k + 0.5) / n) * cells.length)];
+    let run = 0,
+      dir = null;
+    for (const [dx, dz] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1]
+    ]) {
+      let r = 0;
+      while (r < 6 && !solid(x + dx * (r + 1), z + dz * (r + 1))) r++;
+      if (r > run) [run, dir] = [r, [dx, dz]];
+    }
+    if (!dir) continue;
+    const cx = (x + 0.5) * CELL,
+      cz = (z + 0.5) * CELL,
+      y = heightAt(cx, cz),
+      eye = new THREE.PerspectiveCamera(); // a camera's lookAt turns its back (-z) to the target
+    eye.position.set(cx, y + 2.4, cz);
+    eye.lookAt(cx + dir[0] * 8, y + 1.4, cz + dir[1] * 8);
+    out.push([eye.position, eye.quaternion]);
+  }
+  return out;
 }
 function floorShow(i) {
   state = 'intro';

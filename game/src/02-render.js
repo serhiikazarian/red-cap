@@ -143,14 +143,37 @@ const INK_HIDE = {
 };
 
 // The resolution controller. resScale is the drawing ratio, never above the screen's (resCap). calibrate (60-flow) sets it while a
-// floor loads; then every second adaptResolution trades it for frame rate if needed (single ink lines first) and wins it back
-// after three good seconds, never past resCeil (the highest ratio this machine has held). It stops at RES_MIN; a machine that
-// still cannot keep up goes on to RES_LOW, and below RES_MIN the smoke is lighter too (PUFF_LOW, 06-fx)
+// floor loads; then adaptResolution looks at each second of play. A frame is late when it takes 1.4 frames of a 60 Hz screen (or of
+// the screen's own rate, if slower). Over a quarter of a second's frames late: one step down the ladder, thinner smoke first
+// (RES.thin: PUFF_LOW puffs, only while there is that much smoke), then single ink lines, then the ratio, to RES_MIN and on to
+// RES_LOW only from there (below RES_MIN the smoke is thin too). Three seconds in a row with hardly any late frame: one step back
+// up, in the reverse order. A stray hitch moves nothing. A step down is not undone for RES_WAIT seconds; a step up that fails at
+// once is taken back and held back twice as long each time.
 const RES_MIN = 0.75,
   RES_LOW = 0.6,
-  RES = { avg: 16, adj: 0, good: 0 }; // average frame time (ms), time since the last decision, good seconds in a row
-let resScale = 1.75,
-  resCeil = 1.75;
+  RES_UP = 0.1, // one step up the ratio
+  LATE_AT = 1.4, // frames: a frame this long is late
+  LATE_DROP = 0.25, // share of late frames in a second that steps down
+  LATE_OK = 0.02, // at most this share, three seconds in a row, steps up
+  RES_WAIT = 8, // seconds before a step that proved too much is tried again
+  RES_WAIT_MAX = 120;
+const RES = {
+  ticks: [], // this second's frame times (ms)
+  t: 0, // ms in this second
+  frame: 0, // the screen's frame time: the lowest median of a second seen (0: not yet)
+  thin: false, // thinner smoke
+  good: 0, // good seconds in a row
+  skip: 0, // seconds of play left before deciding (a floor's first frames)
+  clock: 0, // seconds of play
+  upAt: -99, // when the last step up was taken
+  last: null, // which it was ('res', 'lite', 'thin'), and the ratio before it
+  from: 0,
+  wait: RES_WAIT,
+  noRes: { above: Infinity, until: 0 }, // a ratio above this is not tried before then
+  noLite: 0, // double ink lines are not tried again before then
+  noThin: 0 // nor full smoke
+};
+let resScale = 1.75;
 function resCap() {
   return Math.min(devicePixelRatio || 1, innerWidth < 700 ? 1.5 : 1.75);
 }
@@ -158,28 +181,76 @@ function resCap() {
 function resFloor(cur) {
   return cur > RES_MIN ? RES_MIN : RES_LOW;
 }
+// a fresh start for a new floor (after calibrate): nothing is held back, and its first two seconds of play are not judged
+function resFresh() {
+  Object.assign(RES, { ticks: [], t: 0, thin: false, good: 0, skip: 2, upAt: -99, last: null, wait: RES_WAIT, noLite: 0, noThin: 0 });
+  RES.noRes = { above: Infinity, until: 0 };
+}
 function adaptResolution(raw) {
-  if (raw < 250) RES.avg = lerp(RES.avg, Math.min(raw, RES.avg * 2.5 + 5), 0.08);
-  if (G && state === 'play') RES.adj += raw;
-  if (RES.adj <= 1000) return;
-  RES.adj = 0;
-  const was = resScale,
-    cap = resCap(),
-    cur = Math.min(resScale, cap);
-  if (RES.avg > 21 && !post.uniforms.lite.value) {
+  if (raw >= 250) return; // a hidden tab, or the page held while a floor is built
+  RES.ticks.push(raw);
+  RES.t += raw;
+  if (RES.t < 1000) return;
+  const ticks = RES.ticks.sort((a, b) => a - b),
+    med = ticks[ticks.length >> 1];
+  RES.ticks = [];
+  RES.t = 0;
+  RES.frame = Math.max(4, RES.frame ? Math.min(RES.frame, med) : med);
+  if (!(G && state === 'play')) {
+    RES.good = 0;
+    return;
+  }
+  RES.clock++;
+  if (RES.skip > 0) {
+    RES.skip--;
+    return;
+  }
+  const lateAt = LATE_AT * clamp(RES.frame, 1000 / 60, 20.1);
+  let n = 0;
+  for (let k = ticks.length - 1; k >= 0 && ticks[k] > lateAt; k--) n++;
+  const late = n / ticks.length;
+  if (late > LATE_DROP) resDown(late);
+  else if (late <= LATE_OK && ++RES.good >= 3) resUp();
+  else if (late > LATE_OK) RES.good = 0;
+}
+function resDown(late) {
+  RES.good = 0;
+  const failed = RES.clock - RES.upAt <= 3 && RES.last; // the step up just taken: undone, and held back twice as long as before
+  RES.wait = failed ? Math.min(RES_WAIT_MAX, RES.wait * 2) : RES_WAIT;
+  const until = RES.clock + RES.wait,
+    cur = Math.min(resScale, resCap()),
+    step = failed ? RES.last : !RES.thin && puffs.length > PUFF_LOW ? 'thin' : !post.uniforms.lite.value ? 'lite' : cur > RES_LOW ? 'res' : '';
+  RES.last = null;
+  if (step === 'thin') {
+    RES.thin = true;
+    RES.noThin = until;
+  } else if (step === 'lite') {
     post.uniforms.lite.value = 1;
-    RES.good = -5;
-  } else if (RES.avg > 21) {
-    resScale = Math.max(resFloor(cur), cur - (RES.avg > 30 ? 0.25 : 0.12));
-    resCeil = Math.max(1, Math.min(resCeil, cur - 0.05));
-    RES.good = -5;
-  } else if (RES.avg < 16 && cur < Math.min(resCeil, cap)) {
-    if (++RES.good >= 3) {
-      RES.good = 0;
-      resScale = Math.min(resCeil, cap, cur + 0.1);
-    }
-  } else RES.good = Math.min(RES.good, 0);
-  if (resScale !== was) resize();
+    RES.noLite = until;
+  } else if (step) {
+    RES.noRes = { above: cur - 0.01, until };
+    resScale = failed ? RES.from : Math.max(resFloor(cur), cur - (late > 0.6 ? 0.25 : 0.12));
+    resize();
+  }
+}
+function resUp() {
+  RES.good = 0;
+  const cap = resCap(),
+    cur = Math.min(resScale, cap),
+    to = Math.min(cap, cur + RES_UP),
+    held = RES.clock < RES.noRes.until && to > RES.noRes.above;
+  if (cur < cap && !held) {
+    [RES.last, RES.from] = ['res', cur];
+    resScale = to;
+    resize();
+  } else if (post.uniforms.lite.value && RES.clock >= RES.noLite) {
+    RES.last = 'lite';
+    post.uniforms.lite.value = 0;
+  } else if (RES.thin && RES.clock >= RES.noThin) {
+    RES.last = 'thin';
+    RES.thin = false;
+  } else return;
+  RES.upAt = RES.clock;
 }
 
 const drawSize = new THREE.Vector2();

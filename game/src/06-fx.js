@@ -316,15 +316,17 @@ function puffSync() {
     g.attributes.aPos.needsUpdate = g.attributes.aSro.needsUpdate = true;
   }
 }
-// a puff of smoke; past PUFF_MAX (PUFF_LOW on a slow machine) the oldest puff still at full life fades out quickly (its life
-// runs six times as fast)
+// a puff of smoke; past PUFF_MAX (PUFF_LOW on a struggling machine: RES.thin, or resScale below RES_MIN) the oldest puffs still
+// at full life fade out quickly (their life runs six times as fast), as many as it takes to come back under the cap
 function smokePuff(pos, size, life, rise) {
   let live = 0;
   for (const p of puffs) if (!p.fast) live++;
-  if (live >= (resScale < RES_MIN ? PUFF_LOW : PUFF_MAX)) {
-    const o = puffs.find(p => !p.fast);
-    if (o) o.fast = true;
-  }
+  let over = live - (RES.thin || resScale < RES_MIN ? PUFF_LOW : PUFF_MAX) + 1;
+  for (let k = 0; k < puffs.length && over > 0; k++)
+    if (!puffs[k].fast) {
+      puffs[k].fast = true;
+      over--;
+    }
   // a stand-in with a sprite's fields: PUFF_MESHES draw it
   const s = { position: pos.clone(), scale: new THREE.Vector3().setScalar(size * 0.6), material: { opacity: 0, rotation: 0 }, visible: true };
   puffs.push({ s, life, max: life, size, rise, rot: rand(-1, 1) });

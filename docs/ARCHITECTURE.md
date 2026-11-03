@@ -44,11 +44,16 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   ink lines round them are not cut. The ink pass skips where the render target's alpha < 1.
 - Sorting: `renderer.setTransparentSort` draws far to near, but a figure of parts in a set order (a Grin: `userData.sortRank`,
   `sortZ` from `sortUnits()` each frame) sorts as one thing. Words keep `renderOrder` 10 (always on top).
-- Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render); `calibrate()` (60-flow) times real frames
-  under the ink during loading and lowers it to `CAL_MS`; floor three also measures the fog wall and a full smoke cloud
-  (`CAL_HEAVY_MS`). Both switch to `lite` (single ink lines) before lowering resolution, stop at `RES_MIN` and go on to
-  `RES_LOW` only when still too slow; below `RES_MIN` the smoke is lighter (`PUFF_LOW`) and the fog wall's floor bank is one
-  sheet instead of two (`fogWall`, ~7 % of a frame when facing it). Game logic costs ~0.3 ms a frame:
+- Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). `calibrate()` (60-flow) times real frames
+  under the ink during loading, from the opening view and `CAL_VIEWS` more spread over the floor (`calViews`): each floor
+  starts from the screen's full ratio, and when the second-slowest view is over `CAL_MS` it switches to `lite` (single ink
+  lines), then lowers the ratio. Heavy moments (thick smoke, the fog wall) are left to the controller: each second of play it
+  counts late frames (over `LATE_AT` frames of a 60 Hz screen); over `LATE_DROP` it steps down (thinner smoke `RES.thin` →
+  `PUFF_LOW`, only while there is that much smoke; then `lite`; then the ratio, to `RES_MIN`, then `RES_LOW`), and after three
+  near-perfect seconds it steps back up in reverse order. A stray hitch moves nothing; a failed step up is undone and held back
+  (`RES_WAIT`, doubling). Below `RES_MIN` the smoke is thin too and the fog wall's floor bank is one sheet (`fogWall`, ~7 % of a
+  frame when facing it). Pixels per frame on floor three: ~1.3 screens of solid things, ~0.5 of see-through ones, up to ~9 in
+  a full smoke cloud, then the ink pass (~10 texture reads a pixel). Game logic costs ~0.3 ms a frame:
   a slow machine is held back by drawing (pixels, the ink pass, overlapping smoke), so that is where speed is won.
 
 ## See-through (56-see-through: its header comment has the full rules)
