@@ -17,7 +17,7 @@ game/assets/       paintings (img/), sounds (sfx/), fonts, cut-out outlines (sha
 game/vendor/       Three.js r128
 game/build.py      packs everything into one file, game/red-cap.html (~6 MB, works offline)
 tests/             automated checks in a headless browser
-tools/             checks, formatting, lint, building an older version (1.13 on)
+tools/             checks, formatting, lint, shipping a version, building an older version (1.13 on)
 docs/              version history and the code's internal rules
 ```
 
@@ -36,4 +36,5 @@ publishing to GitHub Pages. If a check fails, the site stays on the previous ver
 
 Each version is a commit whose subject is the version number, such as `1.14`. GitHub Actions tags it `v1.14` and attaches that
 version's game file to a release (the Releases page): any version from 1.17 on can be downloaded and played offline.
-`tools/build-at.sh 1.17` rebuilds one locally (any version from 1.13 on).
+`tools/build-at.sh 1.17` rebuilds one locally (any version from 1.13 on). `tools/ship.sh N.NN` makes and pushes a version
+commit (after its title label and history entry are set); `tools/wip.sh "message"` saves unfinished work to a side branch.

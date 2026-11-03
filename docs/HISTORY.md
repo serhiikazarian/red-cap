@@ -155,6 +155,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   (`fxAt`, `FX_AT` in 06-fx); `avoidProps` adds each prop's push (`avoidOne`, `AVOID`) instead of building lists; the Grump's
   swell is a constant (`GRUMP_SWELL`).
 - `tools/ship.sh N.NN` ships a version as one commit on top of `main` with exactly the current files (no merge, no force push),
-  then links the work branch to it; `tools/wip.sh "message"` saves work to the work branch only. `CLAUDE.md`: both required,
-  never merge, squash or force-push by hand; commands kept short (scripts that answer in one word, trimmed output).
+  then links the work branch to it; `tools/wip.sh "message"` saves work to the work branch only. `CLAUDE.md` and `README.md`:
+  both required, never merge, squash or force-push by hand; commands kept short (scripts that answer in one word).
 - Title label `v1.22`.
