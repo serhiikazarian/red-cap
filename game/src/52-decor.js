@@ -453,15 +453,19 @@ function decorNarcissism(rng) {
 function decorWrath(rng) {
   const words = ['SHAME!', 'THE END IS NIGH!', 'FORBIDDEN KNOWLEDGE!', 'SCORCHED EARTH', 'PAIN!', 'GUERA!', 'AGE OF CAPRICORN', 'ENOUGH'];
   wallFaces(rng, 0.2, (x, z, yaw) => {
+    const word = words[(rng() * words.length) | 0],
+      y = 1.3 + rng() * 2.4,
+      tilt = (rng() - 0.5) * 0.5;
+    (G.wallWords = G.wallWords || []).push([x, z]); // the niches keep off these faces
+    if (Math.hypot(x - SLOGAN_AT[0], z - SLOGAN_AT[1]) < 3.5) return; // the Priest's slogan has its wall to itself
     const m = new THREE.Mesh(
       new THREE.PlaneGeometry(2.5, 0.86),
-      flat(new THREE.MeshBasicMaterial({ map: wordTex(words[(rng() * words.length) | 0], HEX.tie), transparent: true, depthWrite: false }))
+      flat(new THREE.MeshBasicMaterial({ map: wordTex(word, HEX.tie), transparent: true, depthWrite: false }))
     );
-    m.position.set(x, 1.3 + rng() * 2.4, z);
+    m.position.set(x, y, z);
     m.rotation.y = yaw;
-    m.rotation.z = (rng() - 0.5) * 0.5;
+    m.rotation.z = tilt;
     G.group.add(still(m));
-    (G.wallWords = G.wallWords || []).push([x, z]); // the niches keep off these faces
   });
   // a few braziers for light, well apart and off the route; the route itself carries its own markers
   wallFaces(rng, 0.05, (x, z, yaw, dx, dz) => {

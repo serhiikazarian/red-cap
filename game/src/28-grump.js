@@ -142,7 +142,7 @@ TALKERS.U = {
   hurt: e => e.st === 'pause' && (e.t = Math.min(e.t, 0.5)), // hit while he catches his breath and he shouts again sooner
   stagger: 0.12,
   loud: true,
-  drops: () => {},
+  drops: e => hero.hp < WELL.hp && dropHeart(e.pos.x, e.pos.z), // a heart, only when Red Cap is down to 3 ties or fewer
   // beaten: his rings stop and the fog gate to the Jester lifts
   gone: e => {
     e.waves.forEach(w => G.group.remove(w.m));

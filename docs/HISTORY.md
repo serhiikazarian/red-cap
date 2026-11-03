@@ -136,3 +136,15 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   starts sharp and softens only while such moments last.
 - Replays and pictures keep the controller off (`tests/harness.js`).
 - Title label `v1.20`.
+
+## 1.21 (3 Nov 2026)
+- Floor one: each heart lying in the level is there by a 0.784 chance (`placedHearts`, was 0.7): 12 % more on average.
+- Floor two opens turned right (`yaw` -2.85): the first Grin, close on Red Cap's left, no longer shows behind the card, even
+  on a 21:9 screen.
+- Floor two's slogan (`slogans()` in 50-level): on the Priest's wall 1.6 times smaller, its foot 0.5 m up and its top under
+  the cornice; the copy in front of the door room on a soft dark backing. No wall word within 3.5 m of the Priest's slogan
+  (`SLOGAN_AT`; the SCORCHED EARTH beside it is gone; the layout's dice are drawn as before).
+- The Grump leaves a heart when beaten while Red Cap has 3 ties or fewer (`drops`, below `WELL.hp`).
+- Quieter: the Shade's and the ghosts' pops at half volume; Red Cap's death exhale at 30 % (`DEATH_EXHALE`, was 60 %).
+- Test baselines remade.
+- Title label `v1.21`.

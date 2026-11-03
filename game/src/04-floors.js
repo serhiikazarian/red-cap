@@ -38,7 +38,7 @@ const FLOORS = [
     ],
     dropOdds: { B: 0.18, q: 0.05 },
     hiddenHearts: 1, // hidden in quiet corners (hideHearts)
-    placedHearts: 0.7,
+    placedHearts: 0.784,
     hiddenPiles: 2, // and piles of pebbles in the next quiet corners
     roomPile: [5, 1, 9, 2, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
     roomHeart: [6, 6], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
@@ -91,7 +91,8 @@ const FLOORS = [
     wallH: [3.4, 6],
     words: COL.bile,
     deco: 'mouth',
-    yaw: -2.5, // the start: Red Cap by the first pyramid, looking down the raised room past its two traps
+    yaw: -2.85, // the start: Red Cap by the first pyramid, looking down the raised room past its two traps (the first Grin, close on
+    // his left, stays out of view even on a 21:9 screen)
     pitch: 0.6,
     start: [26, 7.5],
     drone: { notes: [55, 58.27], wave: 'sawtooth', cut: 320, lfo: 0.11, gain: 0.1 },
