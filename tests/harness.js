@@ -119,8 +119,7 @@ function install() {
     animAcc = 0;
     animTick = false;
     flowT = beatT = slowT = hitStop = slabBoomT = poolNext = 0;
-    RES.avg = 16;
-    RES.adj = RES.good = 0;
+    adaptResolution = () => {}; // the drawing quality stays as install set it
     frame(H.T); // restart the loop inside the harness
     const built = floorBuilt;
     floorBuilt = i => {
