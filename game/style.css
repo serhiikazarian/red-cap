@@ -134,7 +134,7 @@ button:disabled { cursor: default; } /* "Cuttin' paper…" is a label until Star
 button:focus, button:focus-visible { outline: none; }
 .screen:not(.padnav) button { background: transparent; color: var(--ink); }
 .screen:not(.padnav) button:focus, .screen:not(.padnav) #musicBtn:focus { background: var(--cap); color: var(--paper); }
-.screen.padnav button { background: var(--sheet); color: var(--ink); outline: none !important; } .screen.padnav button.padfocus { background: var(--cap); color: var(--paper); }
+.screen.padnav button { background: var(--sheet); color: var(--ink); outline: none !important; } .screen.padnav button.padfocus, .screen.padnav #musicBtn.padfocus { background: var(--cap); color: var(--paper); }
 .fine { font-size: .78rem; opacity: .7; }
 .wake { background: var(--paper); animation: whiteout 1.4s ease-out both; }
 .wake .sheet { box-shadow: 6px 8px 0 rgba(13,11,10,.18); transform: rotate(.4deg); }
