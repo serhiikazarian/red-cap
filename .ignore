@@ -1,8 +1,7 @@
-# Kept out of broad code searches: huge one-line files, test baselines, the long change log.
-# They can still be searched by naming the file, e.g.  rg -n "pyramid" docs/HISTORY.md
+# Kept out of broad searches (rg, and Claude Code's search), though saved in git: huge one-line files, test baselines, the
+# change log. Search them by naming the file, e.g.  rg -n "pyramid" docs/HISTORY.md
+# What git does not save at all (the build, out/) is in .gitignore, which the searches skip too.
 game/vendor/
 game/data/
-game/red-cap*.html
 tests/baseline/
 docs/HISTORY.md
-out/

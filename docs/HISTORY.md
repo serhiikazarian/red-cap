@@ -2,7 +2,8 @@
 
 One entry per version, newest at the bottom: `## N.NN (date)`, short plain bullets, key names in backticks. Search it, don't
 read it whole. Versions before 1.05 (the old numbering, up to 7.2) are not in the tree:
-`git show 0508438:HISTORY.md | rg -n "name"`.
+`git show 0508438:HISTORY.md | rg -n "name"`. That old log runs v19 … v50, 8.0 … 14.6 (= 3.0), 3.1 … 4.7 (the rewrite,
+renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to the current 1.xx numbers.
 
 ## 1.05 (3 Nov 2026)
 - Fresh repository from Serj's 7.2 folder (same game). Version numbering restarts at 1.05: two digits after the point, +0.01
@@ -58,3 +59,12 @@ read it whole. Versions before 1.05 (the old numbering, up to 7.2) are not in th
   `r0`, the cages' `bars`, `G.webs`, `G.paintings` (and the unused fields of its placement list); two guards for paintings that
   always exist (`beard_painting`, `grin_fire`).
 - Title label `v1.09`.
+
+## 1.10 (3 Nov 2026), no change to the game
+- Docs checked against 7.2's CONTEXT and HANDOFF and against the code: kept what is true, dropped notes from before the 4.7
+  rewrite (the CSS grain), made the loading timings and the instanced pools precise.
+- Recovered: Serj's decision that onlookers and easels stay out of see-through tweaks; why cornices are thick (thin railings
+  flickered); what `game/data` holds and what a new painting needs; more "not verified by playing" items; the fog-wall option.
+- This file's header explains the old numbering (its "v1.0" and "v3.0" are unrelated to 1.xx).
+- `.ignore` keeps only what git saves but searches skip (the build and `out/` are already skipped through `.gitignore`).
+- Title label `v1.10`.

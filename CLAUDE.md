@@ -79,5 +79,7 @@ like a regression: search, then read the few lines around the hits. Older versio
 `git show 0508438:HISTORY.md | rg -n "pyramid"` (never read it whole).
 
 ## Not verified by playing
-Real-GPU frame rate on low-end machines; volumes (title music, pyramid scream, bomb blast); feel of the Grump ring cracks,
-the hologram gaze timing, Bruno's circle; touch on a real phone; controller on hardware.
+Real-GPU frame rate on low-end machines and the sharpness after calibration (`RES_LOW` included); floor three's busiest
+moments (smoke, fog wall) on a real machine; volumes (title music, pyramid scream, bomb blast); laughs, pops and the exhale by
+ear; see-through fades and contours in motion; feel of the Grump ring cracks, the hologram gaze timing, Bruno's circle;
+touch on a real phone; controller on hardware.

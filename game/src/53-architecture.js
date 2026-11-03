@@ -18,7 +18,7 @@ function wallShade(sh) {
   );
 }
 // one wall edge's cornice, made once per tilt (dy keeps crossing ledges at a corner off one plane); local +z faces the open
-// floor, y = 0 the wall's top
+// floor, y = 0 the wall's top. Thick shapes only: thin railings flickered under the ink pass
 function corniceGeo(dy) {
   if (CORNICE[dy]) return CORNICE[dy];
   const list = [[BOX, M4(0, -0.13 + dy, 0.02, 0, 0, 0, CELL, 0.34, 0.54)]]; // the ledge, overhanging the face
