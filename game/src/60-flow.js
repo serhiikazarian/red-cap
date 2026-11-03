@@ -141,17 +141,18 @@ function enterFloor(i, later) {
   }, 360);
 }
 // The scissors cross their line at one even speed while the floor loads, cutting it open behind them, and the floor shows as
-// they reach the end. Their run is the floor's least scrap time, or how long it took to load here (LOAD_KEY: the mean of the
-// last load and the one remembered before, with SNIP_MARGIN), or LOAD_GUESS the first time; never over LOAD_MAX. A floor
+// they reach the end. Their run is the floor's least scrap time, or how long it took to load here (LOAD_KEY: a faster load
+// is taken as it is, a slower one is averaged with the time remembered, with SNIP_MARGIN), or LOAD_GUESS the first time;
+// never over LOAD_MAX. A floor
 // still loading when SNIP_SLOW_AT of the line is left slows them to SNIP_SLOW of their speed, and again each time that share
 // of what was left remains (each slow stretch takes as long as the one before), down to SNIP_RATE_MIN of it, where they keep
 // cutting at that pace; as it finishes they go back to their own speed. A change of speed keeps their place exactly (the
 // browser's own rate change can lose it after a long slow stretch). Their arrival is checked every SNIP_TICK ms against the
 // animation's own clock (or the wall clock, when there is no animation), so a floor always opens.
-const LOAD_KEY = 'redcap.load.v1',
+const LOAD_KEY = 'redcap.load.v2',
   LOAD_GUESS = [3000, 3000, 3500], // ms per floor: its run before any load has been timed here
-  LOAD_MAX = 15000, // ms: a longer load (a hidden page) is not remembered, and no run is longer
-  SNIP_MARGIN = 1.15, // the run is this much longer than the remembered load
+  LOAD_MAX = 10000, // ms: a longer load (a hidden page) is not remembered, and no run is longer
+  SNIP_MARGIN = 1.1, // the run is this much longer than the remembered load
   SNIP_SLOW_AT = 0.2,
   SNIP_SLOW = 0.5,
   SNIP_RATE_MIN = 1 / 16,
@@ -168,7 +169,7 @@ function loadMemSet(i, ms) {
   if (document.hidden || ms > LOAD_MAX) return; // held up by a hidden page: it says nothing about this machine
   try {
     const m = JSON.parse(localStorage.getItem(LOAD_KEY)) || [];
-    m[i] = Math.round(m[i] ? (m[i] + ms) / 2 : ms);
+    m[i] = Math.round(m[i] && ms > m[i] ? (m[i] + ms) / 2 : ms);
     localStorage.setItem(LOAD_KEY, JSON.stringify(m));
   } catch {
     /* not remembered: the next run is planned from the guess */
@@ -234,7 +235,7 @@ function floorBuilt(i) {
 // stay; RES_MIN with single ink lines is taken as passing. Anything failing, or the whole taking over TUNE_MAX ms, ends it
 // at the best setting found so far. The heaviest moments (thick smoke, the fog wall) are left to the controller.
 const CAL_VIEWS = 4,
-  SETTLE_MIN = 20, // frames: settling takes at least this many
+  SETTLE_MIN = 12, // frames: settling takes at least this many
   SETTLE_RUN = 6, // until the mean gap of the last this-many frames is within SETTLE_TOL of the run before
   SETTLE_TOL = 0.15,
   SETTLE_MAX = 120, // or this many frames
