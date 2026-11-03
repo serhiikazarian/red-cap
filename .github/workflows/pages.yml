@@ -62,11 +62,10 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-  # Every version (a commit whose subject is exactly N.NN) gets a GitHub release, which makes its tag vN.NN, with its built game
+  # A version (a commit whose subject is exactly N.NN) gets a GitHub release, which makes its tag vN.NN, with its built game
   # attached (red-cap-vN.NN.html: one file that plays offline), so any version is one download away. Done here because Claude's
-  # cloud sessions cannot push tags. CI's own token may only tag a commit whose workflow file matches main's: a new version
-  # (the commit just pushed) always can; an older one GitHub refuses is left with a warning. Versions before 1.13 get a release
-  # without the file: they can no longer be built.
+  # cloud sessions cannot push tags. Only the commit just pushed: CI's own token may not tag an older commit whose workflow
+  # file differs from main's (GitHub answers "Resource not accessible by integration").
   versions:
     if: github.event_name == 'push'
     needs: deploy
@@ -75,25 +74,15 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
-      - name: Tag and release every version
+      - name: Tag and release this version
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git log --reverse --format='%H %s' | grep -E '^[0-9a-f]{40} [0-9]+\.[0-9]{2}$' | while read -r sha v; do
-            gh release view "v$v" >/dev/null 2>&1 && continue
-            notes=$(awk -v h="## $v " 'index($0, h) == 1 {f = 1; next} /^## / {f = 0} f' docs/HISTORY.md)
-            file=
-            if tools/build-at.sh "$v" >/dev/null 2>&1; then
-              cp "out/red-cap-$v.html" "out/red-cap-v$v.html"
-              file="out/red-cap-v$v.html"
-            else
-              notes="${notes:-Version $v}
-
-          This version can no longer be built (its pictures are no longer in the history): no game file."
-            fi
-            gh release create "v$v" $file --target "$sha" --title "$v" --notes "${notes:-Version $v}" ||
-              echo "::warning::v$v: GitHub refused its release (CI's token cannot tag a commit whose workflow differs from main's)"
-          done
+          v=$(git log -1 --format=%s)
+          echo "$v" | grep -qE '^[0-9]+\.[0-9]{2}$' || { echo "not a version commit: nothing to tag"; exit 0; }
+          gh release view "v$v" >/dev/null 2>&1 && { echo "v$v is already released"; exit 0; }
+          python3 game/build.py
+          cp game/red-cap.html "red-cap-v$v.html"
+          notes=$(awk -v h="## $v " 'index($0, h) == 1 {f = 1; next} /^## / {f = 0} f' docs/HISTORY.md)
+          gh release create "v$v" "red-cap-v$v.html" --target "$GITHUB_SHA" --title "$v" --notes "${notes:-Version $v}"

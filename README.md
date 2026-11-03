@@ -35,5 +35,5 @@ Every push to `main` runs `.github/workflows/pages.yml`: build, checks (formatti
 publishing to GitHub Pages. If a check fails, the site stays on the previous version.
 
 Each version is a commit whose subject is the version number, such as `1.14`. GitHub Actions tags it `v1.14` and attaches that
-version's game file to a release (the Releases page), so any version from 1.13 on can be downloaded and played offline.
-`tools/build-at.sh 1.14` rebuilds one locally.
+version's game file to a release (the Releases page): any version from 1.17 on can be downloaded and played offline.
+`tools/build-at.sh 1.17` rebuilds one locally (any version from 1.13 on).

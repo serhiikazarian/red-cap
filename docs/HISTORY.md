@@ -118,3 +118,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   workflow file matches `main`'s ("Resource not accessible by integration"), so each new version gets its tag and release
   as it is pushed, and older ones it cannot tag are left with a warning.
 - Title label `v1.17`.
+
+## 1.18 (3 Nov 2026), no change to the game
+- CI's `versions` job releases only the version just pushed (tag `vN.NN`, its game file attached): 1.17 was the first.
+  GitHub refuses CI's own token a tag on an older commit, so 1.05–1.16 have no tags (older builds: `tools/build-at.sh`,
+  from 1.13 on). No more warnings or rebuilds of old versions in every run.
+- Title label `v1.18`.
