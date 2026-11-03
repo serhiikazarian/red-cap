@@ -1,3 +1,15 @@
+# build output (CI builds and publishes it; old builds: tools/build-at.sh N.NN)
 game/red-cap.html
-node_modules/
 out/
+node_modules/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# secrets
+.env
+.env.*

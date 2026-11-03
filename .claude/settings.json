@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "deny": ["Read(./game/vendor/**)", "Read(./game/red-cap*.html)", "Read(./out/**/*.html)"]
+  }
+}

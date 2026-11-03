@@ -1,7 +1,7 @@
 // usage: node tests/replay.js build out.json [quick]
 // Plays fixed scenarios with a frozen clock, seeded dice and a scripted player (tests/harness.js), and records what matters
 // to play (Red Cap, every talker, pickups, shots) every 10 frames. Two builds that play the same give identical files:
-// compare them with tests/replay-cmp.js. The baseline for v4.6 is tests/baseline/replay-v4.6.json.
+// compare them with tests/replay-cmp.js. The baseline is tests/baseline/replay.json.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const { openGame } = require('./harness');

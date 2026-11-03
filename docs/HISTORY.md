@@ -1,6 +1,8 @@
-# Red Cap — change history (v19 → 9.0)
+# Red Cap — change history (v19 → now)
 
-Moved out of HANDOFF.md after 9.0 to keep the handoff short. Look things up here by name (search for a function or constant).
+Oldest first; the newest version is at the bottom. Don't read it whole: search by name (a function, a constant, a talker) or by version, then read the lines around the hits. Every version from 1.05 on is a git commit whose subject is the version (`git log --grep='^1\.05$'`, `tools/build-at.sh 1.05`); older versions are not in the repository.
+
+Version names, in order: v19 … v50 (= 8.0), 8.1 … 9.0, then a clean restart at 10.0 … 10.3 (= the release **v1.0**), 10.4 … 14.6 (= **v3.0**), 3.1 … 4.7 (the clean rewrite into `game/src`, renamed **6.0**), 6.1 … 7.2, then the current numbering from **1.05** (always two digits after the point: 1.05, 1.06 …; the title screen shows `v1.05`). The old "release v1.0" and "v3.0" above are unrelated to the new numbers. "patchNNN" in older entries names the change script of that time.
 
 ## What changed most recently (v19–v20)
 - F3 row 8 is all 'g' with a shader **fog wall** (`fogWall(8)`, called after `dreamwork`); `openGate()` lifts it over ~2.2 s and the row becomes walkable.
@@ -689,3 +691,11 @@ Build 4.7 (the clean rewrite) is renamed 6.0 by Serj. No change to the game. Nex
 ## What changed in 7.2 (3 Nov 2026)
 - The slingshot's lock on a pyramid (reticle and pebble) goes for its orb (q.tgt.fly = q.y + PYR.orbY).
 - A bomb blast that reaches a caged talker (a Grin's cage, Bruno's stake) breaks it and still deals BOMB_DMG; before, breaking the cage took the whole blow. Free talkers in reach already took BOMB_DMG 3 (a Grin dies).
+
+## What changed in 1.05 (3 Nov 2026): fresh repository, new numbering
+- The repository github.com/serhiikazarian/red-cap was deleted and rebuilt from Serj's 7.2 folder (the first commit is that folder as uploaded, without the built copies). The game is 7.2 plus the title-screen label below. The earlier repository's 7.3 and 1.00 (the label and the renumbering) are folded into this version.
+- New version numbering, starting at 1.05: always two digits after the point, each release adds 0.01 (next 1.06). A version is the commit whose subject is exactly the number (no tags: cloud sessions can't push them); the title screen's label matches it.
+- The title screen shows the version in small grey letters, bottom left: `v1.05` (`#version` in `game/index.html`, styled in `game/style.css`, beside `#musicBtn`).
+- Each push to `main` builds, checks (format, lint, unused names, boot) and publishes the game on GitHub Pages: https://serhiikazarian.github.io/red-cap/ (`.github/workflows/pages.yml`). Built copies are no longer kept in the repository: CI builds the live one, `tools/build-at.sh N.NN` rebuilds any version from 1.05 on.
+- CONTEXT.md and HANDOFF.md were folded into `CLAUDE.md` (always loaded, short) and `docs/ARCHITECTURE.md` (the code's rules, read on demand); this file moved to `docs/`. `README.md` is in English. `.ignore` and `.claude/settings.json` keep the huge files out of searches and reads.
+- Old version numbers now appear only in this file. The test baselines lost their version names (`tests/baseline/replay.json`, `replay-quick.json`, `pics/`) and were remade from 7.2: the old ones dated from 4.6 and no longer matched (play changed since).

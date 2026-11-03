@@ -122,6 +122,7 @@ button.ghost { background: transparent; color: var(--ink); }
 #musicBtn .on, #musicBtn.playing .off { display: none; }
 #musicBtn.playing .on { display: inline; }
 #musicBtn { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); font-size: 1rem; padding: 6px 10px; line-height: 0; background: var(--paper); color: var(--ink); }
+#version { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); font-size: .75rem; letter-spacing: .06em; color: #9a948a; text-shadow: 1px 1px 0 var(--ink); pointer-events: none; } /* version label, bottom left of the title page: set by hand in index.html */
 button:not(:disabled):hover { transform: rotate(1deg) scale(1.03); }
 button:disabled { cursor: default; } /* "Cuttin' paper…" is a label until Start */
 button:focus, button:focus-visible { outline: none; }

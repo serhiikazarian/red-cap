@@ -1,0 +1,83 @@
+name: Build, check and deploy
+
+# Every push to main: build the single-file game, run the quick checks, publish it on GitHub Pages.
+# Pull requests: the same build and checks, no deploy.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # the same versions the cloud sessions use (tools/ and tests/ load them from the global npm root)
+      - name: Install checking tools
+        run: |
+          npm install -g eslint@10.1.0 prettier@3.8.1 playwright@1.63.0 acorn@8.18.0
+          playwright install --with-deps chromium
+
+      - name: Build
+        run: python3 game/build.py
+
+      - name: Format check
+        run: python3 tools/fmt.py --check
+
+      - name: Lint (must print nothing)
+        run: |
+          out=$(tools/lint.sh)
+          echo "$out"
+          test -z "$out"
+
+      - name: Unused names (must print nothing)
+        run: |
+          out=$(NODE_PATH=$(npm root -g) node tools/unused.js)
+          echo "$out"
+          test -z "$out"
+
+      - name: Boot test (load, Start, floor intro, no errors)
+        run: |
+          errs=$(NODE_PATH=$(npm root -g) node tests/boot.js game/red-cap.html)
+          echo "$errs"
+          test "$errs" = "[]"
+
+      - name: Prepare site
+        run: |
+          mkdir _site
+          cp game/red-cap.html _site/index.html
+
+      - if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

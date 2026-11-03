@@ -1,0 +1,8 @@
+# Kept out of broad code searches: huge one-line files, test baselines, the long change log.
+# They can still be searched by naming the file, e.g.  rg -n "pyramid" docs/HISTORY.md
+game/vendor/
+game/data/
+game/red-cap*.html
+tests/baseline/
+docs/HISTORY.md
+out/
