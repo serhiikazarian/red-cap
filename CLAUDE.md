@@ -7,6 +7,8 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 ## Working with Serj
 - Serj does not code: plain language, they/them unless told otherwise. Reply with what changed, what was tested, what to check in play.
 - Implement **only what is asked**. If look, sound or play is ambiguous, ask one short question first (AskUserQuestion, with options).
+- Keep Serj posted: before anything slow, one line on what runs and about how long; relay progress as it lands (a difference
+  the moment it shows). Choices about look, sound, play or workflow go to AskUserQuestion with options, not to prose.
 - When a task is done and every check passes, say so and **ask whether to ship**. Never push `main` without their yes
   (saving to the work branch, `tools/wip.sh`, is fine).
 
@@ -39,9 +41,14 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 
 ## Checks
 - After every change: `tools/check.sh` → `OK` (format, build, lint, unused names, boot; else `FAIL <step>` and its output).
-- Proving a change does NOT alter play or looks (tidying, optimising): `tools/same.sh` → `SAME` (~3 min: scripted replays with a
-  frozen clock and seeded dice, plus fixed pictures of each floor, against `tests/baseline/`; `full` for the long replay).
-- A change meant to alter play or looks will differ: after Serj approves it, `tools/same.sh new` remakes the baselines.
+- Proving a change does NOT alter play or looks (tidying, optimising): `tools/same.sh` → `SAME` (~1 min: every full scripted
+  replay with a frozen clock and seeded dice, plus fixed pictures of each floor, against `tests/baseline/`, three at a time,
+  the floors the change touches first). Run it in the background through Monitor (`tools/same.sh 2>&1`): one line a job, so
+  a difference shows in seconds; say what it shows as it comes.
+- A change meant to alter play or looks will differ: after Serj approves it, `tools/same.sh new` remakes the baselines from that
+  check's run (seconds, if the build is unchanged since), writing only the replay files (`tests/baseline/replay/<name>.json`,
+  one sample a line) and pictures that changed.
+- Edits are targeted (Edit, or a small exact-match patch): never rewrite a whole file to change part of it.
 - Bigger changes: `NODE_PATH=$(npm root -g) node tests/soak.js game/red-cap.html 8` → last line `errors []` (~8 min).
 - Writing a probe or taking a picture: read `docs/ARCHITECTURE.md` § Testing first.
 - CI (`.github/workflows/pages.yml`) runs the same quick checks on every push and pull request, publishes `main`, and tags
