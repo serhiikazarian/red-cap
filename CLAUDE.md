@@ -40,7 +40,7 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 
 ## Checks
 - After every change: `tools/check.sh` → `OK` (format, build, lint, unused names, boot; else `FAIL <step>` and its output).
-- Proving a change does NOT alter play or looks (tidying, optimising): `tools/same.sh` → `SAME` (~3 min: scripted replays with a
+- Proving a change does NOT alter play or looks (tidying, optimising): `tools/same.sh` → `SAME` (~5 min: scripted replays with a
   frozen clock and seeded dice, plus fixed pictures of each floor, against `tests/baseline/`; `full` for the long replay).
 - A change meant to alter play or looks will differ: after Serj approves it, `tools/same.sh new` remakes the baselines.
 - Bigger changes: `NODE_PATH=$(npm root -g) node tests/soak.js game/red-cap.html 8` → last line `errors []` (~8 min).

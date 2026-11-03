@@ -1,6 +1,6 @@
 #!/bin/sh
 # Proof that play and looks did not change: scripted replays and fixed pictures of the current build against tests/baseline.
-#   tools/same.sh        quick replay + pictures (~3 min)  -> SAME, or what differs (pictures that differ: out/same-diff/)
+#   tools/same.sh        quick replay + pictures (~5 min)  -> SAME, or what differs (pictures that differ: out/same-diff/)
 #   tools/same.sh full   full replay + pictures
 #   tools/same.sh new    remake the baselines from the current build (after a change meant to alter play or looks)
 cd "$(dirname "$0")/.."
