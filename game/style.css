@@ -90,8 +90,11 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
   clip-path: polygon(0 3%, 6% 0, 14% 2%, 23% 0, 35% 3%, 47% 0, 58% 2%, 70% 0, 82% 3%, 93% 0, 100% 2%, 99% 97%, 90% 100%, 78% 97%, 64% 100%, 50% 98%, 37% 100%, 24% 97%, 11% 100%, 1% 98%); }
 #cutting .num { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; }
 #cutting .what { font-family: var(--display); font-size: 1.55rem; line-height: 1.1; margin-top: 2px; }
-#cutting .cut { position: relative; width: 210px; height: 22px; margin: 10px auto 0; border-bottom: 2px dashed rgba(13,11,10,.55); }
+#cutting .cut { position: relative; width: 210px; height: 22px; margin: 10px auto 0; border-bottom: 2px dashed rgba(13,11,10,.55); overflow-x: clip; }
 #cutting .snip { position: absolute; left: 0; bottom: -12px; width: 34px; height: 24px; animation: snip .7s linear forwards; will-change: transform, opacity; }
+/* the cut it leaves: a slit from the line's start to where its blades cross, the paper's lower lip pale where it parts */
+#cutting .snip::before { content: ''; position: absolute; top: 11px; right: calc(100% - 22px); width: 240px; height: 5px;
+  background: linear-gradient(transparent 0 .5px, rgba(13,11,10,.4) .5px 1px, var(--ink) 1px 3px, rgba(13,11,10,.4) 3px 3.5px, var(--paper) 3.5px 5px); }
 #cutting .blade { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transform-origin: 64.7% 50%; will-change: transform; animation: chopA .22s ease-in-out infinite; }
 #cutting .blade.b { animation-name: chopB; }
 @keyframes chopA { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(14deg); } }
