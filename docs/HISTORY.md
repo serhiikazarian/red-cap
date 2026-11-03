@@ -213,3 +213,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Floor one is built and warmed on the title (`titleWarm`), so its first loading screen is shorter; `LOAD_GUESS` lowered.
 - The title's music button turns red under the controller's selection.
 - Title label `v1.27`.
+
+## 1.28 (3 Nov 2026)
+- Shorter first loading screen: load times start afresh (`redcap.load.v2`: 1.26's could hold a stuck load), a faster load
+  is taken at once and a slower one averaged in, `SNIP_MARGIN` 1.1, `LOAD_MAX` 10 s, `SETTLE_MIN` 12 frames.
+- Title label `v1.28`.
