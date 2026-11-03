@@ -44,9 +44,9 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render); `calibrate()` (60-flow) times real frames
   under the ink during loading and lowers it to `CAL_MS`; floor three also measures the fog wall and a full smoke cloud
   (`CAL_HEAVY_MS`). Both switch to `lite` (single ink lines) before lowering resolution, stop at `RES_MIN` and go on to
-  `RES_LOW` only when still too slow; below `RES_MIN` the smoke is lighter (`PUFF_LOW`). Game logic costs ~0.3 ms a frame:
-  a slow machine is held back by drawing (pixels, the ink pass, overlapping smoke), so that is where speed is won. Offered,
-  not done: lighter fog wall floor bank (~7 % of a frame when facing it).
+  `RES_LOW` only when still too slow; below `RES_MIN` the smoke is lighter (`PUFF_LOW`) and the fog wall's floor bank is one
+  sheet instead of two (`fogWall`, ~7 % of a frame when facing it). Game logic costs ~0.3 ms a frame:
+  a slow machine is held back by drawing (pixels, the ink pass, overlapping smoke), so that is where speed is won.
 
 ## See-through (56-see-through: its header comment has the full rules)
 - Anything that can stand between the camera and the fight is registered while the floor is built: `seeThru(o, dyn, how)`.

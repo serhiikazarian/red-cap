@@ -68,3 +68,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - This file's header explains the old numbering (its "v1.0" and "v3.0" are unrelated to 1.xx).
 - `.ignore` keeps only what git saves but searches skip (the build and `out/` are already skipped through `.gitignore`).
 - Title label `v1.10`.
+
+## 1.11 (3 Nov 2026)
+- Slow machines: the fog wall's floor bank at the Jester's gate is one sheet instead of two once quality is lowered
+  (`fogWall`, `resScale` below `RES_MIN`; ~7 % of a frame when facing it). Normal machines unchanged.
+- Removed `flatShading` from three Lambert materials (cornices, the DMT crown, pebble piles): r128's Lambert ignores it and
+  warned about it; the look is unchanged.
+- Title label `v1.11`.

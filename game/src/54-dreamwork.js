@@ -315,7 +315,7 @@ function dreamMouth(rng, fw, fh) {
     G.deco.push({ m: g, spin: 0.12 + rng() * 0.1, bob: rng() * 6, y });
   }
   // the sculptures on the wall tops (dmtCrown), turning slowly, each the other way from the last; their own random numbers
-  const crownM = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }),
+  const crownM = new THREE.MeshLambertMaterial({ vertexColors: true }),
     crng = mulberry(4242);
   wallTops(crng, 9, 8).forEach(([x, z], k) => {
     const ix = Math.floor(x / CELL),

@@ -6,7 +6,8 @@ const TRAIL_N = 32, // scraps at most
 let TRAIL_GEO = null;
 
 // thick, slow-moving fog along a whole row of the map: two layers of shader noise (a dense core that also hides what is behind
-// it from the ink outlines, and a lighter sheet on Red Cap's side), a bank of it on the floor, and drifting puffs
+// it from the ink outlines, and a lighter sheet on Red Cap's side), a bank of it on the floor (two sheets; on a slow machine,
+// resScale below RES_MIN, only the lower one), and drifting puffs
 function fogWall(row) {
   const xs = [];
   for (let x = 0; x < G.w; x++) if (G.map[row][x] === 'g') xs.push(x);
@@ -49,12 +50,13 @@ function fogWall(row) {
     m.userData.core = !dz;
     g.add(m);
   }
-  for (const y of [0.25, 0.7]) {
+  const bank = [0.25, 0.7].map(y => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(W, 9), low);
     m.rotation.x = -Math.PI / 2;
     m.position.set(x0 + W / 2, y, cz);
     g.add(m);
-  }
+    return m;
+  });
   const puffs = [];
   for (let k = 0; k < 14; k++) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0.3, color: 0xb8c0cc }));
@@ -70,6 +72,7 @@ function fogWall(row) {
     const f = G.fogWall;
     if (!f) return;
     U.time.value = t;
+    bank[1].visible = resScale >= RES_MIN;
     if (f.going) {
       f.fade = Math.max(0, f.fade - dt / 2.2);
       U.fade.value = f.fade;

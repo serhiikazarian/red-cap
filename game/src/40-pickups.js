@@ -131,7 +131,7 @@ function pebblePile(x, z) {
     ].forEach(([px, py, pz, r], k) => list.push([st, M4(px, py, pz, k, k * 2, 0, r, r * 0.8, r)]));
     PILE = {
       g: share(mergeGeos(list)),
-      m: share(new THREE.MeshLambertMaterial({ color: 0x6a7078, emissive: 0x2a3440, flatShading: true })),
+      m: share(new THREE.MeshLambertMaterial({ color: 0x6a7078, emissive: 0x2a3440 })),
       glow: share(
         new THREE.SpriteMaterial({
           map: glowTex('#f4f8ff', 'rgba(150,190,255,.65)'),

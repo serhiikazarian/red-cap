@@ -252,8 +252,7 @@ function buildCells(F, w, box, rng) {
       else if (c === 'X') buildDoor(cx, cz);
       if (c !== '#' && kindAt(x, z) === 1) for (let k = nBefore; k < G.group.children.length; k++) G.group.children[k].position.y += LIFT;
     }
-  if (cornice.length)
-    G.group.add(still(new THREE.Mesh(mergeGeos(cornice), new THREE.MeshLambertMaterial({ color: 0x24100c, emissive: 0x1a0402, flatShading: true }))));
+  if (cornice.length) G.group.add(still(new THREE.Mesh(mergeGeos(cornice), new THREE.MeshLambertMaterial({ color: 0x24100c, emissive: 0x1a0402 }))));
   if (F.deco === 'mouth') addWebs(w, webFaces);
   if (F.deco === 'blocks') addPaintings(w);
 }
