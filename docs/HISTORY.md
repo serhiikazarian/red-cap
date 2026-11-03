@@ -202,3 +202,14 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   that runs long slows them in even steps (`SNIP_SLOW_AT`, `SNIP_SLOW`) instead of stalling them at the end.
 - `CLAUDE.md` condensed; docs are now synced once, at the end of a chat.
 - Title label `v1.26`.
+
+## 1.27 (3 Nov 2026)
+- Loading no longer restarts or sticks: the scissors slow down only to `SNIP_RATE_MIN` and keep their place on a speed change
+  (the browser's own rate change lost it after a long slow stretch); arrival is checked on a timer, not an animation promise;
+  `enterFloor` ignores a second start while a floor is on its way in.
+- `tune` draws one frame each animation frame (the one-shot `calibrate` is gone), tries the best setting first, ends on
+  `TUNE_MAX` or a fault; remembered load times are averaged and capped (`LOAD_MAX`).
+- The scissors cut the line open behind them (`.snip::before`).
+- Floor one is built and warmed on the title (`titleWarm`), so its first loading screen is shorter; `LOAD_GUESS` lowered.
+- The title's music button turns red under the controller's selection.
+- Title label `v1.27`.
