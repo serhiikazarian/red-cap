@@ -1,6 +1,6 @@
 // Pyramids (floor two's 'T' cells): Serj's model with a glowing core and a turning orb, an ink rim drawn right after it, a red
 // pool of light, and a tie half-seen inside. Three blows shatter one (it screams at the first two); it leaves a heart, but one
-// or two hold a bomb and one or two others leave nothing (48-bombs.js). Walkers keep out of its square foot; sight lines and shots meet its two-piece shape (pyrParts).
+// or two hold a bomb and one or two are empty (48-bombs.js). Walkers keep out of its square foot; sight lines and shots meet its two-piece shape (pyrParts).
 const PYR_H = 2.3, // metres from its foot to its tip (its foot is 1.4 m square: Red Cap passes one in a corridor)
   PYR_R = 0.25 * PYR_H, // its body's half-width at mid-height: the round part sight lines and pebbles are stopped by (propR)
   PYR_PAD = 0.05, // metres beyond its square foot that Red Cap and the talkers are kept (collide, pyrPush)
