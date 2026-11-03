@@ -124,3 +124,15 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   GitHub refuses CI's own token a tag on an older commit, so 1.05–1.16 have no tags (older builds: `tools/build-at.sh`,
   from 1.13 on). No more warnings or rebuilds of old versions in every run.
 - Title label `v1.18`.
+
+## 1.20 (3 Nov 2026)
+- 1.19 skipped (Serj's choice of number).
+- The resolution controller (`adaptResolution`) counts late frames each second instead of a running average: a stray
+  hitch moves nothing, and it sharpens back after three good seconds (before, at 60 Hz a drop lasted the whole floor).
+  Steps down: thinner smoke first (`RES.thin` → `PUFF_LOW`, only while there is that much smoke), then single ink lines,
+  then the ratio; back up in reverse. A failed step up is undone and held back (`RES_WAIT`, doubling). `resCeil` is gone.
+- Loading (`calibrate`) starts each floor at the screen's full ratio and times the opening view plus `CAL_VIEWS` views
+  spread over the floor (`calViews`). Floor three no longer sizes itself for a full smoke cloud and the fog wall: it
+  starts sharp and softens only while such moments last.
+- Replays and pictures keep the controller off (`tests/harness.js`).
+- Title label `v1.20`.
