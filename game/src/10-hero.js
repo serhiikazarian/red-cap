@@ -80,7 +80,6 @@ function buildHero() {
 // stunned: the Geezer's stare (FRENZY, the page swirls by psy) or, light, a cough of smoke
 function stunHero(t, light, psy) {
   hero.stun = t;
-  hero.stunLight = !!light;
   hero.stunPsy = psy ?? (light ? 0.2 : 0.75);
   hero.yy = null;
   yoyoMesh.visible = stringMesh.visible = false;

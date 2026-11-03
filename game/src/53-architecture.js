@@ -223,12 +223,10 @@ function addWebs(w, faces) {
     blendDstAlpha: THREE.OneFactor
   });
   G.group.add(new THREE.Mesh(g, m));
-  G.webs = used.length;
 }
 // Serj's painting (beard_painting, 3:4): HUNG on wall faces, on EASELS in open cells against a wall, facing away from it
 const PAINT = { hung: 4, easels: 3, gap: 9 };
 function addPaintings(w) {
-  if (!TEX.beard_painting) return;
   const r = mulberry(5150 + w),
     used = [],
     art = new THREE.MeshLambertMaterial({ map: TEX.beard_painting }),
@@ -260,7 +258,7 @@ function addPaintings(w) {
       g.position.set(fx, 1.6, fz);
       g.rotation.y = Math.atan2(-dx, -dz);
       G.group.add(still(g));
-      used.push([fx, fz, dx, dz, 1]);
+      used.push([fx, fz]);
       hung++;
       continue;
     }
@@ -291,9 +289,8 @@ function addPaintings(w) {
       g.position.set(ex, 0, ez);
       g.rotation.y = Math.atan2(-dx, -dz) + (r() - 0.5) * 0.5;
       G.group.add(still(g));
-      used.push([ex, ez, dx, dz, 0]);
+      used.push([ex, ez]);
       easels++;
     }
   }
-  G.paintings = used; // [x, z, wall dx, wall dz, hung]
 }

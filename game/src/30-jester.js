@@ -43,7 +43,6 @@ function makeJester(e, add) {
   e.tilt.add(mg);
   e.maskG = mg;
   e.maskMat = mask.userData.mat;
-  e.maskOff = 0;
   e.t = 2.5;
   e.cracks = 0;
 }

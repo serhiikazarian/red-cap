@@ -29,7 +29,6 @@ function makeLivingDying(e, add, x, z, part) {
     maxHp: cfg[3],
     r: cfg[4],
     fly: cfg[2],
-    baseFly: cfg[2],
     partH: cfg[1],
     boss: true,
     palette: [0xd8642a, 0x3a4a1c, COL.tie, COL.bile, 0x3a5ad8],

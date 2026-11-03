@@ -349,7 +349,6 @@ function heroOnFloor(F) {
   cam.hy = null;
   cam.hold = 0;
   hero.safe = hero.pos.clone();
-  hero.stunLight = false;
   slowT = 0;
   hero.snared = 0;
   hero.held = 0;

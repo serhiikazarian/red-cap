@@ -28,7 +28,6 @@ function makeBystander(kind, x, z, wallYaw) {
     seed: rand(0, 100),
     t: rand(3, 9),
     lean: 0,
-    r0: 0.32,
     kind,
     h,
     smoke: 0,

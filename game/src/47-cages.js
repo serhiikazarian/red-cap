@@ -41,7 +41,7 @@ function buildCages(F) {
       scorchM.position.y = 0.02;
       scorchM.scale.setScalar(1.2);
       g.add(scorchM);
-      G.cages.push({ g, roof: ropes, bars: [], pole, e, x: cx, z: cz, rattle: 0, broken: false });
+      G.cages.push({ g, roof: ropes, pole, e, x: cx, z: cz, rattle: 0, broken: false });
       keepOut(cx, cz, 1.7);
       continue;
     }
@@ -68,7 +68,7 @@ function buildCages(F) {
       rustBars = new THREE.Mesh(mergeGeos(rustL), rust);
     g.add(roof, rustBars);
     barG.dispose(); // merged into the two pieces above
-    G.cages.push({ g, roof, bars: [rustBars], e, x: cx, z: cz, rattle: 0, broken: false });
+    G.cages.push({ g, roof, e, x: cx, z: cz, rattle: 0, broken: false });
     keepOut(cx, cz, 1.7);
   }
 }

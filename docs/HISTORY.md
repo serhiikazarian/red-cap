@@ -50,3 +50,11 @@ read it whole. Versions before 1.05 (the old numbering, up to 7.2) are not in th
 - Tools: CI runs `tools/check.sh ci`; the tools find their parser through eslint; the tests share `tests/browser.js`; the
   test pictures' quality is fixed. Replay baseline remade (the paused-timer change).
 - Title label `v1.08`.
+
+## 1.09 (3 Nov 2026), no change to the game
+- Checked against Serj's 7.2 backup: the first commit, `game/data/`, the fonts and `game/vendor/` are byte-for-byte the same;
+  every painting, shape, sound and floor field is used; the test baselines are new (not the old `v4.6` ones).
+- Leftovers removed (set but never read): `hero.stunLight`, the Jester's `maskOff`, Livin' / Dyin''s `baseFly`, the onlookers'
+  `r0`, the cages' `bars`, `G.webs`, `G.paintings` (and the unused fields of its placement list); two guards for paintings that
+  always exist (`beard_painting`, `grin_fire`).
+- Title label `v1.09`.

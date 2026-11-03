@@ -86,7 +86,7 @@ function talkerArt(e) {
     if (o.userData && o.userData.frame && o.userData.mat && o.userData.mat.map && (!best || o.userData.frame[1] > best.userData.frame[1])) best = o;
   });
   if (best) return { map: best.userData.mat.map, aspect: best.userData.frame[0] / best.userData.frame[1] };
-  return e.type === 'G' && TEX.grin_fire ? { map: TEX.grin_fire, aspect: SHAPES.grin_fire.aspect } : null; // a Grin is a ball: its drawing
+  return e.type === 'G' ? { map: TEX.grin_fire, aspect: SHAPES.grin_fire.aspect } : null; // a Grin is a ball: its drawing
 }
 // the hologram of the talker nearest the niche
 function holoShow(n) {
