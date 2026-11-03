@@ -11,6 +11,11 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
   the moment it shows). Choices about look, sound, play or workflow go to AskUserQuestion with options, not to prose.
 - When a task is done and every check passes, say so and **ask whether to ship**. Never push `main` without their yes
   (saving to the work branch, `tools/wip.sh`, is fine).
+- **Docs wait for the end of the chat.** During a chat change only code (its own comments included) and what shipping needs:
+  the `#version` label and a `## N.NN (date)` entry in `docs/HISTORY.md` with one short bullet per change. `CLAUDE.md`,
+  `docs/ARCHITECTURE.md` and the fuller history wait. When Serj asks for the end-of-chat summary, sync them once to the
+  latest build: update what changed, cut what is stale, tidy the history entries of that chat. Sync mid-chat only when Serj
+  asks, or when a change is global enough that later work in the same chat depends on the docs (say so first).
 
 ## Working surgically (tokens matter)
 - Find before reading: `rg -n "name" game/src` (always give a path: bare `rg` waits on stdin). Definitions:
