@@ -149,7 +149,7 @@ function enterFloor(i, later) {
 // browser's own rate change can lose it after a long slow stretch). Their arrival is checked every SNIP_TICK ms against the
 // animation's own clock (or the wall clock, when there is no animation), so a floor always opens.
 const LOAD_KEY = 'redcap.load.v1',
-  LOAD_GUESS = [6000, 4500, 6000], // ms per floor: its run before any load has been timed here
+  LOAD_GUESS = [3000, 3000, 3500], // ms per floor: its run before any load has been timed here
   LOAD_MAX = 15000, // ms: a longer load (a hidden page) is not remembered, and no run is longer
   SNIP_MARGIN = 1.15, // the run is this much longer than the remembered load
   SNIP_SLOW_AT = 0.2,
@@ -229,7 +229,7 @@ function floorBuilt(i) {
 // Behind the scrap (under the ink), the floor's drawing settings are found from real frames of it, one each animation frame
 // (the page never stalls, so the scissors stay smooth), from its opening view and CAL_VIEWS more spread over it in turn.
 // First the frames settle: drawn at the screen's full ratio until their pace stops changing (the GPU has finished what the
-// build left it). Then settings of resLadder are tried, halving the rungs each time, and the best whose frames pass the
+// build left it). Then settings of resLadder are tried, the best first, then halving the rungs, and the best whose frames pass the
 // controller's own test (02-render: a frame over LATE_AT screen frames is late) is kept, so play starts as sharp as it will
 // stay; RES_MIN with single ink lines is taken as passing. Anything failing, or the whole taking over TUNE_MAX ms, ends it
 // at the best setting found so far. The heaviest moments (thick smoke, the fog wall) are left to the controller.
@@ -239,7 +239,7 @@ const CAL_VIEWS = 4,
   SETTLE_TOL = 0.15,
   SETTLE_MAX = 120, // or this many frames
   TRY_WARM = 4, // a try: frames drawn at its setting before it is judged (new buffers, first draws)
-  TRY_FRAMES = 40, // then frames judged
+  TRY_FRAMES = 30, // then frames judged
   TRY_LATE = 1, // and how many of them may be late
   TUNE_MAX = 15000, // ms
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
@@ -289,7 +289,7 @@ function tune(live, done) {
     gaps = [];
   let lo = 0,
     hi = L.length - 1, // the best rung known to pass
-    mid = -1, // the rung being tried (-1: still settling)
+    mid = -1, // the rung being tried (-1: still settling; the first try is the best rung)
     n = 0,
     late = 0,
     last = 0,
@@ -305,7 +305,7 @@ function tune(live, done) {
   };
   const next = () => {
     if (lo >= hi) return finish();
-    mid = (lo + hi) >> 1;
+    mid = mid < 0 ? 0 : (lo + hi) >> 1;
     setRung(L[mid]);
     n = late = 0;
   };
@@ -314,7 +314,7 @@ function tune(live, done) {
     try {
       const gap = last ? now - last : 0;
       last = now;
-      if (now - t0 > TUNE_MAX) return finish();
+      if (performance.now() - t0 > TUNE_MAX) return finish();
       if (mid < 0) {
         if (gap) gaps.push(gap);
         if (settled(gaps)) next();
