@@ -150,8 +150,8 @@ function enterFloor(i, later) {
 // browser's own rate change can lose it after a long slow stretch). Their arrival is checked every SNIP_TICK ms against the
 // animation's own clock (or the wall clock, when there is no animation), so a floor always opens.
 const LOAD_KEY = 'redcap.load.v2',
-  LOAD_GUESS = [3000, 3000, 3500], // ms per floor: its run before any load has been timed here
-  LOAD_MAX = 10000, // ms: a longer load (a hidden page) is not remembered, and no run is longer
+  LOAD_GUESS = [2000, 2000, 3000], // ms per floor: its run before any load has been timed here
+  LOAD_MAX = 5000, // ms: a longer load (a hidden page) is not remembered, and no run is longer
   SNIP_MARGIN = 1.1, // the run is this much longer than the remembered load
   SNIP_SLOW_AT = 0.2,
   SNIP_SLOW = 0.5,
@@ -238,11 +238,11 @@ const CAL_VIEWS = 4,
   SETTLE_MIN = 12, // frames: settling takes at least this many
   SETTLE_RUN = 6, // until the mean gap of the last this-many frames is within SETTLE_TOL of the run before
   SETTLE_TOL = 0.15,
-  SETTLE_MAX = 120, // or this many frames
+  SETTLE_MAX = 60, // or this many frames
   TRY_WARM = 4, // a try: frames drawn at its setting before it is judged (new buffers, first draws)
   TRY_FRAMES = 30, // then frames judged
   TRY_LATE = 1, // and how many of them may be late
-  TUNE_MAX = 15000, // ms
+  TUNE_MAX = 3000, // ms: the controller (02-render) goes on from the best setting found by then
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
   FIRST_SCRAP_MS = 1400; // and before floor one (its first build is the longest)
 // the views drawn while a floor loads, each a camera place and turn: the floor's opening view first, then CAL_VIEWS more
