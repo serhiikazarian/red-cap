@@ -7,6 +7,8 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 ## Working with Serj
 - Serj does not code: plain language, they/them unless told otherwise. Reply with what changed, what was tested, what to check in play.
 - Implement **only what is asked**. If look, sound or play is ambiguous, ask one short question first (AskUserQuestion, with options).
+- Keep Serj posted: before anything slow, one line on what runs and about how long; relay progress as it lands (a difference
+  the moment it shows). Choices about look, sound, play or workflow go to AskUserQuestion with options, not to prose.
 - When a task is done and every check passes, say so and **ask whether to ship**. Never push `main` without their yes
   (saving to the work branch, `tools/wip.sh`, is fine).
 
