@@ -208,17 +208,17 @@ const SFX = {
   },
   pop() {
     // a Priest's ghost bursting like a soap bubble
-    sNoise({ dur: 0.03, f: 5000, q: 0.8, gain: 0.45, a: 0.001 });
-    sTone({ f: 380, f2: 1500, dur: 0.14, type: 'sine', gain: 0.45, a: 0.002 });
-    sTone({ f: 1500, f2: 700, dur: 0.1, type: 'triangle', gain: 0.15, at: 0.06, a: 0.002 });
-    sNoise({ dur: 0.15, f: 2500, f2: 900, q: 1.2, gain: 0.14, at: 0.03 });
+    sNoise({ dur: 0.03, f: 5000, q: 0.8, gain: 0.225, a: 0.001 });
+    sTone({ f: 380, f2: 1500, dur: 0.14, type: 'sine', gain: 0.225, a: 0.002 });
+    sTone({ f: 1500, f2: 700, dur: 0.1, type: 'triangle', gain: 0.075, at: 0.06, a: 0.002 });
+    sNoise({ dur: 0.15, f: 2500, f2: 900, q: 1.2, gain: 0.07, at: 0.03 });
   },
   shadePop() {
     // a Shade going like a burst gum bubble (lower than a ghost's pop)
-    sNoise({ dur: 0.03, f: 3000, q: 0.7, gain: 0.5, a: 0.001 });
-    sTone({ f: 700, f2: 150, dur: 0.22, type: 'sine', gain: 0.6, a: 0.002 });
-    sTone({ f: 260, f2: 90, dur: 0.12, type: 'triangle', gain: 0.3, a: 0.002 });
-    sNoise({ dur: 0.18, f: 1200, f2: 400, q: 1, gain: 0.12, at: 0.01 });
+    sNoise({ dur: 0.03, f: 3000, q: 0.7, gain: 0.25, a: 0.001 });
+    sTone({ f: 700, f2: 150, dur: 0.22, type: 'sine', gain: 0.3, a: 0.002 });
+    sTone({ f: 260, f2: 90, dur: 0.12, type: 'triangle', gain: 0.15, a: 0.002 });
+    sNoise({ dur: 0.18, f: 1200, f2: 400, q: 1, gain: 0.06, at: 0.01 });
   },
   unmask() {
     sNoise({ dur: 0.3, f: 800, f2: 3000, q: 3, gain: 0.15 });

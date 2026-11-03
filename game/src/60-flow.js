@@ -285,15 +285,16 @@ function nextFloor() {
     enterFloor(floorIdx + 1, true);
   }
 }
+const DEATH_EXHALE = 0.3; // Red Cap's last breath, at 30 % of the recording
 let deadStill = false; // the death screen is up: the world is no longer drawn (the main loop)
 function die() {
   post.uniforms.psy.value = 0;
   state = 'dead';
   deadStill = false;
-  const ex = sPlay('death_exhale', 0.6); // quieter, and cut short with a fade
+  const ex = sPlay('death_exhale', DEATH_EXHALE); // cut short with a fade
   if (ex) {
     const t = AU.ctx.currentTime;
-    ex.g.gain.setValueAtTime(0.6, t + 0.7);
+    ex.g.gain.setValueAtTime(DEATH_EXHALE, t + 0.7);
     ex.g.gain.linearRampToValueAtTime(0, t + 1);
     ex.s.stop(t + 1.05);
   }

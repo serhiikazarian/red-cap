@@ -267,6 +267,41 @@ function roomPile(F) {
   const [cx, cz] = pick(cells);
   pebblePile(...heartRoom((cx + 0.2 + Math.random() * 0.6) * CELL, (cz + 0.2 + Math.random() * 0.6) * CELL));
 }
+// floor two's slogan, GOD LOVES HIS CHILDREN (SLOGAN_W x SLOGAN_H at full size): on the Priest's wall facing the exit door, its
+// foot 0.5 m up and its top under the cornice; and smaller on the wall in front of the door room, on a soft dark backing that lifts
+// it off the busy painting
+const SLOGAN_W = 5,
+  SLOGAN_H = 6.2,
+  SLOGAN_AT = [8.5 * CELL, 12 * CELL], // the Priest's wall: the middle of the face (wall words keep 3.5 m off it, 52-decor)
+  SLOGAN_PRIEST = 1 / 1.6, // the size on the Priest's wall
+  SLOGAN_DOOR = 0.6; // and in front of the door room
+function slogans() {
+  const sl = new THREE.Mesh(
+    new THREE.PlaneGeometry(SLOGAN_W, SLOGAN_H),
+    new THREE.MeshBasicMaterial({ map: TEX.slogan, transparent: true, alphaTest: 0.2 })
+  );
+  sl.scale.setScalar(SLOGAN_PRIEST);
+  sl.position.set(SLOGAN_AT[0], 0.5 + (SLOGAN_H * SLOGAN_PRIEST) / 2, SLOGAN_AT[1] - 0.03);
+  sl.rotation.y = Math.PI;
+  G.group.add(sl);
+  const sl2 = sl.clone();
+  sl2.scale.setScalar(SLOGAN_DOOR);
+  sl2.position.set(8.5 * CELL, 2.6, 7 * CELL - 0.03);
+  G.group.add(sl2);
+  // the backing: ink, solid in the middle and fading over its outer 24 pixels, a little larger than the slogan
+  const dark = canvasTex(128, 160, (x, w, h) => {
+    x.fillStyle = HEX.ink;
+    x.globalAlpha = 0.075;
+    for (let k = 0; k < 12; k++) x.fillRect(k * 2, k * 2, w - k * 4, h - k * 4);
+  });
+  const back = new THREE.Mesh(
+    new THREE.PlaneGeometry(SLOGAN_W * SLOGAN_DOOR + 0.6, SLOGAN_H * SLOGAN_DOOR + 0.6),
+    new THREE.MeshBasicMaterial({ map: dark, transparent: true, depthWrite: false })
+  );
+  back.position.set(8.5 * CELL, 2.6, 7 * CELL - 0.015);
+  back.rotation.y = Math.PI;
+  G.group.add(back);
+}
 // overhead: floor one's yellow drips, floor two's stalactites, the Grin in the sky and its slogans, floor three's floating blocks
 // and the chamber's red floor
 function skyDecor(F, w, box) {
@@ -294,14 +329,7 @@ function skyDecor(F, w, box) {
     sky.position.set(fw / 2, 20, fh / 2 - 17);
     sky.userData.mat.fog = false;
     G.group.add(sky);
-    const sl = new THREE.Mesh(new THREE.PlaneGeometry(5, 6.2), new THREE.MeshBasicMaterial({ map: TEX.slogan, transparent: true, alphaTest: 0.2 }));
-    sl.position.set(8.5 * CELL, 3.6, 12 * CELL - 0.03);
-    sl.rotation.y = Math.PI;
-    G.group.add(sl);
-    const sl2 = sl.clone();
-    sl2.scale.setScalar(0.6);
-    sl2.position.set(8.5 * CELL, 2.6, 7 * CELL - 0.03);
-    G.group.add(sl2);
+    slogans();
   } else if (F.deco === 'blocks') {
     const cols = ['t_blue', 't_lime', 't_orange', 't_ochre', 't_brown'];
     for (let k = 0; k < 26; k++) {
