@@ -1,5 +1,5 @@
-// Textures and paper figures: every painting in data/assets.js becomes TEX[name]; a figure is its painting cut out along its
-// outline (data/shapes.js) and extruded into a thin card. Also the texts drawn into the world (wordTex) and canvas textures.
+// Textures and paper figures: every painting in assets/img (ASSETS) becomes TEX[name]; a figure is its painting cut out along its
+// outline (assets/shapes.json, SHAPES) and extruded into a thin card. Also the texts drawn into the world (wordTex) and canvas textures.
 const TEX = {};
 // every asset becomes a texture except the title's slides (plain page images); wall paintings (t_*) mirror-repeat
 function loadTextures() {

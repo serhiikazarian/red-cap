@@ -4,10 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Red Cap</title>
 <style>
-/*INCLUDE data/fonts/permanent-marker.css*/
-/*INCLUDE data/fonts/courier-prime-400.css*/
-/*INCLUDE data/fonts/courier-prime-700.css*/
-/*INCLUDE data/fonts/rock-salt.css*/
+/*INCLUDE fonts.css*/
 /*INCLUDE style.css*/
 </style>
 
@@ -58,7 +55,7 @@
     <p class="keys"><b>WASD</b> move · <b>Mouse</b> look · <b>Click / J</b> yo-yo · <b>Right click / L</b> slingshot · <b>Space / K</b> dodge · <b>Q / E</b> turn · <b>Esc</b> pause<br><b>Controller</b> left stick move · right stick look · <b>RT</b> yo-yo · <b>LT</b> slingshot · <b><i class="pso"></i> / B</b> dodge · <b>Start</b> pause</p>
   </div>
   <button id="musicBtn" aria-label="Music is off: turn it on" title="Music"><svg class="off" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /><path d="M2 2l20 20" /></svg><svg class="on" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" /></svg></button>
-  <div id="version">v1.12</div>
+  <div id="version">v1.13</div>
 </section>
 
 <section id="card" class="screen" hidden>
@@ -133,10 +130,9 @@
 /*INCLUDE vendor/three-r128.min.js*/
 </script>
 <script>
-/*INCLUDE data/assets.js*/
-/*INCLUDE data/painting.js*/
-/*INCLUDE data/shapes.js*/
-/*INCLUDE data/sounds.js*/
+/*DATA ASSETS assets/img*/
+/*SHAPES assets/shapes.json*/
+/*DATA SOUNDS assets/sfx*/
 </script>
 <script>
 /*INCLUDE src/*.js*/

@@ -13,7 +13,7 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 ## Working surgically (tokens matter)
 - Find before reading: `rg -n "name" game/src` (always give a path: bare `rg` waits on stdin). Definitions:
   `rg -n "^(async )?function name\b|^(const|let) name\b" game/src`. Then read only the lines around the hit (offset/limit).
-  Never read a whole file in `game/src`; never open `game/data/`, `game/vendor/`, `tests/baseline/` or a built HTML.
+  Never read a whole file in `game/src`; never open `game/assets/`, `game/vendor/`, `tests/baseline/` or a built HTML.
 - Make the change in the file that owns the behaviour. When rewriting code, tidy what you touch in the same pass: clearer
   names, dead or duplicated lines, stale comments, a long function split into named steps (`node tools/sizes.js` lists the
   longest). Tidying must not change play or looks: when the task itself doesn't alter play, prove it with `tools/same.sh`.
@@ -28,8 +28,9 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
   (`TALKERS[letter]`: how it is made, moves, is hit and torn, its boss bar; the list heads 20-talkers.js), 21 shots, 22–31 one
   file per talker, 4x floor features (48 bombs, 49 the floor-three secret), 5x building a floor (53 walls, 54 dream
   architecture, 55 baking, 56 see-through), 6x flow, menus, input, camera, loop, boot.
-- `game/index.html` (page; `/*INCLUDE path*/` lines are replaced by files), `game/style.css`, `game/data/` (fonts, ASSETS,
-  painting, SHAPES, SOUNDS: huge one-line blobs), `game/vendor/three-r128.min.js`.
+- `game/index.html` (page; its marker lines are filled by `game/build.py`), `game/style.css`, `game/fonts.css`,
+  `game/assets/` (the real files: `img/*.webp` → ASSETS, `sfx/*.mp3` → SOUNDS, `fonts/*.woff2`, `shapes.json` → SHAPES;
+  the build packs them into the one offline file), `game/vendor/three-r128.min.js`.
 - `tests/` (headless Playwright probes; `tests/browser.js` starts them), `tools/`, `docs/ARCHITECTURE.md` (deeper rules, by
   section: read only the one you need).
 

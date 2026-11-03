@@ -1,4 +1,4 @@
-// Sound: everything is synthesised with Web Audio except a few recorded clips (data/sounds.js).
+// Sound: everything is synthesised with Web Audio except a few recorded clips (assets/sfx, as SOUNDS).
 // AU.at is where the sound being made comes from (null: Red Cap or the whole floor); sounds fade with distance from Red Cap.
 const AU = { ctx: null, master: null, muted: false, drone: [], at: null },
   MASTER_GAIN = 0.75,

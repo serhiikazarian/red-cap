@@ -11,11 +11,11 @@ look. Controls: keyboard and mouse, touchscreen or gamepad.
 
 ```
 game/src/*.js      the game, one file per part (core, Red Cap, each talker, floors, menus, loop)
-game/index.html    the page; /*INCLUDE path*/ lines are replaced by files at build time
-game/style.css     styles
-game/data/         fonts, images, cut-out shapes, sounds (embedded data)
+game/index.html    the page; its marker lines are filled at build time
+game/style.css     styles (fonts.css: the fonts)
+game/assets/       paintings (img/), sounds (sfx/), fonts, cut-out outlines (shapes.json)
 game/vendor/       Three.js r128
-game/build.py      builds everything into one file, game/red-cap.html (~6 MB, works offline)
+game/build.py      packs everything into one file, game/red-cap.html (~6 MB, works offline)
 tests/             automated checks in a headless browser
 tools/             formatting, lint, building any older version
 docs/              version history and the code's internal rules

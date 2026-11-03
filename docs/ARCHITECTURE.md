@@ -19,13 +19,16 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   draws). Never add a Sprite per puff. `PUFF_MAX` 45 (`PUFF_LOW` 25 on a slow machine).
 - A stand-in mesh inside frozen `G.group` needs `matrixWorldNeedsUpdate = true` when moved.
 
-## Data (game/data)
-- One-line blobs, made outside this repository (the source pictures, the pyramid model and the scripts that drew the jaw and the
-  Grin's fire and mouth were in Serj's older project folders; they are not here). `ASSETS[name]`: a webp data URI; every one
-  becomes `TEX[name]` except the title's `slide_*`; `t_*` are wall and floor paintings (mirror-repeated). `SHAPES[name]`:
-  `{ aspect, pts }`, the painting's outline as 0..1 points, which `paper(name, …)` cuts and extrudes. `SOUNDS[name]`: an mp3
-  data URI, played with `sPlay(name, gain)`. A new painting needs its `ASSETS` entry, a `SHAPES` outline if it is a cut-out,
-  and a check that it is uploaded during loading (`warmUp`).
+## Assets (game/assets)
+- Real files; `game/build.py` packs them into the one offline file as data (`/*DATA ASSETS assets/img*/` and the other marker
+  lines in index.html). The game never loads a file at run time: opened from disk, a browser would block that.
+- `img/<name>.webp` → `ASSETS[name]`; every one becomes `TEX[name]` except the title's `slide_*`; `t_*` are wall and floor
+  paintings (mirror-repeated). `shapes.json` (one cut-out per line) → `SHAPES[name]`: `{ aspect, pts }`, the painting's
+  outline as 0..1 points, which `paper(name, …)` cuts and extrudes. `sfx/<name>.mp3` → `SOUNDS[name]`, played with
+  `sPlay(name, gain)`. `fonts/*.woff2`, declared in `game/fonts.css`. A new painting: drop its webp in `img/`, add an
+  outline to `shapes.json` if it is a cut-out, and check it is uploaded during loading (`warmUp`).
+- Made outside this repository: the source pictures, the pyramid model and the scripts that drew the jaw and the Grin's fire
+  and mouth were in Serj's older project folders; they are not here.
 
 ## World and placement (05-world, 04-floors)
 - Grid `CELL = 3` m; `solid()` ('#', and 'g' while `G.gateClosed`); raised floor `LIFT = 1.5` (things built inside a raised
@@ -77,7 +80,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 
 ## Sound (01-audio)
 - Synth: `sTone`, `sNoise`, `SFX.*`. Recorded clips: `sPlay(name, gain)` → `{ s, g }` (null before decoding; `AU.buf` is filled
-  by `auInit` on the first click). Clips live in `game/data/sounds.js`.
+  by `auInit` on the first click). Clips live in `game/assets/sfx/`.
 - Where a sound comes from: `AU.at`; the loop sets it to each talker's position around its update, and sounds scale by
   `auK(AU.at)`. `hurtHero` clears it, so Red Cap's own sounds never fade. A long clip that follows its source keeps `.at`
   (`sprayFollow`). The Jester's laugh and the Grump are never distance-faded.

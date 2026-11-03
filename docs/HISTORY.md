@@ -83,3 +83,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `lowHeart`), talkers' drops and bosses' big hearts unchanged.
 - Test baselines remade (the dice fall differently).
 - Title label `v1.12`.
+
+## 1.13 (3 Nov 2026), no change to the game
+- The paintings, sounds and fonts are real files in `game/assets/` (`img/*.webp`, `sfx/*.mp3`, `fonts/*.woff2`, `fonts.css`;
+  the outlines in `shapes.json`, one per line) instead of base64 text in `game/data/`. `game/build.py` packs them into the one
+  offline file (`/*DATA …*/`, `/*SHAPES …*/` markers); the build is the same as 1.12's byte for byte, except that
+  `beard_painting` now sits in `ASSETS` with the rest.
+- Title label `v1.13`.

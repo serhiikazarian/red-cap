@@ -2,6 +2,6 @@
 # change log. Search them by naming the file, e.g.  rg -n "pyramid" docs/HISTORY.md
 # What git does not save at all (the build, out/) is in .gitignore, which the searches skip too.
 game/vendor/
-game/data/
+game/assets/
 tests/baseline/
 docs/HISTORY.md
