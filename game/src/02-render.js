@@ -3,9 +3,6 @@
 // (the Geezer's swirl, the finale's shock ring, contours of see-through things).
 const canvas = $('#view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-let resScale = 1.75, // the resolution adapts to keep the frame rate up (frame, calibrate)
-  frameAvg = 16,
-  resCeil = 1.75;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 160);
 const touchUI = matchMedia('(pointer: coarse)').matches;
@@ -18,7 +15,7 @@ renderer.setTransparentSort((a, b) => a.groupOrder - b.groupOrder || a.renderOrd
 const rt = new THREE.WebGLRenderTarget(4, 4, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
 rt.depthTexture = new THREE.DepthTexture(4, 4);
 rt.depthTexture.type = THREE.UnsignedIntType;
-// see-through things are also drawn into this half-size mask (55-see-through); the ink pass draws a bold contour where it changes
+// see-through things are also drawn into this half-size mask (56-see-through); the ink pass draws a bold contour where it changes
 const SEE_ZFAR = 64, // metres: a floater's distance is kept in the mask's blue channel as a share of this
   SEE_GZFAR = 24, // metres: a pillar's distance, in the alpha channel
   SOLID_GAP = [0.2, 0.45]; // metres beyond a pillar's near side where its contour fades in
@@ -31,7 +28,7 @@ const post = new THREE.ShaderMaterial({
     px: { value: new THREE.Vector2() },
     cn: { value: camera.near },
     cf: { value: camera.far },
-    inkCol: { value: new THREE.Color(0x0d0b0a) },
+    inkCol: { value: new THREE.Color(COL.ink) },
     dotScale: { value: 5 },
     far: { value: 30 },
     psy: { value: 0 }, // the Geezer's swirl, 0..1
@@ -145,11 +142,51 @@ const INK_HIDE = {
   blendDstAlpha: THREE.OneMinusSrcAlphaFactor
 };
 
+// The resolution controller. resScale is the drawing ratio, never above the screen's (resCap). calibrate (60-flow) sets it while a
+// floor loads; then every second adaptResolution trades it for frame rate if needed (single ink lines first) and wins it back
+// after three good seconds, never past resCeil (the highest ratio this machine has held). It stops at RES_MIN; a machine that
+// still cannot keep up goes on to RES_LOW, and below RES_MIN the smoke is lighter too (PUFF_LOW, 06-fx)
+const RES_MIN = 0.75,
+  RES_LOW = 0.6,
+  RES = { avg: 16, adj: 0, good: 0 }; // average frame time (ms), time since the last decision, good seconds in a row
+let resScale = 1.75,
+  resCeil = 1.75;
+function resCap() {
+  return Math.min(devicePixelRatio || 1, innerWidth < 700 ? 1.5 : 1.75);
+}
+// the lowest step down from ratio cur: RES_MIN first, RES_LOW only from there
+function resFloor(cur) {
+  return cur > RES_MIN ? RES_MIN : RES_LOW;
+}
+function adaptResolution(raw) {
+  if (raw < 250) RES.avg = lerp(RES.avg, Math.min(raw, RES.avg * 2.5 + 5), 0.08);
+  if (G && state === 'play') RES.adj += raw;
+  if (RES.adj <= 1000) return;
+  RES.adj = 0;
+  const was = resScale,
+    cap = resCap(),
+    cur = Math.min(resScale, cap);
+  if (RES.avg > 21 && !post.uniforms.lite.value) {
+    post.uniforms.lite.value = 1;
+    RES.good = -5;
+  } else if (RES.avg > 21) {
+    resScale = Math.max(resFloor(cur), cur - (RES.avg > 30 ? 0.25 : 0.12));
+    resCeil = Math.max(1, Math.min(resCeil, cur - 0.05));
+    RES.good = -5;
+  } else if (RES.avg < 16 && cur < Math.min(resCeil, cap)) {
+    if (++RES.good >= 3) {
+      RES.good = 0;
+      resScale = Math.min(resCeil, cap, cur + 0.1);
+    }
+  } else RES.good = Math.min(RES.good, 0);
+  if (resScale !== was) resize();
+}
+
 const drawSize = new THREE.Vector2();
 function resize() {
   const w = innerWidth,
     h = innerHeight,
-    dpr = Math.min(devicePixelRatio || 1, w < 700 ? 1.5 : 1.75, resScale);
+    dpr = Math.min(resCap(), resScale);
   renderer.getSize(drawSize); // reallocate the canvas only when its size or ratio really changes
   if (drawSize.x !== w || drawSize.y !== h || renderer.getPixelRatio() !== dpr) renderer.setDrawingBufferSize(w, h, dpr);
   const bw = Math.floor(w * dpr),

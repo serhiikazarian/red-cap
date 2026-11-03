@@ -153,11 +153,11 @@ function hitHolo(p, rad) {
     if (!n.holo || n.holo.a < 0.3) continue;
     const q = n.holo.m.position;
     if (Math.hypot(q.x - p.x, q.z - p.z) < 0.55 + rad && Math.abs(q.y - p.y) < n.holo.m.scale.y / 2 + 0.3) {
-      burst(q.clone(), [0xc9a0ff, 0x8a3cff, 0xece6da], 22, 4, 0.12);
+      burst(q.clone(), [0xc9a0ff, 0x8a3cff, COL.paper], 22, 4, 0.12);
       holoGone(n);
       n.look = 0;
       hero.blest = 3;
-      floatWord('BLESSED', hero.pos.clone().setY(hero.pos.y + 2.6), '#d8212a', 0.9, true);
+      floatWord('BLESSED', hero.pos.clone().setY(hero.pos.y + 2.6), HEX.tie, 0.9, true);
       sNoise({ dur: 0.3, f: 700, f2: 250, type: 'lowpass', gain: 0.2 });
       return true;
     }

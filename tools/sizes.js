@@ -1,11 +1,6 @@
 // usage: node tools/sizes.js [n] -- the longest top-level functions in game/src (lines), with their file
 const fs = require('fs'), path = require('path');
-let acorn;
-try {
-  acorn = require('acorn');
-} catch {
-  acorn = require('/opt/node-tools/node_modules/acorn');
-}
+const acorn = require('./acorn');
 const dir = path.join(__dirname, '..', 'game', 'src');
 const out = [];
 for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.js')).sort()) {

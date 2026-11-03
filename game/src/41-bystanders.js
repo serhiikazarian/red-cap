@@ -132,7 +132,7 @@ function hitNpc(p, rad) {
       G.npcHearts = (G.npcHearts || 0) + 1;
       G.lastTieT = 0;
       heartBetween(n.pos, hero.pos);
-      burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [0xd8212a, 0xece6da], 10, 3, 0.14);
+      burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [COL.tie, COL.paper], 10, 3, 0.14);
     }
     if (n.offended) {
       sTone({ f: 140, dur: 0.08, type: 'square', gain: 0.05 });
@@ -145,7 +145,7 @@ function hitNpc(p, rad) {
     n.tilt.position.x = 0.1;
     sTone({ f: 330, f2: 130, dur: 0.35, type: 'sawtooth', gain: 0.07, filt: [900, 300] });
     npcVoice(n, 0.5);
-    burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [0xece6da, 0x8d8579, 0x0d0b0a], 8, 3, 0.14);
+    burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [COL.paper, COL.smoke, COL.ink], 8, 3, 0.14);
     giveAmmo(2, n.pos);
     if (!G.npcHint) {
       G.npcHint = true;
@@ -158,6 +158,5 @@ function hitNpc(p, rad) {
 // a talker torn nearby: some onlookers react
 function bystandersReact(pos) {
   for (const n of G.npcs)
-    if (!n.offended && n.pos.distanceTo(pos) < 12 && Math.random() < 0.25)
-      setTimeout(() => G && G.npcs.includes(n) && npcVoice(n, 0.7), rand(200, 900));
+    if (!n.offended && n.pos.distanceTo(pos) < 12 && Math.random() < 0.25) later(rand(0.2, 0.9), () => G.npcs.includes(n) && npcVoice(n, 0.7));
 }

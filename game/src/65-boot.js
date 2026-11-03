@@ -1,7 +1,7 @@
 // Start-up: load the pictures, make the canvas textures, build Red Cap and the particle pools, then the title. While the
-// paper is still being cut ("Cuttin' paper…" stays at least TITLE_MIN), the work every start would otherwise pay for is done:
+// paper is still being cut ("Cuttin’ paper…" stays at least TITLE_MIN), the work every start would otherwise pay for is done:
 // compile the ink pass and Red Cap, and decode the pictures off the main thread (each floor uploads its own in warmUp)
-const TITLE_MIN = 1000; // ms "Cutting paper…" stays on the title at least
+const TITLE_MIN = 1000; // ms "Cuttin’ paper…" stays on the title at least
 async function titleWarm() {
   if (state !== 'title') return;
   renderer.compile(postScene, postCam);

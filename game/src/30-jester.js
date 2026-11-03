@@ -21,7 +21,7 @@ function makeJester(e, add) {
     r: 1.15,
     hgt: H,
     y1: H,
-    palette: [0x9a9e98, 0xe0a46a, 0x0d0b0a, 0xf0cf2e, 0xb3202f],
+    palette: [0x9a9e98, 0xe0a46a, COL.ink, COL.bile, COL.cap],
     boss: true,
     dormant: true,
     masked: true,
@@ -56,11 +56,11 @@ function setMasked(e, on) {
   if (e.masked === on) return;
   e.masked = on;
   if (on) {
-    floatWord('BACK ON', e.pos.clone().setY(4.3), '#ece6da', 0.8);
+    floatWord('BACK ON', e.pos.clone().setY(4.3), HEX.paper, 0.8);
   } else {
     SFX.unmask();
     jesterLaugh(e);
-    floatWord('HA HA HA', e.pos.clone().setY(4.4), '#f0cf2e', 1.1);
+    floatWord('HA HA HA', e.pos.clone().setY(4.4), HEX.bile, 1.1);
   }
 }
 // Dormant until Red Cap comes through the gate. Then he walks after him, weaving, and picks an action: throw the mask like a
@@ -72,40 +72,51 @@ function updJester(e, dt, dist, ux, uz, mv) {
     r = clamp(1 - e.hp / e.maxHp, 0, 1),
     tq = 1 - 0.45 * r;
   if (e.dormant) {
-    faceCam(e, dt);
-    if (hero.pos.z < 8 * CELL && !G.gateClosed) {
-      e.dormant = false;
-      e.engaged = true;
-      G.totemIdle = null; // the two nearest big totems flash at once
-      if (G.F.lowHeart && hero.hp < 3) spawnPickup((G.F.lowHeart[0] + 0.5) * CELL, (G.F.lowHeart[1] + 0.5) * CELL);
-      e.t = 1.4;
-      SFX.laugh();
-      toast('Immune when masked. Ring a totem nearby, or knock a fallen face back.');
-      floatWord('WELCOME', e.pos.clone().setY(4.4), '#ece6da', 1.1);
-    }
+    jesterWaits(e, dt);
     return;
   }
   if (p2 && !e.p2) {
     e.p2 = true;
-    floatWord('ENOUGH', e.pos.clone().setY(4.4), '#d8212a', 1.3);
+    floatWord('ENOUGH', e.pos.clone().setY(4.4), HEX.tie, 1.3);
     e.st = 'walk';
     e.t = 0.8;
     setMasked(e, true);
   }
   const mg = e.maskG;
   if (e.mBoom) maskFlight(e, dt, tq);
-  // the mask: home on the face, lifted above the head (laugh) or knocked askew (stun)
-  if (animTick) {
-    const want =
-      e.st === 'laugh'
-        ? new THREE.Vector3(e.maskHome.x + 0.6, e.maskHome.y + 1.5, 0.4)
-        : e.st === 'stun'
-          ? new THREE.Vector3(e.maskHome.x - 1.1, e.maskHome.y - 0.9, 0.5)
-          : e.maskHome;
-    mg.position.lerp(want, 0.45);
-    mg.rotation.z = lerp(mg.rotation.z, e.st === 'laugh' ? 0.5 : e.st === 'stun' ? 1.1 : 0, 0.45);
+  if (animTick) maskPose(e, mg);
+  const step = JESTER_ST[e.st];
+  if (step) step(e, dt, dist, ux, uz, mv, p2, r, tq, mg);
+  if (e.st !== 'stun' && e.st !== 'charge' && dist < e.r + hero.r + 0.15) hurtHero(1, e.pos);
+}
+// behind the fog gate he waits, facing the camera, until Red Cap comes through
+function jesterWaits(e, dt) {
+  faceCam(e, dt);
+  if (hero.pos.z < 8 * CELL && !G.gateClosed) {
+    e.dormant = false;
+    e.engaged = true;
+    G.totemIdle = null; // the two nearest big totems flash at once
+    if (G.F.lowHeart && hero.hp < 3) spawnPickup((G.F.lowHeart[0] + 0.5) * CELL, (G.F.lowHeart[1] + 0.5) * CELL);
+    e.t = 1.4;
+    SFX.laugh();
+    toast('Immune when masked. Ring a totem nearby, or knock a fallen face back.');
+    floatWord('WELCOME', e.pos.clone().setY(4.4), HEX.paper, 1.1);
   }
-  if (e.st === 'idle' || e.st === 'walk') {
+}
+// the mask: home on the face, lifted above the head (laugh) or knocked askew (stun)
+function maskPose(e, mg) {
+  const want =
+    e.st === 'laugh'
+      ? new THREE.Vector3(e.maskHome.x + 0.6, e.maskHome.y + 1.5, 0.4)
+      : e.st === 'stun'
+        ? new THREE.Vector3(e.maskHome.x - 1.1, e.maskHome.y - 0.9, 0.5)
+        : e.maskHome;
+  mg.position.lerp(want, 0.45);
+  mg.rotation.z = lerp(mg.rotation.z, e.st === 'laugh' ? 0.5 : e.st === 'stun' ? 1.1 : 0, 0.45);
+}
+// his states, one step each (p2: the second half of the fight; r: how worn down he is, 0..1; tq: his rests, shorter as he tires)
+const JESTER_ST = {
+  walk(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     const v = steer(e),
       wv = Math.sin((performance.now() / 1000) * (2.2 + 3 * r) + e.seed) * r * 1.3; // a weave that widens as he tires of you
@@ -125,7 +136,7 @@ function updJester(e, dt, dist, ux, uz, mv) {
       if (!hero.hasJaw && roll < (p2 ? 0.35 : 0.2)) {
         e.st = 'throw';
         e.t = 0.7;
-        floatWord('CATCH', e.pos.clone().setY(4.3), '#ece6da', 1, true);
+        floatWord('CATCH', e.pos.clone().setY(4.3), HEX.paper, 1, true);
         SFX.growl();
       } else if (roll < (p2 ? 0.72 : third ? 0.62 : 0.3)) {
         e.st = 'faces';
@@ -140,10 +151,11 @@ function updJester(e, dt, dist, ux, uz, mv) {
         e.t = (0.8 - 0.4 * r) * rand(0.75, 1.2);
         e.feint = r > 0.25 && Math.random() < 0.3 + 0.2 * r;
         SFX.growl();
-        floatWord('HUSH', e.pos.clone().setY(4.2), '#ece6da', 1);
+        floatWord('HUSH', e.pos.clone().setY(4.2), HEX.paper, 1);
       }
     } else if (e.st === 'walk' && r > 0.2 && e.skipCd <= 0 && Math.random() < dt * 1.4 * r) jesterSkip(e, ux, uz, r, false);
-  } else if (e.st === 'wind') {
+  },
+  wind(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     if (animTick) {
       shake(e.tilt, 0.1);
@@ -157,7 +169,7 @@ function updJester(e, dt, dist, ux, uz, mv) {
       if (e.feint) {
         // a feint: he hops aside and goes again, faster
         e.feint = false;
-        floatWord('HA!', e.pos.clone().setY(4.2), '#f0cf2e', 0.9);
+        floatWord('HA!', e.pos.clone().setY(4.2), HEX.bile, 0.9);
         jesterSkip(e, ux, uz, r, true);
       } else {
         e.st = 'charge';
@@ -166,7 +178,8 @@ function updJester(e, dt, dist, ux, uz, mv) {
         e.cz = uz;
       }
     }
-  } else if (e.st === 'skip') {
+  },
+  skip(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     mv.x = e.kx;
     mv.z = e.kz;
@@ -185,7 +198,8 @@ function updJester(e, dt, dist, ux, uz, mv) {
         e.t = Math.max(0.2, e.actT || 0.6);
       }
     }
-  } else if (e.st === 'charge') {
+  },
+  charge(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     const sp = 12 + 6 * r;
     e.tilt.rotation.x = -0.18;
@@ -207,8 +221,8 @@ function updJester(e, dt, dist, ux, uz, mv) {
       setMasked(e, false);
       cam.shake = 0.6;
       SFX.boom();
-      burst(e.pos.clone().setY(1.6), [0x9a9e98, 0xece6da], 20, 6, 0.25);
-      floatWord('THUD', e.pos.clone().setY(4), '#ece6da', 1);
+      burst(e.pos.clone().setY(1.6), [0x9a9e98, COL.paper], 20, 6, 0.25);
+      floatWord('THUD', e.pos.clone().setY(4), HEX.paper, 1);
     } else if (e.t <= 0) {
       e.tilt.rotation.x = 0;
       if (r > 0.6 && !e.again && Math.random() < 0.45) {
@@ -216,7 +230,7 @@ function updJester(e, dt, dist, ux, uz, mv) {
         e.st = 'wind';
         e.t = 0.25;
         e.feint = false;
-        floatWord('AGAIN!', e.pos.clone().setY(4.2), '#d8212a', 1);
+        floatWord('AGAIN!', e.pos.clone().setY(4.2), HEX.tie, 1);
         SFX.growl(); // near the end, a second charge straight after the first
       } else {
         e.again = false;
@@ -224,7 +238,8 @@ function updJester(e, dt, dist, ux, uz, mv) {
         e.t = (p2 ? 2 : 2.8) * tq;
       }
     }
-  } else if (e.st === 'stun') {
+  },
+  stun(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     if (animTick) {
       e.tilt.rotation.z = Math.sin(performance.now() / 90) * 0.1;
       e.tilt.rotation.x = 0.15;
@@ -235,27 +250,30 @@ function updJester(e, dt, dist, ux, uz, mv) {
       e.tilt.rotation.x = 0;
       setMasked(e, true);
     }
-  } else if (e.st === 'laugh') {
+  },
+  laugh(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     if (animTick) {
       e.tilt.rotation.z = Math.sin(performance.now() / 70) * 0.06;
       e.tilt.position.y = Math.abs(Math.sin(performance.now() / 120)) * 0.15;
     }
-    if (Math.random() < dt * 2) floatWord(pick(['HA', 'HA HA', 'HEE']), e.pos.clone().setY(4.3 + rand(0, 0.6)), '#f0cf2e', 0.7);
+    if (Math.random() < dt * 2) floatWord(pick(['HA', 'HA HA', 'HEE']), e.pos.clone().setY(4.3 + rand(0, 0.6)), HEX.bile, 0.7);
     if (e.t <= 0) {
       e.st = 'walk';
       e.t = 2;
       e.tilt.position.y = 0;
       setMasked(e, true);
     }
-  } else if (e.st === 'faces') {
+  },
+  faces(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     if (e.t <= 0) {
       dropFaces(JESTER_FACES[p2 ? 2 : e.hp <= (e.maxHp * 2) / 3 ? 1 : 0]);
       e.st = 'walk';
       e.t = (p2 ? 2.2 : 2.8) * tq;
     }
-  } else if (e.st === 'throw') {
+  },
+  throw(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     if (animTick) shake(e.tilt, 0.06);
     if (e.t <= 0) {
@@ -269,12 +287,13 @@ function updJester(e, dt, dist, ux, uz, mv) {
       e.st = 'open';
       SFX.fireball();
     }
-  } else if (e.st === 'open') {
+  },
+  open(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     if (animTick) e.tilt.rotation.z = Math.sin(performance.now() / 120) * 0.05;
   }
-  if (e.st !== 'stun' && e.st !== 'charge' && dist < e.r + hero.r + 0.15) hurtHero(1, e.pos);
-}
+};
+JESTER_ST.idle = JESTER_ST.walk;
 // the thrown mask flies out and back in a loop, bending toward Red Cap on the way out; it takes two hearts; caught again, it
 // goes back on
 function maskFlight(e, dt, tq) {
@@ -320,7 +339,7 @@ function jesterSkip(e, ux, uz, r, reWind) {
   e.skipCd = 1.1;
   e.reWind = reWind;
   sNoise({ dur: 0.18, f: 900, f2: 2600, q: 1, gain: 0.14 });
-  if (!reWind && Math.random() < 0.5) floatWord(pick(['HOP', 'TA-DA', 'WHEE']), e.pos.clone().setY(4.2), '#f0cf2e', 0.8);
+  if (!reWind && Math.random() < 0.5) floatWord(pick(['HOP', 'TA-DA', 'WHEE']), e.pos.clone().setY(4.2), HEX.bile, 0.8);
 }
 // the Jester in his fight (null before and after)
 function jester() {
@@ -339,9 +358,9 @@ function jesterStruck(J, fx, fz) {
   SFX.boom();
   SFX.tink();
   cam.shake = Math.max(cam.shake, 0.3);
-  burst(J.pos.clone().setY(2.8), [0x9a9e98, 0xece6da, 0x0d0b0a], 16, 6, 0.2);
+  burst(J.pos.clone().setY(2.8), [0x9a9e98, COL.paper, COL.ink], 16, 6, 0.2);
   if (J.cracks < 2) {
-    floatWord('CRACK', J.pos.clone().setY(4.4), '#ece6da', 1.2);
+    floatWord('CRACK', J.pos.clone().setY(4.4), HEX.paper, 1.2);
   } else {
     J.cracks = 0;
     if (J.mBoom) {
@@ -363,7 +382,7 @@ function kickFace(p, rad) {
     s.slab.rotation.set(0, 0, 0);
     s.slab.position.set(s.x, 1, s.z);
     G.group.remove(s.ring);
-    floatWord('RETURN TO SENDER', new THREE.Vector3(s.x, 2.6, s.z), '#f0cf2e', 0.8);
+    floatWord('RETURN TO SENDER', new THREE.Vector3(s.x, 2.6, s.z), HEX.bile, 0.8);
     SFX.yoyo();
     return true;
   }
@@ -382,22 +401,20 @@ function finale(J) {
   SFX.tear();
   sTone({ f: 55, f2: 28, dur: 2.4, type: 'sawtooth', gain: 0.22, filt: [700, 70] });
   sNoise({ dur: 1.8, f: 2600, f2: 180, q: 0.8, gain: 0.26 });
-  for (let k = 0; k < 4; k++) burst(J.pos.clone().setY(0.8 + k * 0.8), [0xece6da, 0x0d0b0a, 0xd8212a, 0xf0cf2e, 0x9a9e98], 40, 10, 0.34);
+  for (let k = 0; k < 4; k++) burst(J.pos.clone().setY(0.8 + k * 0.8), [COL.paper, COL.ink, COL.tie, COL.bile, 0x9a9e98], 40, 10, 0.34);
   for (let k = 0; k < 10; k++) {
     const a = (k / 10) * TAU;
-    burst(J.pos.clone().add(new THREE.Vector3(Math.cos(a) * 1.2, 2.2, Math.sin(a) * 1.2)), [0xd8212a, 0x0d0b0a], 4, 12, 0.4);
+    burst(J.pos.clone().add(new THREE.Vector3(Math.cos(a) * 1.2, 2.2, Math.sin(a) * 1.2)), [COL.tie, COL.ink], 4, 12, 0.4);
   }
   floatWord(
     'SILENCE',
     camera.position.clone().addScaledVector(camera.getWorldDirection(tmpW), camera.position.distanceTo(J.pos)),
-    '#d8212a',
+    HEX.tie,
     2.6,
     true
   );
   G.finalAt = J.pos.clone();
-  setTimeout(() => {
-    if (G && G.finalAt) spawnFinalMask(G.finalAt.x, G.finalAt.z);
-  }, 2200);
+  later(2.2, () => G.finalAt && spawnFinalMask(G.finalAt.x, G.finalAt.z));
 }
 // the shock ring runs on real time (the world is in slow motion meanwhile), centred where he stood on screen
 function finFx(rdt) {
@@ -432,7 +449,7 @@ function spawnFinalMask(x, z) {
   G.group.add(glow);
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(1.6, 2.1, 40),
-    new THREE.MeshBasicMaterial({ color: 0xf0cf2e, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide })
+    new THREE.MeshBasicMaterial({ color: COL.bile, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide })
   );
   ring.rotation.x = -Math.PI / 2;
   ring.position.set(x, 0.05, z);
@@ -457,12 +474,12 @@ function updFinalMask(dt, now) {
     fl.classList.add('on');
     SFX.unmask();
     SFX.laugh(true); // the last laugh
-    burst(new THREE.Vector3(f.x, 2, f.z), [0xf0cf2e, 0xece6da, 0xd8212a], 50, 8, 0.3);
+    burst(new THREE.Vector3(f.x, 2, f.z), [COL.bile, COL.paper, COL.tie], 50, 8, 0.3);
     slowT = 0.8;
-    setTimeout(() => {
+    later(0.9, () => {
       fl.classList.remove('on');
       win();
-    }, 900);
+    });
   }
 }
 // The fallen faces: n masks drop from the sky, one on Red Cap's spot and the rest around him, each warned by a red ring; they
@@ -486,7 +503,7 @@ function dropFaces(n) {
   for (const [x, z] of spots) {
     const ring = new THREE.Mesh(
       FACE_RING_GEO,
-      new THREE.MeshBasicMaterial({ color: 0xd8212a, side: THREE.DoubleSide, transparent: true, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: COL.tie, side: THREE.DoubleSide, transparent: true, depthWrite: false })
     );
     ring.rotation.x = -Math.PI / 2;
     ring.position.set(x, 0.05, z);
@@ -520,9 +537,9 @@ function updSlabs(dt) {
         if (performance.now() - slabBoomT > 120) SFX.boom(); // masks landing together: one boom
         slabBoomT = performance.now();
         cam.shake = Math.max(cam.shake, 0.35);
-        s.ring.material.color.setHex(0xf0cf2e);
+        s.ring.material.color.setHex(COL.bile);
         s.ring.scale.setScalar(1);
-        burst(new THREE.Vector3(s.x, 0.3, s.z), [0x9a9e98, 0xece6da, 0x0d0b0a], 12, 5, 0.22);
+        burst(new THREE.Vector3(s.x, 0.3, s.z), [0x9a9e98, COL.paper, COL.ink], 12, 5, 0.22);
         if (Math.hypot(hero.pos.x - s.x, hero.pos.z - s.z) < 1.4) hurtHero(1, new THREE.Vector3(s.x, 0, s.z));
       }
     } else if (s.st === 'fly') {
@@ -540,7 +557,7 @@ function updSlabs(dt) {
         }
       }
       if (s.t <= 0) {
-        burst(s.slab.position.clone().setY(1.5), [0x9a9e98, 0xece6da], 12, 5, 0.2);
+        burst(s.slab.position.clone().setY(1.5), [0x9a9e98, COL.paper], 12, 5, 0.2);
         G.group.remove(s.slab);
         slabs.splice(i, 1);
       }
@@ -558,5 +575,50 @@ function updSlabs(dt) {
 TALKERS.M = {
   make: makeJester,
   update: updJester,
-  bar: e => (e.masked ? ['Masked — immune', false] : ['', false, 'UNMASKED'])
+  bar: e => (e.masked ? ['Masked — immune', false] : ['', false, 'UNMASKED']),
+  struck: jesterBlow,
+  stagger: 0.12,
+  knock: 2,
+  rim: { a: 0.7, k: 0.45 },
+  tornWord: null,
+  drops: () => {},
+  gone: e => {
+    if (e.mBoom) {
+      G.group.remove(e.mBoom.m);
+      e.mBoom = null;
+    }
+    finale(e);
+  }
 };
+// a blow on him: the mask takes it (only TINK), and a totem's shout or a fallen face cannot take the last of him: he reels and
+// waits for Red Cap's own hand
+function jesterBlow(e, n, weapon, force) {
+  if (!force && !(e.dazedT > 0) && e.masked) {
+    SFX.tink();
+    burst(e.pos.clone().setY(2.6), [COL.paper, 0x9a9e98, COL.bile], 8, 4, 0.14);
+    floatWord(pick(['HA!', 'TINK', 'NOPE', 'HA HA']), e.pos.clone().setY(4.1 + rand(0, 0.4)), HEX.paper, 0.9);
+    return null;
+  }
+  if (weapon || e.hp - n > 0) return n;
+  e.hp = Math.min(e.hp, 0.5);
+  e.dazedT = 6;
+  e.flash = 0.3;
+  if (e.mBoom) {
+    G.group.remove(e.mBoom.m);
+    e.mBoom = null;
+    e.maskG.visible = true;
+  }
+  setMasked(e, false);
+  e.st = 'stun';
+  e.t = 0.01;
+  e.maskG.position.set(e.maskHome.x - 1.1, e.maskHome.y - 0.9, 0.5);
+  e.maskG.rotation.z = 1.1;
+  floatWord('REELIN’', e.pos.clone().setY(4.6), HEX.bile, 1.6, true);
+  SFX.boom();
+  SFX.tink();
+  cam.shake = Math.max(cam.shake, 0.45);
+  slowT = 0.5;
+  sTone({ f: 70, f2: 40, dur: 1.2, type: 'sawtooth', gain: 0.16, filt: [500, 90] });
+  burst(e.pos.clone().setY(3), [0x9a9e98, COL.paper, COL.bile], 30, 7, 0.26);
+  return null;
+}

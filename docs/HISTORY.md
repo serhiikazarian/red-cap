@@ -29,3 +29,24 @@ read it whole. Versions before 1.05 (the old numbering, up to 7.2) are not in th
 - When the Geezer misses his last stare, `WINDED` takes over from `MISSED` at once.
 - `bigWord(text, color, size, under)` takes an optional smaller line; a talker's `bar(e)` returns `[text, lit, word]`.
 - Title label `v1.07`.
+
+## 1.08 (3 Nov 2026)
+- Each talker's own rules when hit or torn moved from the shared code into its file (`TALKERS` hooks `shielded`, `struck`,
+  `hurt`, `escape`, `torn`, `drops`, `gone`, `trapped`, and traits such as `stagger`, `knock`, `rim`, `harmless`, `loud`);
+  play unchanged.
+- Long fights split into one step per state (`JESTER_ST`, `GEEZER_ST`, `USHER_ST`, `PRIEST_ST`, `SMOKER_ST`); floor one's dream
+  corridor split into named pieces.
+- New files: `48-bombs.js` (from the pyramids), `49-secret.js` (the plaques, the painting and the Laughin’ Jaw, from
+  Livin’ / Dyin’), `54-dreamwork.js` (each floor's dream architecture, from the architecture file); baking and see-through
+  are now `55-bake.js` and `56-see-through.js`.
+- One colour palette in the code (`COL`, `HEX`, 00-util) and named page colours (`--alarm`, `--sheet`, `--muted`); the page's
+  yellow is now the game's warmer `#f0cf2e` (EXPOSED / UNMASKED / WINDED, the lock ring).
+- Five delays in play (the fog gate opening, the Jester's final mask, the win after his last laugh, a cough's echo, an
+  onlooker's voice) now wait while the game is paused (`later`).
+- Slow machines: below `RES_MIN` the quality control may go on to `RES_LOW` 0.6, with lighter smoke (`PUFF_LOW` 25). Fast
+  machines unchanged.
+- Small tidying: `loseJaw`, `START_AMMO`, the resolution controller in one place (`adaptResolution`, `resCap`), `bossInFight`,
+  `touchControls`.
+- Tools: CI runs `tools/check.sh ci`; the tools find their parser through eslint; the tests share `tests/browser.js`; the
+  test pictures' quality is fixed. Replay baseline remade (the paused-timer change).
+- Title label `v1.08`.

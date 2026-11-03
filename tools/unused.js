@@ -1,11 +1,6 @@
 // usage: node tools/unused.js  -- top-level names in game/src that nothing else uses (candidates for removal)
 const fs = require('fs'), path = require('path');
-let acorn;
-try {
-  acorn = require('acorn');
-} catch {
-  acorn = require('/opt/node-tools/node_modules/acorn');
-}
+const acorn = require('./acorn');
 const dir = path.join(__dirname, '..', 'game', 'src');
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.js')).sort();
 const all = files.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');

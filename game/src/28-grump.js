@@ -23,7 +23,7 @@ function makeGrump(e, add) {
     hgt: 8,
     y1: 8,
     still: true,
-    palette: [0x4fa9df, 0x9bd12c, 0xf2a35e, 0x0d0b0a, 0xe7b84a],
+    palette: [0x4fa9df, 0x9bd12c, 0xf2a35e, COL.ink, 0xe7b84a],
     boss: true,
     waveCount: 0
   });
@@ -48,7 +48,7 @@ function updGrump(e, dt, dist, ux, uz, mv) {
       e.st = 'inflate';
       e.t = 0.55;
       SFX.growl();
-      floatWord('GRRR', e.pos.clone().setY(8.8), '#d8212a', 2);
+      floatWord('GRRR', e.pos.clone().setY(8.8), HEX.tie, 2);
     }
   } else if (e.st === 'inflate') {
     const k = 1 - e.t / 0.55;
@@ -111,7 +111,7 @@ function updWaves(e, dt, dist, ux, uz) {
         w.hit = true; // a dodge timed right slips through; a whole block soaks it
         if (through <= 0 && !(hero.dodgeT > 0 || hero.dodgeIF > 0) && los(e.pos, hero.pos) && performance.now() - (e.muffledAt || 0) > 1500) {
           e.muffledAt = performance.now();
-          bigWord('MUFFLED', '#ece6da', 1 / 1.7);
+          bigWord('MUFFLED', HEX.paper, 1 / 1.7);
         }
       } else if (through < open) {
         // a worn block: part of the shout leaks through, and every whole heart's worth costs a heart
@@ -135,7 +135,21 @@ function updWaves(e, dt, dist, ux, uz) {
     }
   }
 }
-TALKERS.U = { make: makeGrump, update: updGrump, bar: e => [e.st === 'pause' ? 'Catchin’ breath' : 'Shoutin’', e.st === 'pause'] };
+TALKERS.U = {
+  make: makeGrump,
+  update: updGrump,
+  bar: e => [e.st === 'pause' ? 'Catchin’ breath' : 'Shoutin’', e.st === 'pause'],
+  hurt: e => e.st === 'pause' && (e.t = Math.min(e.t, 0.5)), // hit while he catches his breath and he shouts again sooner
+  stagger: 0.12,
+  loud: true,
+  drops: () => {},
+  // beaten: his rings stop and the fog gate to the Jester lifts
+  gone: e => {
+    e.waves.forEach(w => G.group.remove(w.m));
+    e.waves.length = 0;
+    openGate();
+  }
+};
 
 // ----- the sound blocks
 // the hearts a ring carries to Red Cap: 0 behind a sound block, rising as the block wears, the full amount (open) in the open.
@@ -180,14 +194,14 @@ function grumpWear(e, w) {
     w.blk.add(k);
     b.flashT = 3; // it flashes either way: at first only to show what shouting does to a block
     if (e.wearOn) b.hp -= 0.0224; // about nine bursts of shouting from whole to spent
-    burst(new THREE.Vector3(b.x, 0.9, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, 0x0d0b0a], 4, 3, 0.14);
+    burst(new THREE.Vector3(b.x, 0.9, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 4, 3, 0.14);
     // the shout splashes against it: bits of the ring thrown back and up off its face
     const ux = (e.pos.x - b.x) / (dd || 1),
       uz = (e.pos.z - b.z) / (dd || 1);
     for (let q = 0; q < 3; q++)
       burst(
         new THREE.Vector3(b.x + ux * 0.9 + rand(-0.6, 0.6), rand(0.4, 1.6), b.z + uz * 0.9 + rand(-0.6, 0.6)),
-        [0xf0cf2e, 0xece6da, 0x4fa9df, 0x0d0b0a],
+        [COL.bile, COL.paper, 0x4fa9df, COL.ink],
         4,
         4,
         0.16,
@@ -208,7 +222,7 @@ function grumpWear(e, w) {
       const [ix, iz] = cellOf(b.x, b.z);
       G.map[iz] = G.map[iz].slice(0, ix) + '.' + G.map[iz].slice(ix + 1);
       delete G.props[k];
-      burst(new THREE.Vector3(b.x, 1, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, 0x0d0b0a], 24, 6, 0.26);
+      burst(new THREE.Vector3(b.x, 1, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 24, 6, 0.26);
       for (let p = 0; p < 6; p++) smokePuff(new THREE.Vector3(b.x + rand(-0.8, 0.8), rand(0.4, 1.8), b.z + rand(-0.8, 0.8)), rand(1.2, 2), 0.9, 0.6);
       sNoise({ dur: 0.45, f: 900, f2: 200, q: 0.8, gain: 0.3 });
     }
@@ -256,7 +270,7 @@ function shedBox(b, it, e) {
     sz: rand(-5, 5),
     t: 0.75
   });
-  burst(m.position.clone(), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, 0x0d0b0a], 8, 3, 0.16);
+  burst(m.position.clone(), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 8, 3, 0.16);
   sNoise({ dur: 0.18, f: 700, f2: 250, q: 1, gain: 0.18 });
 }
 function updDebris(dt) {
@@ -270,7 +284,7 @@ function updDebris(dt) {
     c.m.rotation.x += c.sx * dt;
     c.m.rotation.z += c.sz * dt;
     if (c.t <= 0) {
-      burst(c.m.position.clone(), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, 0x0d0b0a], 12, 4, 0.18);
+      burst(c.m.position.clone(), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 12, 4, 0.18);
       smokePuff(c.m.position.clone(), rand(0.9, 1.4), 0.8, 0.5);
       G.group.remove(c.m);
       c.m.geometry.dispose();
@@ -361,5 +375,5 @@ function emitWave(e) {
   waveShade(w);
   SFX.wah();
   sTone({ f: 70, f2: 45, dur: 0.5, type: 'sawtooth', gain: 0.18, filt: [500, 200] });
-  if (e.waveCount === 3) floatWord(pick(['BLAH', 'STOP', 'SHUT UP', 'GRR']), e.pos.clone().setY(8.8), '#0d0b0a', 1.8);
+  if (e.waveCount === 3) floatWord(pick(['BLAH', 'STOP', 'SHUT UP', 'GRR']), e.pos.clone().setY(8.8), HEX.ink, 1.8);
 }

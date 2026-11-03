@@ -1,16 +1,12 @@
 // usage: node tests/menus.js build outDir -- opens the title, the catalogue (two pages), the pause menu; a picture of each; errors
-const { chromium } = require('playwright');
-const path = require('path');
+const { launch, newPage, openTitle } = require('./browser');
 (async () => {
   const [build, dir] = process.argv.slice(2);
   require('fs').mkdirSync(dir, { recursive: true });
-  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
-  const pg = await b.newPage({ viewport: { width: 880, height: 500 } });
-  const errs = [];
-  pg.on('pageerror', e => errs.push(String(e)));
-  pg.on('console', m => m.type() === 'error' && errs.push(m.text().slice(0, 300)));
-  await pg.goto('file://' + path.resolve(build));
-  await pg.waitForSelector('#startBtn:not([disabled])', { timeout: 120000 });
+  const b = await launch(),
+    errs = [],
+    pg = await newPage(b, errs);
+  await openTitle(pg, build);
   const still = () => pg.evaluate(() => document.getAnimations().forEach(a => (a.pause(), (a.currentTime = 0))));
   await pg.evaluate(() => { slidesOn(false); localStorage.clear(); catMem = {}; });
   await pg.evaluate(() => openCatalogue('title'));

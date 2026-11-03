@@ -25,15 +25,17 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - `game/src/*.js`: the game, one file per part, joined in name order into one script by `game/build.py` (one shared scope: any
   file can call any function; only top-level `const`/`let` must exist before they are used at load). Groups: 0x core (helpers,
   sound, drawing + ink pass, textures, floor data, world grid, effects, HUD), 1x Red Cap and weapons, 20 shared talker code
-  (`TALKERS[letter] = { make, update, dying, dazed, bar, warn }`), 21 shots, 22–31 one file per talker, 4x floor features,
-  5x building a floor, 6x flow, menus, input, camera, loop, boot.
+  (`TALKERS[letter]`: how it is made, moves, is hit and torn, its boss bar; the list heads 20-talkers.js), 21 shots, 22–31 one
+  file per talker, 4x floor features (48 bombs, 49 the floor-three secret), 5x building a floor (53 walls, 54 dream
+  architecture, 55 baking, 56 see-through), 6x flow, menus, input, camera, loop, boot.
 - `game/index.html` (page; `/*INCLUDE path*/` lines are replaced by files), `game/style.css`, `game/data/` (fonts, ASSETS,
   painting, SHAPES, SOUNDS: huge one-line blobs), `game/vendor/three-r128.min.js`.
-- `tests/` (headless Playwright probes), `tools/`, `docs/ARCHITECTURE.md` (deeper rules, by section: read only the one you need).
+- `tests/` (headless Playwright probes; `tests/browser.js` starts them), `tools/`, `docs/ARCHITECTURE.md` (deeper rules, by
+  section: read only the one you need).
 
 ## Checks
 - After every change: `tools/check.sh` → `OK` (format, build, lint, unused names, boot; else `FAIL <step>` and its output).
-- Proving a change does NOT alter play or looks (tidying, optimising): `tools/same.sh` → `SAME` (~2 min: scripted replays with a
+- Proving a change does NOT alter play or looks (tidying, optimising): `tools/same.sh` → `SAME` (~3 min: scripted replays with a
   frozen clock and seeded dice, plus fixed pictures of each floor, against `tests/baseline/`; `full` for the long replay).
 - A change meant to alter play or looks will differ: after Serj approves it, `tools/same.sh new` remakes the baselines.
 - Bigger changes: `NODE_PATH=$(npm root -g) node tests/soak.js game/red-cap.html 8` → last line `errors []` (~8 min).
@@ -60,6 +62,10 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - Still meshes are baked (`bakeStatics`): anything that moves or changes later must not be marked `still()`.
 - See-through: register big props with `seeThru(o, dyn, how)`; never give a see-through part a global `renderOrder > 0`.
 - Talker materials (`e.mats`) get their colour reset every frame (hit flash): colour parts with textures or vertex colours.
+- What is special about one talker goes in its own `TALKERS` entry (hooks and traits listed at the top of 20-talkers.js), never
+  as `e.type === 'X'` in shared code.
+- Core colours: `COL.ink` / `HEX.paper` … (00-util) in code, `var(--ink)` … in style.css; never retype their hex values.
+- A delay in play: `later(sec, fn)` (held while paused, dropped with the floor), never `setTimeout`.
 
 ## Game
 - Floors: 1 *The Usher's Corridor* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged, pyramids

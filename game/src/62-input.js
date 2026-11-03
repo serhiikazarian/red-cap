@@ -103,7 +103,7 @@ addEventListener('blur', () => {
 $('#touch').addEventListener('pointerdown', () => {
   if (state === 'intro') beginFloor();
 });
-(() => {
+function touchControls() {
   const sz = $('#stickZone'),
     lz = $('#lookZone'),
     st = $('#stick'),
@@ -182,7 +182,8 @@ $('#touch').addEventListener('pointerdown', () => {
     b.addEventListener('pointerdown', () => b.classList.add('down'));
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => b.classList.remove('down'));
   }
-})();
+}
+touchControls();
 // ----- a game controller: left stick moves, right stick looks, RT yo-yo, LT slingshot, A / B dodge, Start pauses; it also
 // walks the menus
 const PAD = { prev: [], move: { x: 0, y: 0 }, on: false, navT: 0, sel: null, active: false };

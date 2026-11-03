@@ -307,7 +307,7 @@ function framed(tex, w, h, x, y, z, yaw, tilt, label, cut, keep) {
   const inner = new THREE.Group();
   inner.rotation.z = tilt;
   g.add(inner);
-  const bg = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ color: cut ? 0x3a2a1c : 0xece6da }));
+  const bg = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ color: cut ? 0x3a2a1c : COL.paper }));
   bg.position.z = 0.02;
   inner.add(bg);
   const pic = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.92, h * 0.92), new THREE.MeshLambertMaterial({ map: tex, alphaTest: cut ? 0.4 : 0 }));
@@ -394,7 +394,7 @@ function decorNarcissism(rng) {
     },
     0.8
   );
-  const ballM = new THREE.MeshLambertMaterial({ color: 0xece6da });
+  const ballM = new THREE.MeshLambertMaterial({ color: COL.paper });
   floorSpots(
     rng,
     34,
@@ -455,7 +455,7 @@ function decorWrath(rng) {
   wallFaces(rng, 0.2, (x, z, yaw) => {
     const m = new THREE.Mesh(
       new THREE.PlaneGeometry(2.5, 0.86),
-      flat(new THREE.MeshBasicMaterial({ map: wordTex(words[(rng() * words.length) | 0], '#d8212a'), transparent: true, depthWrite: false }))
+      flat(new THREE.MeshBasicMaterial({ map: wordTex(words[(rng() * words.length) | 0], HEX.tie), transparent: true, depthWrite: false }))
     );
     m.position.set(x, 1.3 + rng() * 2.4, z);
     m.rotation.y = yaw;
@@ -470,7 +470,7 @@ function decorWrath(rng) {
     if (G.pathSet.has(cellOf(fx, fz).join(',')) || G.fires.some(f => Math.hypot(f.x - fx, f.z - fz) < 11) || !clearOf(fx, fz, 0.9)) return;
     brazier(fx, 0, fz, 1.35);
   });
-  const scorch = flat(new THREE.MeshBasicMaterial({ color: 0x0d0b0a, transparent: true, opacity: 0.55, depthWrite: false }));
+  const scorch = flat(new THREE.MeshBasicMaterial({ color: COL.ink, transparent: true, opacity: 0.55, depthWrite: false }));
   floorSpots(
     rng,
     22,

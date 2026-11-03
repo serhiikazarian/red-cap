@@ -86,7 +86,7 @@ function bossBar(e) {
     [text, lit, word = null] = (T && T.bar && T.bar(e)) || ['', false];
   txt(EL.bossState, text);
   EL.bossState.classList.toggle('open', lit);
-  if (word && word !== bossWord) bigWord(word, 'var(--bile)', 1, 'Attack him!');
+  if (word && word !== bossWord) bigWord(word, HEX.bile, 1, 'Attack him!');
   bossWord = word;
 }
 // attack warnings: a marker over the Usher about to charge and the Geezer about to stare or lash (warnOf)

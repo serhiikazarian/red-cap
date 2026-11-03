@@ -11,7 +11,7 @@ function makeSmoker(e, add, x, z, part, type) {
     noBar: true,
     r: 0.6,
     fly: 2.3,
-    palette: [0xc8202c, 0xe6b48c, 0x0d0b0a, 0x9a9a9a],
+    palette: [0xc8202c, 0xe6b48c, COL.ink, 0x9a9a9a],
     alpha: 1
   });
   if (type === 'W') Object.assign(e, { name: 'Brainless the Second', hp: 6, maxHp: 6, r: 1.8, boss: true, lives: 3, smoky: 2, coughT: 3 });
@@ -57,12 +57,22 @@ function updSmoker(e, dt, dist, ux, uz, mv) {
     smokePuff(tp, (e.st === 'smoke' ? rand(1.4, 2.2) : 0.45) * ks * (e.smoky ? 1.5 : 1), (e.st === 'smoke' ? 3 : 1.6) * ks, 0.5);
   }
   const seen = dist < 20 && !hero.inSmoke && los(e.pos, hero.pos);
-  if (e.st === 'idle') {
+  const step = SMOKER_ST[e.st];
+  if (step) step(e, dt, dist, ux, uz, mv, seen);
+  e.alpha = lerp(e.alpha, e.hidden ? 0.08 : 1, 1 - Math.exp(-6 * dt));
+  e.fade.forEach(m => (m.opacity = e.alpha));
+  e.shadow.visible = !e.hidden;
+  e.tilt.position.y = e.fly;
+}
+// his states, one step each (updSmoker runs the one he is in)
+const SMOKER_ST = {
+  idle(e, dt, dist, ux, uz, mv, seen) {
     if (seen || dist < 9) {
       e.st = 'hover';
       e.t = rand(2.5, 4);
     }
-  } else if (e.st === 'hover') {
+  },
+  hover(e, dt, dist, ux, uz, mv, seen) {
     if (!seen) {
       [mv.x, mv.z] = steer(e);
       mv.sp = 3.2;
@@ -85,10 +95,11 @@ function updSmoker(e, dt, dist, ux, uz, mv) {
           4.5,
           0.12
         );
-      floatWord('*COUGH*', e.pos.clone().setY(e.fly + 1.2), '#8d8579', 0.8);
+      floatWord('*COUGH*', e.pos.clone().setY(e.fly + 1.2), HEX.smoke, 0.8);
       sNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
     }
-  } else if (e.st === 'smoke') {
+  },
+  smoke(e, dt, dist, ux, uz, mv, seen) {
     // hidden: circles round Red Cap under cover
     e.hidden = true;
     const rad = dist > 6 ? 0.6 : dist < 3.5 ? -0.6 : 0;
@@ -99,9 +110,10 @@ function updSmoker(e, dt, dist, ux, uz, mv) {
       e.st = 'reveal';
       e.t = 0.4;
       e.hidden = false;
-      floatWord('PSST', e.pos.clone().setY(e.fly + 1.1), '#ece6da', 0.7);
+      floatWord('PSST', e.pos.clone().setY(e.fly + 1.1), HEX.paper, 0.7);
     }
-  } else if (e.st === 'reveal') {
+  },
+  reveal(e, dt, dist, ux, uz, mv, seen) {
     if (animTick) shake(e.tilt, 0.05);
     if (e.t <= 0) {
       const tp = e.tip.clone();
@@ -119,11 +131,7 @@ function updSmoker(e, dt, dist, ux, uz, mv) {
       e.t = rand(4, 6);
     }
   }
-  e.alpha = lerp(e.alpha, e.hidden ? 0.08 : 1, 1 - Math.exp(-6 * dt));
-  e.fade.forEach(m => (m.opacity = e.alpha));
-  e.shadow.visible = !e.hidden;
-  e.tilt.position.y = e.fly;
-}
+};
 // back from his smoke somewhere near Red Cap where he can see him, in a cloud (MISS ME?)
 function smokerReturns(e) {
   for (let tries = 0; tries < 40; tries++) {
@@ -146,7 +154,7 @@ function smokerReturns(e) {
   const k2 = e.smoky || 1;
   for (let k = 0; k < 7 * k2; k++)
     smokePuff(e.pos.clone().add(new THREE.Vector3(rand(-1.4, 1.4) * k2, 2 + rand(-1, 1), rand(-1.4, 1.4) * k2)), rand(2, 3.2) * k2, 3.5, 0.1);
-  floatWord('MISS ME?', e.pos.clone().setY(3.8), '#ece6da', 1);
+  floatWord('MISS ME?', e.pos.clone().setY(3.8), HEX.paper, 1);
   sNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
 }
 // Brainless never stops coughing; close by, a fit of it rattles Red Cap for a moment
@@ -155,15 +163,49 @@ function smokerCough(e, dt, dist, ux, uz) {
   if (e.coughT <= 0) {
     e.coughT = rand(2.2, 3.4);
     sNoise({ dur: 0.35, f: 380, f2: 160, q: 1.5, gain: 0.28 });
-    setTimeout(() => sNoise({ dur: 0.3, f: 340, f2: 150, q: 1.5, gain: 0.22 }), 260);
-    floatWord('*COUGH*', e.pos.clone().setY(e.fly + 2.6), '#8d8579', 1);
+    later(0.26, () => sNoise({ dur: 0.3, f: 340, f2: 150, q: 1.5, gain: 0.22 }));
+    floatWord('*COUGH*', e.pos.clone().setY(e.fly + 2.6), HEX.smoke, 1);
     for (let k = 0; k < 6; k++) smokePuff(e.pos.clone().add(new THREE.Vector3(ux * k * 1.2, e.fly - 0.4, uz * k * 1.2)), rand(1.8, 2.8), 2.5, 0.2);
     if (dist < 8.5 && los(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
   }
 }
-TALKERS.S = { make: makeSmoker, update: updSmoker, bar: e => [e.hidden ? 'Hidin’ in his smoke' : 'Every hit shakes out pebbles', !e.hidden] };
+TALKERS.S = {
+  make: makeSmoker,
+  update: updSmoker,
+  bar: e => [e.hidden ? 'Hidin’ in his smoke' : 'Every hit shakes out pebbles', !e.hidden],
+  hurt: e => giveAmmo(Math.random() < 0.5 ? 2 : 3, e.pos), // every hit shakes pebbles out of him
+  drops: e => {
+    if (hero.hp <= 2) dropHeart(e.pos.x, e.pos.z);
+    else dropsDefault(e);
+    giveAmmo(2, e.pos);
+  }
+};
 TALKERS.W = {
   make: makeSmoker,
   update: updSmoker,
-  bar: e => [e.lives > 1 ? 'Will slip away ' + (e.lives - 1) + ' more time' + (e.lives > 2 ? 's' : '') : 'Last breath', e.lives <= 1]
+  bar: e => [e.lives > 1 ? 'Will slip away ' + (e.lives - 1) + ' more time' + (e.lives > 2 ? 's' : '') : 'Last breath', e.lives <= 1],
+  // not yet: he slips away in his smoke and comes back later
+  escape: e => {
+    if (e.lives <= 1) return false;
+    e.lives--;
+    e.hp = e.maxHp;
+    e.away = true;
+    e.hidden = true;
+    e.t = 12;
+    e.root.visible = false;
+    e.st = 'hover';
+    for (let k = 0; k < 14; k++)
+      smokePuff(e.pos.clone().add(new THREE.Vector3(rand(-1.6, 1.6), (e.fly || 2) + rand(-1, 1), rand(-1.6, 1.6))), rand(2.4, 3.6), 4.5, 0.1);
+    // the first time the game says it; the second time he does, and his line wins over the curse from the blow that sent him off
+    if (e.lives === 2) toast('He went up in smoke. Beware');
+    else floatWord("I'LL TAKE A BREAK", e.pos.clone().setY(3.8), HEX.paper, 1.1, true);
+    giveAmmo(2, e.pos);
+    SFX.tear();
+    return true;
+  },
+  drops: e => {
+    dropHeart(e.pos.x, e.pos.z);
+    giveAmmo(2, e.pos);
+    giveAmmo(2, e.pos);
+  }
 };

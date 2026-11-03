@@ -177,7 +177,7 @@ function updPickups(dt) {
     if (Math.hypot(hero.pos.x - rx, hero.pos.z - rz) < 7) {
       G.roomHeartGiven = true;
       spawnPickup(rx, rz);
-      burst(new THREE.Vector3(rx, 1, rz), [0xd8212a, 0xf0cf2e, 0xece6da], 12, 3, 0.14);
+      burst(new THREE.Vector3(rx, 1, rz), [COL.tie, COL.bile, COL.paper], 12, 3, 0.14);
     }
   }
   for (const p of G.pickups) {
@@ -191,10 +191,10 @@ function updPickups(dt) {
       G.group.remove(p.glow);
       hero.hp = p.big ? hero.maxHp : Math.min(hero.maxHp, hero.hp + 1);
       drawTies();
-      if (p.big) floatWord('ALL BETTER', hero.pos.clone().setY(hero.pos.y + 2.6), '#f0cf2e', 1);
+      if (p.big) floatWord('ALL BETTER', hero.pos.clone().setY(hero.pos.y + 2.6), HEX.bile, 1);
       SFX.pickup();
-      burst(p.g.position, [0xd8212a, 0xf0cf2e, 0xece6da], 14, 4, 0.14);
-      if (!p.big) floatWord('+1 TIE', p.g.position.clone().setY(2.2), '#f0cf2e', 0.75);
+      burst(p.g.position, [COL.tie, COL.bile, COL.paper], 14, 4, 0.14);
+      if (!p.big) floatWord('+1 TIE', p.g.position.clone().setY(2.2), HEX.bile, 0.75);
     }
   }
   for (const p of G.piles || [])

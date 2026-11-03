@@ -5,9 +5,10 @@ let G = null,
   state = 'title', // title, build, intro, play, frozen, paused, dead, won ...
   floorIdx = 0;
 const stats = { kills: 0, hits: 0, deaths: 0, start: 0, npc: [0, 0, 0] };
+const START_AMMO = 7; // pebbles at the start of a game (a retry restores what he had on entering the floor)
 const hero = {
   stun: 0,
-  ammo: 7,
+  ammo: START_AMMO,
   maxAmmo: 10,
   ammoFloor: -1,
   floorAmmo: 5,
@@ -38,6 +39,18 @@ const stick = { x: 0, y: 0 };
 let animTick = false, // stop-motion: poses update at 12 frames a second, on frames where animTick is true
   animAcc = 0;
 
+// a timer in play time: fn runs once sec seconds of play have passed (real seconds, not slowed by slow motion, held while the
+// game is paused); a new floor drops the old floor's timers
+function later(sec, fn) {
+  G.later.push({ t: sec, fn });
+}
+function tickLater(rdt) {
+  for (const w of G.later.slice()) {
+    if ((w.t -= rdt) > 0) continue;
+    G.later.splice(G.later.indexOf(w), 1);
+    w.fn();
+  }
+}
 function cellOf(x, z) {
   return [Math.floor(x / CELL), Math.floor(z / CELL)];
 }

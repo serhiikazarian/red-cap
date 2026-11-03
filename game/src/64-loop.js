@@ -30,7 +30,10 @@ function frame(now) {
     if (warnEdgeOn || WARN.some(w => w.on)) updWarn(); // a warning left up when the floor ended goes
     return;
   }
-  if (state === 'play') playStep(dt);
+  if (state === 'play') {
+    playStep(dt);
+    tickLater(Math.min(raw / 1000, 0.25));
+  }
   if (state === 'play' || state === 'dead' || state === 'intro') {
     updGrins(dt);
     updParts(dt);
@@ -53,34 +56,8 @@ function frame(now) {
   pyrSort();
   render();
 }
-// every second, trade resolution for frame rate if needed (single ink lines first), and win it back after three good
-// seconds; steps start from the ratio the screen really shows (cap), so none is spent on ratios it cannot
-function adaptResolution(raw) {
-  if (raw < 250) frameAvg = lerp(frameAvg, Math.min(raw, frameAvg * 2.5 + 5), 0.08);
-  if (G && state === 'play') frame.adj = (frame.adj || 0) + raw;
-  if (frame.adj > 1000) {
-    frame.adj = 0;
-    const was = resScale,
-      cap = Math.min(devicePixelRatio || 1, innerWidth < 700 ? 1.5 : 1.75),
-      cur = Math.min(resScale, cap);
-    if (frameAvg > 21 && !post.uniforms.lite.value) {
-      post.uniforms.lite.value = 1;
-      frame.good = -5;
-    } else if (frameAvg > 21) {
-      resScale = Math.max(0.75, cur - (frameAvg > 30 ? 0.25 : 0.12));
-      resCeil = Math.max(1, Math.min(resCeil, cur - 0.05));
-      frame.good = -5;
-    } else if (frameAvg < 16 && cur < Math.min(resCeil, cap)) {
-      if ((frame.good = (frame.good || 0) + 1) >= 3) {
-        frame.good = 0;
-        resScale = Math.min(resCeil, cap, cur + 0.1);
-      }
-    } else frame.good = Math.min(frame.good || 0, 0);
-    if (resScale !== was) resize();
-  }
-}
 // a step of play: Red Cap, the flow field, every talker (their sounds come from where they are; the Grump's fill the floor),
-// the floor's features, the Geezer's swirl, the boss bar (a boss is in the fight once close and face to face), the heartbeat
+// the floor's features, the Geezer's swirl, the boss bar, the heartbeat
 function playStep(dt) {
   updHero(dt);
   flowT -= dt;
@@ -90,7 +67,7 @@ function playStep(dt) {
   }
   G.psyWind = 0;
   for (const e of G.enemies) {
-    AU.at = e.type === 'U' ? null : e.pos; // what it sets off sounds from where it is (the Grump's shouting fills the floor)
+    AU.at = TALKERS[e.type].loud ? null : e.pos; // what it sets off sounds from where it is (the Grump's shouting fills the floor)
     updEnemy(e, dt);
   }
   AU.at = null;
@@ -113,18 +90,7 @@ function playStep(dt) {
   updCovers(dt);
   updDebris(dt);
   post.uniforms.psy.value = Math.min(1, Math.max(G.psyWind, hero.stun > 0 ? hero.stunPsy : 0));
-  let boss = null,
-    bd = 1e9;
-  for (const e of G.enemies) {
-    if (!e.boss || e.noBar || e.dead || e.dying || e.dormant || e.away || e.waiting || e.caged) continue;
-    const d = e.pos.distanceTo(hero.pos);
-    if (!e.engaged && d < 9 && los(e.pos, hero.pos)) e.engaged = true; // close and face to face counts as the fight beginning
-    if (e.engaged && d < 26 && d < bd) {
-      bd = d;
-      boss = e;
-    }
-  }
-  bossBar(boss);
+  bossBar(bossInFight());
   if (hero.hp <= 2) {
     beatT -= dt;
     if (beatT <= 0) {
@@ -132,6 +98,21 @@ function playStep(dt) {
       SFX.heartbeat();
     }
   }
+}
+// the boss whose bar shows: the nearest one in the fight (a boss is in it once close and face to face), within 26 m
+function bossInFight() {
+  let boss = null,
+    bd = 1e9;
+  for (const e of G.enemies) {
+    if (!e.boss || e.noBar || e.dead || e.dying || e.dormant || e.away || e.waiting || e.caged) continue;
+    const d = e.pos.distanceTo(hero.pos);
+    if (!e.engaged && d < 9 && los(e.pos, hero.pos)) e.engaged = true;
+    if (e.engaged && d < 26 && d < bd) {
+      bd = d;
+      boss = e;
+    }
+  }
+  return boss;
 }
 // the floor's ambient motion: onlookers, animated decor, floating blocks, drifting doodle faces, falling newspapers, brazier
 // sparks, floor two's embers, floor one's drips, the open door's glow
@@ -179,7 +160,7 @@ function ambience(dt, tsec) {
       if (Math.random() < dt * 9)
         burst(
           new THREE.Vector3(f.x + rand(-0.25, 0.25), f.glow.position.y - 0.45, f.z + rand(-0.25, 0.25)),
-          [0xff7a1a, 0xf0cf2e, 0xd8212a],
+          [COL.hot, COL.bile, COL.tie],
           1,
           1.2,
           0.2,
@@ -187,7 +168,7 @@ function ambience(dt, tsec) {
         );
     }
   if (G.F.deco === 'mouth' && state === 'play' && Math.random() < dt * 14)
-    burst(new THREE.Vector3(hero.pos.x + rand(-10, 10), 0.3, hero.pos.z + rand(-10, 10)), [0xff7a1a, 0xf0cf2e], 1, 0.4, 0.09, { g: -1.2, life: 2.5 });
+    burst(new THREE.Vector3(hero.pos.x + rand(-10, 10), 0.3, hero.pos.z + rand(-10, 10)), [COL.hot, COL.bile], 1, 0.4, 0.09, { g: -1.2, life: 2.5 });
   if (G.drips) {
     const D = G.drips;
     D.d.forEach((d, k) => {
@@ -208,6 +189,6 @@ function ambience(dt, tsec) {
   if (G.portal && G.portal.open) {
     G.portal.hole.material.color.setHSL(0, 0.8, 0.35 + Math.sin(tsec * 6) * 0.1);
     if (Math.random() < 0.3)
-      burst(new THREE.Vector3(G.portal.x + rand(-0.8, 0.8), 0.2, G.portal.z), [0xd8212a, 0x0d0b0a], 1, 1, 0.15, { g: -3, life: 1 });
+      burst(new THREE.Vector3(G.portal.x + rand(-0.8, 0.8), 0.2, G.portal.z), [COL.tie, COL.ink], 1, 1, 0.15, { g: -3, life: 1 });
   }
 }

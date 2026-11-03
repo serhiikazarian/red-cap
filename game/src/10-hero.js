@@ -56,9 +56,9 @@ function buildHero() {
   // the yo-yo: two red discs, a yellow axle ring, and a string
   yoyoMesh = new THREE.Group();
   const disc = new THREE.CylinderGeometry(0.32, 0.32, 0.1, 20);
-  const red = new THREE.MeshBasicMaterial({ color: 0xd8212a }),
-    yel = new THREE.MeshBasicMaterial({ color: 0xf0cf2e }),
-    wht = new THREE.MeshBasicMaterial({ color: 0xece6da });
+  const red = new THREE.MeshBasicMaterial({ color: COL.tie }),
+    yel = new THREE.MeshBasicMaterial({ color: COL.bile }),
+    wht = new THREE.MeshBasicMaterial({ color: COL.paper });
   [-1, 1].forEach(s => {
     const d = new THREE.Mesh(disc, red);
     d.rotation.z = Math.PI / 2;
@@ -73,7 +73,7 @@ function buildHero() {
   ring.rotation.z = Math.PI / 2;
   yoyoMesh.add(ring);
   yoyoMesh.visible = false;
-  stringMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 4), new THREE.MeshBasicMaterial({ color: 0x0d0b0a }));
+  stringMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 4), new THREE.MeshBasicMaterial({ color: COL.ink }));
   stringMesh.visible = false;
   return root;
 }
@@ -86,7 +86,7 @@ function stunHero(t, light, psy) {
   yoyoMesh.visible = stringMesh.visible = false;
   if (light) {
     cam.hurt = 0.34;
-    floatWord('*HACK*', hero.pos.clone().setY(2.8), '#8d8579', 0.8);
+    floatWord('*HACK*', hero.pos.clone().setY(2.8), HEX.smoke, 0.8);
     return;
   }
   cam.shake = 0.5;
@@ -127,7 +127,7 @@ function hurtHero0(dmg, from, pierce) {
   SFX.hurt();
   $('#hurt').style.opacity = 1;
   setTimeout(() => ($('#hurt').style.opacity = 0), 160);
-  burst(hero.pos.clone().setY(hero.pos.y + 1.2), [0xb3202f, 0x7a1d14, 0x3a6fb5], 10, 4, 0.14);
+  burst(hero.pos.clone().setY(hero.pos.y + 1.2), [COL.cap, 0x7a1d14, 0x3a6fb5], 10, 4, 0.14);
   drawTies();
   if (hero.hp <= 0) die();
   return true;
@@ -137,7 +137,7 @@ function soak() {
   const was = hero.wet > 0;
   hero.wet = Math.min(3, (hero.wet || 0) + 0.35);
   if (!was) {
-    floatWord('BLESSED', hero.pos.clone().setY(hero.pos.y + 2.6), '#d8212a', 0.9, true);
+    floatWord('BLESSED', hero.pos.clone().setY(hero.pos.y + 2.6), HEX.tie, 0.9, true);
     sNoise({ dur: 0.3, f: 700, f2: 250, type: 'lowpass', gain: 0.2 });
   }
   if (!G.wetHint) {
@@ -340,7 +340,7 @@ function heroConditions(dt) {
   hero.wet = Math.max(0, (hero.wet || 0) - dt);
   hero.blest = Math.max(0, (hero.blest || 0) - dt); // a niche's blessing: the same look, less slow
   if ((hero.wet > 0 || hero.blest > 0) && Math.random() < dt * 14)
-    burst(hero.pos.clone().setY(hero.pos.y + rand(0.4, 1.6)), [0xb3202f, 0x8a0d18], 1, 0.6, 0.1, { g: 14, life: 0.6 });
+    burst(hero.pos.clone().setY(hero.pos.y + rand(0.4, 1.6)), [COL.cap, 0x8a0d18], 1, 0.6, 0.1, { g: 14, life: 0.6 });
   if (!(hero.ghostT > 0)) hero.parts.mats.forEach(m => m.color.setHex(hero.wet > 0 || hero.blest > 0 ? 0xffb4b4 : 0xffffff)); // red while soaked
   return (hero.held > 0 ? 0 : hero.snared > 0 ? 1.8 : hero.spook > 0 ? 3.1 : 5.2) * (hero.wet > 0 ? 0.5 : hero.blest > 0 ? 0.75 : 1);
 }
@@ -437,15 +437,14 @@ function heroHeat(dt) {
     hero.heat = (hero.heat || 0) + dt * nearFire;
     if (hero.heat > 0.45 && !hero.heatWarned) {
       hero.heatWarned = true;
-      bigWord('HOT', '#ff7a1a');
+      bigWord('HOT', HEX.hot);
       sNoise({ dur: 0.4, f: 2500, q: 1, gain: 0.12 });
     }
-    if (Math.random() < dt * 20) burst(hero.pos.clone().setY(hero.pos.y + 0.3), [0xff7a1a, 0xf0cf2e], 1, 1, 0.14, { g: -4, life: 0.5 });
+    if (Math.random() < dt * 20) burst(hero.pos.clone().setY(hero.pos.y + 0.3), [COL.hot, COL.bile], 1, 1, 0.14, { g: -4, life: 0.5 });
     if (hero.heat > 1.1) {
       hero.heat = 0;
       hero.heatWarned = false;
-      if (hurtHero(1, hero.pos.clone().add(new THREE.Vector3(0.01, 0, 0))))
-        floatWord('BURNT', hero.pos.clone().setY(hero.pos.y + 2.8), '#ff7a1a', 0.9);
+      if (hurtHero(1, hero.pos.clone().add(new THREE.Vector3(0.01, 0, 0)))) floatWord('BURNT', hero.pos.clone().setY(hero.pos.y + 2.8), HEX.hot, 0.9);
     }
   } else {
     hero.heat = Math.max(0, (hero.heat || 0) - dt * 2);

@@ -130,7 +130,7 @@ function makeGrin(e, add) {
     r: 0.75,
     drawnR: 0.95,
     fly: 2.0,
-    palette: [0x7a2ad0, 0x0d0b0a, 0xc89cff, 0xb3202f]
+    palette: [0x7a2ad0, COL.ink, 0xc89cff, COL.cap]
   });
   const m = grinBall(1.7);
   e.tilt.add(m);
@@ -189,7 +189,7 @@ function updGrin(e, dt, dist, ux, uz, mv) {
     } else if (seen && e.t <= 0 && e.stagger <= 0) {
       e.st = 'wind';
       e.t = 0.55;
-      floatWord('HAAA', e.pos.clone().setY(e.fly + 1.1), '#f0cf2e', 0.7);
+      floatWord('HAAA', e.pos.clone().setY(e.fly + 1.1), HEX.bile, 0.7);
     }
   } else if (e.st === 'wind') {
     if (animTick) {
@@ -224,14 +224,10 @@ function updGrin(e, dt, dist, ux, uz, mv) {
   }
   e.tilt.position.y = e.fly;
   if (Math.random() < dt * 18)
-    burst(
-      e.pos.clone().add(new THREE.Vector3(rand(-0.6, 0.6), e.fly + rand(-0.1, 0.7), rand(-0.6, 0.6))),
-      [0xff7a1a, 0xf0cf2e, 0xd8212a],
-      1,
-      1,
-      0.22,
-      { g: -5, life: 0.6 }
-    );
+    burst(e.pos.clone().add(new THREE.Vector3(rand(-0.6, 0.6), e.fly + rand(-0.1, 0.7), rand(-0.6, 0.6))), [COL.hot, COL.bile, COL.tie], 1, 1, 0.22, {
+      g: -5,
+      life: 0.6
+    });
   if (animTick) e.glow.scale.setScalar(2.5 + Math.random() * 0.7);
   const now2 = performance.now() / 1000;
   for (const f of e.flames) {
@@ -333,4 +329,15 @@ function updGrins(dt) {
     }
   }
 }
-TALKERS.G = { make: makeGrin, update: updGrin, dying: grinDying };
+TALKERS.G = {
+  make: makeGrin,
+  update: updGrin,
+  dying: grinDying,
+  rim: { col: 0xb46cff, a: 0.55 },
+  torn: cheshire, // its grin stays behind
+  tornWord: 'BUSTED',
+  drops: e => {
+    dropsDefault(e);
+    giveAmmo(1, e.pos);
+  }
+};

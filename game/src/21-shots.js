@@ -20,7 +20,7 @@ function bloodDrop(from, v) {
       material: { dispose() {} }
     };
   if (slot != null) {
-    BLOOD.setColorAt(slot, tmpC.setHex(pick([0xb3202f, 0x8a0d18, 0xd8212a])));
+    BLOOD.setColorAt(slot, tmpC.setHex(pick([COL.cap, 0x8a0d18, COL.tie])));
     BLOOD.instanceColor.needsUpdate = true;
     bloodSlot(m);
   }
@@ -39,7 +39,7 @@ function redOrb(from, dir) {
 function insultShot(from, dir, word, color) {
   const s = new THREE.Sprite(
     new THREE.SpriteMaterial({
-      map: wordTex(word || pick(['STUPID', 'MORON', 'TOOL']), color || '#ff7a1a'),
+      map: wordTex(word || pick(['STUPID', 'MORON', 'TOOL']), color || HEX.hot),
       transparent: true,
       depthWrite: false,
       fog: false
@@ -60,7 +60,7 @@ function hitWord(p, rad) {
       continue;
     b.life = 0; // updShots bursts it and takes it away
     hit = true;
-    burst(b.s.position.clone(), [0xff7a1a, 0xece6da, 0x0d0b0a], 14, 5, 0.18);
+    burst(b.s.position.clone(), [COL.hot, COL.paper, COL.ink], 14, 5, 0.18);
     sNoise({ dur: 0.18, f: 3200, f2: 1200, q: 2, gain: 0.22 });
     SFX.tink();
   }
@@ -85,7 +85,7 @@ function updShots(dt) {
     if (b.kind === 'blood') b.v.y -= 9 * dt;
     b.s.position.addScaledVector(b.v, dt);
     if ((b.kind === 'fire' || b.kind === 'word') && Math.random() < 0.6)
-      burst(b.s.position, [0xffb030, 0xff5a1a, 0xf0cf2e], 1, 1.2, 0.14, { g: -2, life: 0.5 });
+      burst(b.s.position, [0xffb030, 0xff5a1a, COL.bile], 1, 1.2, 0.14, { g: -2, life: 0.5 });
     if (b.kind === 'blood') b.s.rotation.z += dt * 10;
     const p = b.s.position,
       [ix, iz] = cellOf(p.x, p.z);
@@ -115,7 +115,7 @@ function updShots(dt) {
       else if (b.kind === 'fire' && hero.dodgeT <= 0) dead = true;
     }
     if (dead) {
-      if (b.kind !== 'blood' && b.kind !== 'rain') burst(p, [0xffb030, 0xff5a1a, 0x0d0b0a], 10, 4, 0.2);
+      if (b.kind !== 'blood' && b.kind !== 'rain') burst(p, [0xffb030, 0xff5a1a, COL.ink], 10, 4, 0.2);
       if (b.s.slot !== undefined) {
         if (b.s.slot != null) {
           BLOOD.setMatrixAt(b.s.slot, ZERO_M);

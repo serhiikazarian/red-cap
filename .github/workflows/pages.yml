@@ -28,35 +28,15 @@ jobs:
         with:
           node-version: 22
 
-      # the same versions the cloud sessions use (tools/ and tests/ load them from the global npm root)
+      # the same versions the cloud sessions use (tools/ and tests/ load them from the global npm root; acorn comes with eslint)
       - name: Install checking tools
         run: |
-          npm install -g eslint@10.1.0 prettier@3.8.1 playwright@1.63.0 acorn@8.18.0
+          npm install -g eslint@10.1.0 prettier@3.8.1 playwright@1.63.0
           playwright install --with-deps chromium
 
-      - name: Build
-        run: python3 game/build.py
-
-      - name: Format check
-        run: python3 tools/fmt.py --check
-
-      - name: Lint (must print nothing)
-        run: |
-          out=$(tools/lint.sh)
-          echo "$out"
-          test -z "$out"
-
-      - name: Unused names (must print nothing)
-        run: |
-          out=$(NODE_PATH=$(npm root -g) node tools/unused.js)
-          echo "$out"
-          test -z "$out"
-
-      - name: Boot test (load, Start, floor intro, no errors)
-        run: |
-          errs=$(NODE_PATH=$(npm root -g) node tests/boot.js game/red-cap.html)
-          echo "$errs"
-          test "$errs" = "[]"
+      # the same checks as a session's tools/check.sh: format (check only), build, lint, unused names, boot
+      - name: Build and check
+        run: tools/check.sh ci
 
       - name: Prepare site
         run: |

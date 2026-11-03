@@ -1,16 +1,12 @@
 // soak: each floor live for a while, Red Cap (unhurtable) walking and attacking at random; prints errors ([] = clean)
-const { chromium } = require('playwright');
+const { launch, newPage, openTitle, startGame } = require('./browser');
 (async () => {
   const [build, secs = '20'] = process.argv.slice(2);
-  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
-  const pg = await b.newPage({ viewport: { width: 880, height: 500 } });
-  const errs = [];
-  pg.on('pageerror', e => errs.push(String(e)));
-  pg.on('console', m => m.type() === 'error' && errs.push(m.text().slice(0, 300)));
-  await pg.goto('file://' + require('path').resolve(build));
-  await pg.waitForSelector('#startBtn:not([disabled])', { timeout: 120000 });
-  await pg.click('#startBtn');
-  await pg.waitForFunction("state === 'intro'", null, { timeout: 180000 });
+  const b = await launch(),
+    errs = [],
+    pg = await newPage(b, errs);
+  await openTitle(pg, build);
+  await startGame(pg);
   for (const f of [0, 1, 2]) {
     await pg.evaluate(f => { if (f !== floorIdx) enterFloor(f); slidesOn(false); cardAt = 0; beginFloor(); }, f);
     const t0 = Date.now();

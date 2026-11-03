@@ -124,6 +124,7 @@ function newFloor(F, w) {
     totems: [],
     mines: [],
     gateClosed: true,
+    later: [], // timers in play time (later)
     portal: null,
     deco: [],
     fires: [],

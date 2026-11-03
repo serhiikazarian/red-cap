@@ -2,7 +2,7 @@
 // Plays fixed scenarios with a frozen clock, seeded dice and a scripted player (tests/harness.js), and records what matters
 // to play (Red Cap, every talker, pickups, shots) every 10 frames. Two builds that play the same give identical files:
 // compare them with tests/replay-cmp.js. The baseline is tests/baseline/replay.json.
-const { chromium } = require('playwright');
+const { launch } = require('./browser');
 const fs = require('fs');
 const { openGame } = require('./harness');
 
@@ -24,7 +24,7 @@ const SCENARIOS = [
 
 (async () => {
   const [build, out, quick] = process.argv.slice(2);
-  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
+  const b = await launch();
   const errs = [],
     result = {};
   for (const [name, floor, seed, frames0, setup] of SCENARIOS) {

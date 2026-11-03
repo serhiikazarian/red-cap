@@ -19,7 +19,7 @@ function makeBruno(e, add, x, z) {
     wide: 1.2,
     hgt: 3,
     y1: 3,
-    palette: [0xff7a1a, 0xd8212a, 0x0d0b0a, 0x9aa070],
+    palette: [COL.hot, COL.tie, COL.ink, 0x9aa070],
     boss: true,
     aura: BRUNO_AURA,
     pebbleDmg: 1
@@ -97,12 +97,12 @@ function updBruno(e, dt, dist, ux, uz, mv) {
       e.t = 0.95;
       e.flareCd = 4.5;
       SFX.growl();
-      floatWord('MADONE!', e.pos.clone().setY(3.8), '#ff7a1a', 1.3, true);
+      floatWord('MADONE!', e.pos.clone().setY(3.8), HEX.hot, 1.3, true);
       sNoise({ dur: 0.7, f: 900, f2: 400, q: 3, gain: 0.2 });
     } else if (seen && e.t <= 0 && e.stagger <= 0) {
       e.st = 'wind';
       e.t = 0.55;
-      floatWord(pick(['MADONE!', 'STUPID!', 'MADONE!', 'YOU FOOL']), e.pos.clone().setY(3.7), '#ff7a1a', 1.1);
+      floatWord(pick(['MADONE!', 'STUPID!', 'MADONE!', 'YOU FOOL']), e.pos.clone().setY(3.7), HEX.hot, 1.1);
       SFX.growl();
     }
   } else if (e.st === 'flareWind') {
@@ -123,7 +123,7 @@ function updBruno(e, dt, dist, ux, uz, mv) {
         const a = rand(0, TAU);
         burst(
           e.pos.clone().add(new THREE.Vector3(Math.cos(a) * rand(1, BRUNO_FLARE), 0.3, Math.sin(a) * rand(1, BRUNO_FLARE))),
-          [0xff7a1a, 0xf0cf2e, 0xd8212a],
+          [COL.hot, COL.bile, COL.tie],
           1,
           3,
           0.3,
@@ -185,7 +185,7 @@ function brunoFire(e, dt, now) {
       r = Math.sqrt(Math.random()) * BRUNO_SCORCH;
     tmpW.set(e.pos.x + Math.cos(a) * r, 0, e.pos.z + Math.sin(a) * r);
     if (los(e.pos, tmpW))
-      burst(tmpW.clone().setY(e.pos.y + rand(0.1, 0.6)), [0xff7a1a, 0xf0cf2e, 0xd8212a, 0xfff2a0], 1, 1.6, 0.24, { g: -5, life: 0.9 });
+      burst(tmpW.clone().setY(e.pos.y + rand(0.1, 0.6)), [COL.hot, COL.bile, COL.tie, 0xfff2a0], 1, 1.6, 0.24, { g: -5, life: 0.9 });
   }
   e.hot.x = e.pos.x;
   e.hot.z = e.pos.z;
@@ -193,7 +193,7 @@ function brunoFire(e, dt, now) {
   e.scorch.visible = true;
   if (!e.fireRing) {
     e.fireRing = new THREE.Group();
-    const mat = new THREE.MeshBasicMaterial({ color: 0xd8212a, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicMaterial({ color: COL.tie, transparent: true, depthWrite: false, side: THREE.DoubleSide });
     for (let k = 0; k < BRUNO_RING_N; k++) {
       const seg = new THREE.Mesh(BRUNO_RING_GEO, mat);
       seg.rotation.set(-Math.PI / 2, 0, (k / BRUNO_RING_N) * TAU);
@@ -210,9 +210,20 @@ function brunoFire(e, dt, now) {
       seg.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && los(e.pos, tmpW);
     }
   if (Math.random() < dt * 50)
-    burst(e.pos.clone().add(new THREE.Vector3(rand(-1, 1), rand(0.1, 1.2), rand(-1, 1))), [0xff7a1a, 0xf0cf2e, 0xd8212a], 1, 2, 0.28, {
+    burst(e.pos.clone().add(new THREE.Vector3(rand(-1, 1), rand(0.1, 1.2), rand(-1, 1))), [COL.hot, COL.bile, COL.tie], 1, 2, 0.28, {
       g: -5,
       life: 0.8
     });
 }
-TALKERS.Z = { make: makeBruno, update: updBruno, bar: e => [e.st === 'flareWind' ? 'Flarin’ — back off' : '', false] };
+TALKERS.Z = {
+  make: makeBruno,
+  update: updBruno,
+  bar: e => [e.st === 'flareWind' ? 'Flarin’ — back off' : '', false],
+  rim: { col: 0xffb35a },
+  torn: e => e.fireRing && G.group.remove(e.fireRing),
+  // the fire goes out with him; he leaves a plain heart
+  drops: e => {
+    e.hot.r = 0;
+    dropHeart(e.pos.x, e.pos.z);
+  }
+};

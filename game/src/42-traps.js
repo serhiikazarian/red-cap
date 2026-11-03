@@ -53,11 +53,11 @@ function trapBite(m) {
   sNoise({ dur: 0.12, f: 3200, q: 2, gain: 0.26 });
   cam.shake = Math.max(cam.shake, 0.3);
   const at = new THREE.Vector3(m.x, 0.5, m.z);
-  burst(at, [0x3a3430, 0xece6da, 0x0d0b0a], 10, 5, 0.14);
+  burst(at, [0x3a3430, COL.paper, COL.ink], 10, 5, 0.14);
   if (Math.hypot(hero.pos.x - m.x, hero.pos.z - m.z) < 1.55 && hurtHero(1, at, true)) {
     hero.held = 0.5;
     hero.knock.set(0, 0);
-    burst(hero.pos.clone().setY(0.4), [0xd8212a, 0x7a1d14], 8, 3, 0.12);
+    burst(hero.pos.clone().setY(0.4), [COL.tie, 0x7a1d14], 8, 3, 0.12);
   }
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.fly != null) continue;
@@ -77,13 +77,9 @@ function trapBite(m) {
       e.engaged = true;
       e.stagger = 2.6;
       e.dazedT = 2.6;
-      floatWord('REELIN’', e.pos.clone().setY(hitHeight(e) + 1.6), '#f0cf2e', 1.1, true);
-      if (e.type === 'R') e.reelHits = e.ghosts.every(g => g.wait <= 0) ? 2 : 1;
-      if (e.type === 'R' && e.st === 'spray') {
-        e.st = 'walk';
-        e.t = 2.6;
-        sprayStop();
-      }
+      floatWord('REELIN’', e.pos.clone().setY(hitHeight(e) + 1.6), HEX.bile, 1.1, true);
+      const T = TALKERS[e.type];
+      if (T.trapped) T.trapped(e);
     }
   }
 }

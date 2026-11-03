@@ -1,7 +1,7 @@
 // usage: node tests/pics.js build outDir
 // Fixed moments on each floor (frozen clock, seeded dice, the scripted player of tests/harness.js), drawn for real and saved
 // as PNGs. Compare two builds' folders with tests/pics-cmp.py.
-const { chromium } = require('playwright');
+const { launch } = require('./browser');
 const fs = require('fs');
 const { openGame } = require('./harness');
 
@@ -19,7 +19,7 @@ const SHOTS = [
 (async () => {
   const [build, dir] = process.argv.slice(2);
   fs.mkdirSync(dir, { recursive: true });
-  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
+  const b = await launch();
   const errs = [];
   for (const [name, floor, seed, frames, setup] of SHOTS) {
     const pg = await openGame(b, build, errs);

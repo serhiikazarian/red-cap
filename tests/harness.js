@@ -2,11 +2,10 @@
 // frames that advance only on H.step, seeded dice, no sound, no drawing) and installs a scripted player.
 // In the page: R.start(floor, seed, setup) builds a floor and starts it, R.run(frames, sample) plays.
 const path = require('path');
+const { newPage } = require('./browser');
 
 async function openGame(browser, build, errs) {
-  const pg = await browser.newPage({ viewport: { width: 880, height: 500 } });
-  pg.on('pageerror', e => errs.push(String(e)));
-  pg.on('console', m => m.type() === 'error' && errs.push(m.text().slice(0, 300)));
+  const pg = await newPage(browser, errs);
   // dice fixed from the first line of the page: what start-up draws at random (the smoke texture) is the same every run
   await pg.addInitScript(() => {
     let s = 7;
@@ -30,6 +29,10 @@ async function openGame(browser, build, errs) {
 
 /* runs in the page */
 function install() {
+  // the pictures' quality is fixed (single ink lines at RES_MIN), so it does not depend on how fast this machine draws
+  resScale = RES_MIN;
+  post.uniforms.lite.value = 1;
+  resize();
   const H = (window.__H = { T: 1e6, timers: [], rafs: [], id: 1 });
   performance.now = () => H.T;
   window.setTimeout = (fn, ms = 0) => {
@@ -108,7 +111,7 @@ function install() {
     H.seed(seed);
     last = H.T;
     hero.hp = hero.maxHp;
-    hero.ammo = 7;
+    hero.ammo = START_AMMO;
     hero.ammoFloor = -1;
     cam.yaw = 0;
     cam.pitch = 0.24;
@@ -116,8 +119,8 @@ function install() {
     animAcc = 0;
     animTick = false;
     flowT = beatT = slowT = hitStop = slabBoomT = poolNext = 0;
-    frameAvg = 16;
-    frame.adj = frame.good = 0;
+    RES.avg = 16;
+    RES.adj = RES.good = 0;
     frame(H.T); // restart the loop inside the harness
     const built = floorBuilt;
     floorBuilt = i => {

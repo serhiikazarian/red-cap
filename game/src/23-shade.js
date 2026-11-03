@@ -1,7 +1,7 @@
 // The Shade (q): one of the Priest's little ghosts, loose on the first floor. Harmless: it says boo and pinches a pebble.
 
 function makeShade(e, add) {
-  Object.assign(e, { name: 'Shade', hp: 1.5, maxHp: 1.5, pebbleDmg: 1.5, r: 0.55, fly: 1.6, palette: [0xd8d4cc, 0x6c6a66, 0x0d0b0a] });
+  Object.assign(e, { name: 'Shade', hp: 1.5, maxHp: 1.5, pebbleDmg: 1.5, r: 0.55, fly: 1.6, palette: [0xd8d4cc, 0x6c6a66, COL.ink] });
   const m = add(paper(Math.random() < 0.5 ? 'ghost_a' : 'ghost_b', 1.3, 0.05));
   m.position.y = -0.65;
   e.body = m;
@@ -52,4 +52,15 @@ function updShade(e, dt, dist, ux, uz, mv) {
     }
   }
 }
-TALKERS.q = { make: makeShade, update: updShade };
+TALKERS.q = {
+  make: makeShade,
+  update: updShade,
+  pops: true,
+  harmless: true,
+  tornWord: 'POPPED',
+  hurt: e => e.hp > 0 && Math.random() < 0.08 && giveAmmo(1, e.pos),
+  drops: e => {
+    dropsDefault(e);
+    giveAmmo(Math.max(e.stolen || 0, Math.random() < 0.4 ? 1 : 0), e.pos); // and the pebbles it pinched
+  }
+};

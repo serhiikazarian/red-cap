@@ -2,7 +2,7 @@
 
 Read the section you need when a task touches it. File names are in `game/src/`. Why a rule exists: search `docs/HISTORY.md`, or for older versions `git show 0508438:HISTORY.md | rg -n "name"`.
 
-## Geometry, memory, baking (03-textures, 54-bake, 50-level)
+## Geometry, memory, baking (03-textures, 55-bake, 50-level)
 - `paper(name, h, depth, lit, once)`: a painted cut-out from `SHAPES`. `once` for a one-off size (e.g. onlookers' random heights),
   which must not go into the shared shape cache.
 - `share()` marks geometry/materials that are never disposed. A shape made again and again mid-fight is made once and shared.
@@ -15,7 +15,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Pools: particles, blood, drips, pages, motes and birds are `InstancedMesh` pools (`instPool`, `PMESH`, `BLOOD`, 06-fx);
   floor-3 block props and box-shaped floaters are instanced by texture (`instanceProps`, `syncBoxes` after any change, 51-props).
 - Smoke is batched (06-fx): `puffs` hold stand-ins; `puffSync()` (start of `render()`) fills `PUFF_MESHES` (≤ 8 instanced
-  draws). Never add a Sprite per puff. `PUFF_MAX` 45.
+  draws). Never add a Sprite per puff. `PUFF_MAX` 45 (`PUFF_LOW` 25 on a slow machine).
 - A stand-in mesh inside frozen `G.group` needs `matrixWorldNeedsUpdate = true` when moved.
 
 ## World and placement (05-world, 04-floors)
@@ -32,11 +32,13 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   ink lines round them are not cut. The ink pass skips where the render target's alpha < 1.
 - Sorting: `renderer.setTransparentSort` draws far to near, but a figure of parts in a set order (a Grin: `userData.sortRank`,
   `sortZ` from `sortUnits()` each frame) sorts as one thing. Words keep `renderOrder` 10 (always on top).
-- Resolution adapts (`resScale`); `calibrate()` (60-flow) times real frames under the ink during loading and lowers it to
-  `CAL_MS`; floor three also measures the fog wall and a full smoke cloud (`CAL_HEAVY_MS`). The controller switches to `lite`
-  (single ink lines) before lowering resolution.
+- Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render); `calibrate()` (60-flow) times real frames
+  under the ink during loading and lowers it to `CAL_MS`; floor three also measures the fog wall and a full smoke cloud
+  (`CAL_HEAVY_MS`). Both switch to `lite` (single ink lines) before lowering resolution, stop at `RES_MIN` and go on to
+  `RES_LOW` only when still too slow; below `RES_MIN` the smoke is lighter (`PUFF_LOW`). Game logic costs ~0.3 ms a frame:
+  a slow machine is held back by drawing (pixels, the ink pass, overlapping smoke), so that is where speed is won.
 
-## See-through (55-see-through: its header comment has the full rules)
+## See-through (56-see-through: its header comment has the full rules)
 - Anything that can stand between the camera and the fight is registered while the floor is built: `seeThru(o, dyn, how)`.
   `'hard'` (onlookers, floor one's easels) only keeps the camera off, never fades; `'plain'` fades evenly without a contour;
   the default fades with a contour. A new big prop or floater must be registered, or the camera can sit inside it.
@@ -48,14 +50,17 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   (`seeBounds`): a new kind of thing drawn into the mask must be covered there too, or its contour is cut. Never give a
   see-through part a global `renderOrder > 0`.
 
-## Pyramids (44-pyramids)
+## Pyramids (44-pyramids, 48-bombs)
 - Floor two's `T` cells. Destructible (`hitPyr`, `pyrShatter`); collision by square foot (`pyrPush`); glow, halo and floor pool
   share materials (one update a frame); own ink rim (`pyrRim`, drawn in `onAfterRender`; a mesh drawn with
   `renderBufferDirect` needs a stand-in in the scene so its shape is uploaded). The slingshot (not the yo-yo) can lock onto one.
 
 ## Talkers (20-talkers, 22–31)
-- Registry `TALKERS[letter] = { make, update, dying, dazed, bar, warn }`; shared `damage`, `kill`. Each talker's file holds its
-  build, fight and helpers, tuning at the top. Attack warnings: add a talker's tell to `warnOf` (07-hud, `updWarn`).
+- Registry `TALKERS[letter]`: `make`, `update`, optional `dying`, `dazed`, `bar`, `warn`, the hit and kill hooks (`shielded`,
+  `struck`, `hurt`, `escape`, `torn`, `drops`, `gone`, `trapped`) and traits (`stagger`, `knock`, `pops`, `tornWord`, `rim`,
+  `harmless`, `loud`, `noCover`), all listed at the top of 20-talkers.js; shared `damage`, `kill` call them in a fixed order
+  (keep it: the dice rolls must stay in the same order). Long fights run one step per state (`JESTER_ST[e.st]` …).
+  Each talker's file holds its build, fight and helpers, tuning at the top. Attack warnings: add a talker's tell to `warnOf` (07-hud, `updWarn`).
 - `e.mats` are reset to white (or the hit flash) every frame: coloured parts use textures or vertex colours.
 
 ## Sound (01-audio)
@@ -82,11 +87,11 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   texture repeats; three.js ids on their own dice), sound off, a scripted player; used by the replay and picture tests that
   prove a change alters nothing. `tools/same.sh` runs them; by hand: `tests/replay.js build out.json [quick]` +
   `tests/replay-cmp.js a.json b.json`, `tests/pics.js build dir` + `tests/pics-cmp.py dirA dirB [diffDir]` (diffDir gets
-  side-by-side + difference images). Run with `NODE_PATH=$(npm root -g)`, one browser at a time. When a replay differs and
+  side-by-side + difference images). The harness fixes the drawing quality (`RES_MIN`, single ink lines). Run with `NODE_PATH=$(npm root -g)`, one browser at a time. When a replay differs and
   the cause isn't obvious: `DEEP=1 node tests/replay.js …` for both builds, then `node tests/replay-deep.js a.json b.json`
   names the first dice roll (with its call stack) or field where they part.
-- Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (JS may be async and return
-  JSON). To pin the camera, wrap `renderer.render` and set the camera when `c===camera`.
+- Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (`<js>` is one expression:
+  wrap statements in `(async () => { ... })()`; what it returns is printed as JSON). To pin the camera, wrap `renderer.render` and set the camera when `c===camera`.
 - Menus against an older version: `tools/build-at.sh N.NN`, then `node tests/menus.js out/red-cap-N.NN.html out/a &&
   node tests/menus.js game/red-cap.html out/b && python3 tests/pics-cmp.py out/a out/b`.
 - Probe gotchas: headless game time runs 5–10× slow, and Red Cap is held at floor start, so move the thing to him instead.

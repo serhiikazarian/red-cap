@@ -1,6 +1,6 @@
 // Livin' / Dyin' (L): floor three's hidden boss. Hit both plaques and the painting behind the start wakes; the head comes apart
-// into pieces you fight in turn (the hair, the two eyes, the jaw, the skull). The reward: the Laughing Jaw, which puts the
-// Jester off his throw and heckles him into laughing.
+// into pieces you fight in turn (the hair, the two eyes, the jaw, the skull). The reward: the Laughin’ Jaw, which puts the
+// Jester off his throw and heckles him into laughing. The plaques, the painting and the jaw: 49-secret.js.
 const tmpS1 = new THREE.Vector3(),
   tmpS2 = new THREE.Vector3();
 
@@ -32,7 +32,7 @@ function makeLivingDying(e, add, x, z, part) {
     baseFly: cfg[2],
     partH: cfg[1],
     boss: true,
-    palette: [0xd8642a, 0x3a4a1c, 0xd8212a, 0xf0cf2e, 0x3a5ad8],
+    palette: [0xd8642a, 0x3a4a1c, COL.tie, COL.bile, 0x3a5ad8],
     daze: 0
   });
   if (part === 'jaw') {
@@ -201,7 +201,7 @@ function ldHair(e, dt, dist, ux, uz, mv, now) {
       e.st = 'tangled';
       e.t = 1.6;
       e.daze = 1.6;
-      floatWord('TANGLED', e.pos.clone().setY(3), '#f0cf2e', 0.9);
+      floatWord('TANGLED', e.pos.clone().setY(3), HEX.bile, 0.9);
     }
   } else if (e.st === 'tangled') {
     if (animTick) e.tilt.rotation.z = Math.sin(now * 12) * 0.15;
@@ -226,7 +226,7 @@ function ldEye(e, dt, dist, ux, uz, mv, now) {
     e.t = 2.4;
     e.burst = 3;
     e.bt = 0;
-    floatWord('SEE YOU', e.pos.clone().setY(3.4), '#d8212a', 0.7);
+    floatWord('SEE YOU', e.pos.clone().setY(3.4), HEX.tie, 0.7);
   }
   if (e.st === 'fire') {
     e.bt -= dt;
@@ -252,12 +252,12 @@ function ldJaw(e, dt, dist, ux, uz, mv, now) {
     if (dist < 3 && e.stagger <= 0) {
       e.st = 'chompWind';
       e.t = 0.5;
-      floatWord('CHOMP', e.pos.clone().setY(2.6), '#ece6da', 0.9);
+      floatWord('CHOMP', e.pos.clone().setY(2.6), HEX.paper, 0.9);
     } else if (e.t <= 0 && dist > 5) {
       e.st = 'chargeWind';
       e.t = 0.75;
       SFX.growl();
-      floatWord('KILL', e.pos.clone().setY(2.8), '#d8212a', 1.2);
+      floatWord('KILL', e.pos.clone().setY(2.8), HEX.tie, 1.2);
     }
   } else if (e.st === 'chompWind') {
     e.jaw.set(Math.min(1, (0.5 - e.t) / 0.3));
@@ -289,7 +289,7 @@ function ldJaw(e, dt, dist, ux, uz, mv, now) {
       e.daze = 2.2;
       SFX.boom();
       cam.shake = 0.5;
-      floatWord('DAZED', e.pos.clone().setY(2.6), '#f0cf2e', 1);
+      floatWord('DAZED', e.pos.clone().setY(2.6), HEX.bile, 1);
     } else if (e.t <= 0) {
       e.st = 'hop';
       e.t = rand(2.5, 3.5);
@@ -304,7 +304,7 @@ function ldJaw(e, dt, dist, ux, uz, mv, now) {
   }
   if (e.st === 'hop' || e.st === 'dazed') {
     e.jaw.set(Math.abs(Math.sin(now * 14)) * 0.55);
-    if (Math.random() < dt * 0.8) floatWord(pick(['HA', 'HA HA', 'HAHAHA']), e.pos.clone().setY(e.fly + 1.6), '#f0cf2e', 0.8);
+    if (Math.random() < dt * 0.8) floatWord(pick(['HA', 'HA HA', 'HAHAHA']), e.pos.clone().setY(e.fly + 1.6), HEX.bile, 0.8);
   } else if (e.st === 'chargeWind' || e.st === 'charge') e.jaw.set(0.9 + Math.sin(now * 30) * 0.1);
 }
 
@@ -320,7 +320,7 @@ function ldSkull(e, dt, dist, ux, uz, mv, now) {
     e.t = 0.75;
     e.n = (e.n || 0) + 1;
     SFX.growl();
-    floatWord(e.n % 3 === 0 ? 'LIVIN’ OR DYIN’' : 'KILL', e.pos.clone().setY(4.4), '#d8212a', 1.1);
+    floatWord(e.n % 3 === 0 ? 'LIVIN’ OR DYIN’' : 'KILL', e.pos.clone().setY(4.4), HEX.tie, 1.1);
   }
   if (e.st === 'wind') {
     if (animTick) shake(e.tilt, 0.08);
@@ -334,7 +334,7 @@ function ldSkull(e, dt, dist, ux, uz, mv, now) {
         }
       else
         for (const off of [-0.5, -0.25, 0, 0.25, 0.5])
-          insultShot(from, new THREE.Vector3(Math.sin(base + off), 0, Math.cos(base + off)), 'KILL', '#d8212a');
+          insultShot(from, new THREE.Vector3(Math.sin(base + off), 0, Math.cos(base + off)), 'KILL', HEX.tie);
       e.st = 'idle';
       e.t = rand(2, 2.8);
       e.tilt.position.set(0, 0, 0);
@@ -342,65 +342,33 @@ function ldSkull(e, dt, dist, ux, uz, mv, now) {
   }
   if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
 }
-TALKERS.L = { make: makeLivingDying, update: updLivingDying };
+TALKERS.L = {
+  make: makeLivingDying,
+  update: updLivingDying,
+  // the whole head, and a piece waiting its turn, cannot be hurt; a dazed piece takes double
+  struck: (e, n) => {
+    if (e.waiting || e.part === 'whole') {
+      SFX.tink();
+      floatWord('NOT YET', e.pos.clone().setY((e.fly || 2) + 1.5), HEX.paper, 0.8);
+      return null;
+    }
+    return e.daze > 0 ? n * 2 : n;
+  },
+  drops: () => {}
+};
 
-// ----- the secret and the reward
-// floor three's secret: two plaques, LIVIN' and DYIN', on opposite walls, and a dark painting behind the start
-function hideLivingDying() {
-  G.plaques = [];
-  for (const [name, x, z, yaw] of [
-    ['ld_living', 3.04, 31.5, Math.PI / 2],
-    ['ld_dying', 59.96, 31.5, -Math.PI / 2]
-  ]) {
-    const m = paper(name, 0.75, 0.06, true);
-    m.position.set(x, 1.9, z);
-    m.rotation.y = yaw;
-    G.group.add(m);
-    const glow = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: glowRed, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.25 })
-    );
-    glow.position.set(x, 2.25, z);
-    glow.scale.set(2.2, 1.4, 1);
-    G.group.add(glow);
-    G.plaques.push({ m, glow, x, z, lit: false, word: name === 'ld_living' ? 'LIVIN’' : 'DYIN’' });
-  }
-  const f = framed(TEX.t_ldcanvas, 2.7, 3.85, 10.5 * CELL, 2.6, (G.h - 1) * CELL - 0.05, Math.PI, 0, '', false);
-  f.pic.material.color.setHex(0x3a3a3a);
-  G.ldPainting = f;
-  G.ld = null;
-}
-// a plaque hit lights up; both lit wake the painting
-function hitPlaque(p, rad) {
-  if (!G.plaques) return false;
-  for (const q of G.plaques) {
-    if (q.lit || Math.hypot(q.x - p.x, q.z - p.z) > rad + 1) continue;
-    q.lit = true;
-    q.glow.material.opacity = 1;
-    q.glow.scale.set(3.2, 2, 1);
-    q.m.userData.mat.emissive.setHex(0x661010);
-    SFX.unmask();
-    floatWord(q.word, new THREE.Vector3(q.x, 3, q.z), '#d8212a', 1.2);
-    burst(new THREE.Vector3(q.x, 2, q.z), [0xd8212a, 0xf0cf2e, 0x3a5ad8], 16, 4, 0.16);
-    if (G.plaques.every(o => o.lit)) {
-      toast('Behind where you started, a paintin’ opens its eyes.');
-      G.ldWake = 2.2;
-      SFX.villain();
-    } else toast(q.word + '. Somewhere, the other word is listenin’.');
-    return true;
-  }
-  return false;
-}
+// ----- waking, and the pieces in turn (the secret that wakes it and the reward: 49-secret.js)
 // the painting wakes: the whole head appears, then splits into its pieces, fought in turn (stages)
 function ldWakeUp() {
   const f = G.ldPainting;
   f.pic.material.color.setHex(0xffffff);
-  burst(new THREE.Vector3(10.5 * CELL, 2.6, (G.h - 1) * CELL - 0.5), [0xd8642a, 0x3a4a1c, 0xd8212a, 0xf0cf2e, 0x3a5ad8], 40, 7, 0.3);
+  burst(new THREE.Vector3(10.5 * CELL, 2.6, (G.h - 1) * CELL - 0.5), [0xd8642a, 0x3a4a1c, COL.tie, COL.bile, 0x3a5ad8], 40, 7, 0.3);
   const c = new THREE.Vector3(10.5 * CELL, 0, (G.h - 3.5) * CELL);
   G.ld = { center: c, stages: [['hair'], ['eyeL', 'eyeR'], ['jaw'], ['skull']], stage: -1, parts: [] };
   const w = makeEnemy('L', c.x, (G.h - 2) * CELL, 'whole');
   w.t = 2.6;
   G.ld.whole = w;
-  floatWord('LIVIN’ OR DYIN’?', w.pos.clone().setY(5.4), '#d8212a', 1.5);
+  floatWord('LIVIN’ OR DYIN’?', w.pos.clone().setY(5.4), HEX.tie, 1.5);
   SFX.boom();
   cam.shake = 0.5;
   updLeft();
@@ -411,7 +379,7 @@ function ldSplit(w) {
   SFX.tear();
   SFX.villain(true);
   cam.shake = 0.6;
-  burst(w.pos.clone().setY(2.4), [0xd8642a, 0x3a4a1c, 0xd8212a, 0xf0cf2e], 50, 9, 0.3);
+  burst(w.pos.clone().setY(2.4), [0xd8642a, 0x3a4a1c, COL.tie, COL.bile], 50, 9, 0.3);
   for (const part of ['hair', 'eyeL', 'eyeR', 'jaw', 'skull']) {
     const e = makeEnemy('L', w.pos.x + rand(-2, 2), w.pos.z + rand(-2, 2), part);
     e.waiting = true;
@@ -451,98 +419,6 @@ function ldCheck() {
     } else ldNext();
   }
 }
-// the reward: a jaw that will not stop laughing at the Jester
-function spawnJaw(x, z) {
-  const j = jawModel(1.1),
-    m = j.g;
-  m.position.set(x, 1, z);
-  G.group.add(m);
-  const glow = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 })
-  );
-  glow.position.set(x, 1.4, z);
-  glow.scale.setScalar(2);
-  G.group.add(glow);
-  G.jawPickup = { m, glow, x, z, j };
-  toast('Somethin’ is left behind, laughin’.');
-}
-// the plaques glow until hit; the painting shakes awake; the jaw lies laughing until taken, then rides on Red Cap's shoulder
-// and heckles the Jester into laughing (unmasked) every 8 s
-function updSecrets(dt) {
-  const now = performance.now() / 1000;
-  if (G.plaques) for (const q of G.plaques) if (!q.lit) q.glow.material.opacity = 0.18 + Math.sin(now * 2.5 + q.x) * 0.12;
-  if (G.ldWake > 0) {
-    G.ldWake -= dt;
-    if (animTick) G.ldPainting.g.position.x = 10.5 * CELL + rand(-0.05, 0.05);
-    if (G.ldWake <= 0) ldWakeUp();
-  }
-  if (G.finalMask) updFinalMask(dt, now);
-  if (G.jawPickup) {
-    const j = G.jawPickup;
-    j.m.position.y = 0.6 + Math.sin(now * 3) * 0.2;
-    j.m.rotation.y += dt * 2;
-    j.j.set(Math.abs(Math.sin(now * 13)) * 0.8);
-    if (Math.hypot(hero.pos.x - j.x, hero.pos.z - j.z) < 1.2) {
-      G.group.remove(j.m);
-      G.group.remove(j.glow);
-      G.jawPickup = null;
-      hero.hasJaw = true;
-      giveJawBuddy();
-      SFX.villain(true);
-      SFX.pickup();
-      toast('The Laughin’ Jaw. The Jester cannot stand it.');
-      $('#wJaw').hidden = false;
-    }
-  }
-  if (hero.hasJaw && hero.jawBuddy) {
-    const b = hero.jawBuddy,
-      rx = Math.cos(cam.yaw),
-      rz = -Math.sin(cam.yaw);
-    b.position.set(hero.pos.x - rx * 0.7, 2.1 + Math.abs(Math.sin(now * 8)) * 0.1, hero.pos.z - rz * 0.7);
-    b.rotation.y = cam.yaw;
-    if (hero.jawBuddyJ) hero.jawBuddyJ.set(Math.abs(Math.sin(now * 12)) * 0.7);
-    const J = jester();
-    G.jawT = (G.jawT ?? 6) - dt;
-    if (J && G.jawT <= 0 && J.masked && (J.st === 'walk' || J.st === 'idle') && J.pos.distanceTo(hero.pos) < 15) {
-      G.jawT = 8;
-      floatWord(pick(['NICE MASK', 'CLOWN', 'HA HA HA', 'SHOW YOUR FACE']), b.position.clone().setY(3.2), '#f0cf2e', 0.9);
-      SFX.villain(true);
-      J.st = 'laugh';
-      J.t = 4.4;
-      setMasked(J, false);
-      floatWord("WHO'S LAUGHING?!", J.pos.clone().setY(4.8), '#d8212a', 1.2);
-    }
-  }
-}
-// a cartoon jaw in two pieces: the top teeth and the jawbone, snapping open and shut
-function jawModel(h) {
-  const g = new THREE.Group(),
-    up = paper('jaw_up', h * 0.44, 0.08),
-    loP = new THREE.Group(),
-    lo = paper('jaw_lo', h * 0.55, 0.08);
-  const mouth = new THREE.Mesh(new THREE.PlaneGeometry(h * 0.95, h * 0.5), new THREE.MeshBasicMaterial({ color: 0x2a0608 }));
-  mouth.position.set(0, h * 0.5, -0.07);
-  g.add(mouth);
-  loP.add(lo);
-  g.add(loP, up);
-  const base = h * 0.5;
-  const set = o => {
-    up.position.y = base + o * h * 0.2;
-    up.rotation.z = o * 0.08;
-    loP.position.y = -o * h * 0.06;
-    loP.rotation.z = -o * 0.05;
-    mouth.scale.y = 0.15 + o;
-  };
-  set(0);
-  return { g, up, lo, set };
-}
-// the jaw on Red Cap's shoulder
-function giveJawBuddy() {
-  const j = jawModel(0.55);
-  scene.add(j.g);
-  hero.jawBuddy = j.g;
-  hero.jawBuddyJ = j;
-}
 // one strand of hair: a tube that tapers to a point, with its colour baked in
 function hairStrand(curve, r, seg, colour) {
   const t = new THREE.TubeGeometry(curve, seg, r, 5, false),
@@ -570,7 +446,7 @@ function hairModel() {
     cols = [0xc8642a, 0xa24a1e, 0xe08a3e, 0x7a3a18, 0xd8723a],
     clumps = [];
   const mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x220a02 }),
-    ink = new THREE.MeshBasicMaterial({ color: 0x0d0b0a, side: THREE.BackSide });
+    ink = new THREE.MeshBasicMaterial({ color: COL.ink, side: THREE.BackSide });
   for (let c = 0; c < 10; c++) {
     const a0 = (c / 10) * TAU + rand(-0.15, 0.15),
       clump = new THREE.Group();

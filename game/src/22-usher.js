@@ -1,7 +1,7 @@
 // The Usher (B): shows you to your seat, then charges at it.
 // a cone body in a dark coat, his bow-tied face, brows that drop when he sees you, glowing eyes for the charge, two arms
 function makeUsher(e, add) {
-  Object.assign(e, { name: 'Usher', hp: 4.5, maxHp: 4.5, r: 0.7, hgt: 3, y1: 3, palette: [0xb3202f, 0x0d0b0a, 0xe8c628, 0x58622e] });
+  Object.assign(e, { name: 'Usher', hp: 4.5, maxHp: 4.5, r: 0.7, hgt: 3, y1: 3, palette: [COL.cap, COL.ink, 0xe8c628, 0x58622e] });
   const bmat = new THREE.MeshBasicMaterial({ map: TEX.t_dark, color: 0xc4c4b4 });
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.62, 2.0, 7, 1), bmat);
   body.position.y = 1.0;
@@ -11,7 +11,7 @@ function makeUsher(e, add) {
   head.position.y = 1.4;
   head.position.z = 0.2;
   e.head = head;
-  const browM = new THREE.MeshBasicMaterial({ color: 0x0d0b0a });
+  const browM = new THREE.MeshBasicMaterial({ color: COL.ink });
   e.brows = [
     [-0.225, 0.8, -0.42],
     [0.25, 0.81, 0.42]
@@ -60,7 +60,7 @@ function updUsher(e, dt, dist, ux, uz, mv) {
     e.t = 0.42 + (K - 1) * 0.4;
     SFX.growl();
     sTone({ f: 90 / K, f2: 55 / K, dur: 0.5 * K, type: 'sawtooth', gain: 0.12, filt: [500, 160] });
-    floatWord('!!', e.pos.clone().setY(3 * K), '#d8212a', 0.9 * K);
+    floatWord('!!', e.pos.clone().setY(3 * K), HEX.tie, 0.9 * K);
   };
   if (e.rage > 0) e.rage -= dt;
   if (e.wantCharge) {
@@ -70,7 +70,24 @@ function updUsher(e, dt, dist, ux, uz, mv) {
     aim();
     e.t = 0.32;
   }
-  if (e.st === 'idle') {
+  const step = USHER_ST[e.st];
+  if (step) step(e, dt, dist, ux, uz, mv, K, cs, aim);
+  if (e.st !== 'aim' && e.st !== 'idle' && animTick)
+    e.brows.forEach(b => {
+      b.rotation.z = b.userData.rz;
+      b.position.y = 0.8;
+    });
+  e.eyes.forEach(s => {
+    s.visible = e.st === 'aim' || e.st === 'charge';
+    if (s.visible) s.scale.setScalar(0.34 + Math.random() * 0.08);
+  });
+  e.mom = Math.max(0, (e.mom || 0) - dt);
+  if (dist < e.r + hero.r + 0.15 && e.stagger <= 0 && hurtHero(e.st === 'charge' || (K > 1 && (e.st === 'lunge' || e.mom > 0)) ? 2 : 1, e.pos))
+    hero.knock.multiplyScalar(K); // a big one's charge and lunge take two hearts
+}
+// his states, one step each (updUsher runs the one he is in)
+const USHER_ST = {
+  idle(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (animTick) e.head.rotation.z = Math.sin(performance.now() / 400 + e.seed) * 0.1;
     if ((dist < (e.sight || 20) && los(e.pos, hero.pos)) || dist < 8) {
       e.brows.forEach(b => (b.visible = true));
@@ -84,7 +101,8 @@ function updUsher(e, dt, dist, ux, uz, mv) {
         toast('Dodge sideways.');
       }
     }
-  } else if (e.st === 'chase') {
+  },
+  chase(e, dt, dist, ux, uz, mv, K, cs, aim) {
     [mv.x, mv.z] = steer(e);
     mv.sp = 4.8 - (K - 1) * 1.1;
     if (animTick) e.arms.forEach((a, i) => (a.rotation.z = Math.sin(performance.now() / 160 + i * 3) * 0.3));
@@ -92,7 +110,8 @@ function updUsher(e, dt, dist, ux, uz, mv) {
       e.st = 'wind';
       e.t = 0.3 * Math.sqrt(K);
     } else if (dist > 3.2 * K && dist < 14 + (K - 1) * 8 && e.chargeCd <= 0 && e.stagger <= 0 && losCover(e.pos, hero.pos, e.r + 0.15)) aim();
-  } else if (e.st === 'aim') {
+  },
+  aim(e, dt, dist, ux, uz, mv, K, cs, aim) {
     // the tell: he stops, shakes, arms back, brows twitching
     if (animTick) {
       shake(e.tilt, 0.06);
@@ -119,7 +138,8 @@ function updUsher(e, dt, dist, ux, uz, mv) {
       sTone({ f: 140 / K, f2: 60 / K, dur: 0.4 * K, type: 'sawtooth', gain: 0.1 * Math.sqrt(K), filt: [700, 200] });
       if (K > 1) cam.shake = Math.max(cam.shake, 0.08 * K);
     }
-  } else if (e.st === 'charge') {
+  },
+  charge(e, dt, dist, ux, uz, mv, K, cs, aim) {
     mv.x = e.lx;
     mv.z = e.lz;
     mv.sp = cs;
@@ -127,7 +147,7 @@ function updUsher(e, dt, dist, ux, uz, mv) {
       e.tilt.rotation.x = 0.3;
       e.arms.forEach((a, i) => (a.rotation.z = (i ? -1 : 1) * 1.4));
     }
-    if (Math.random() < dt * 30) burst(e.pos.clone().setY(0.2), [0x8d8579, 0x0d0b0a], 1, 1.5, 0.12, { g: -2, life: 0.4 });
+    if (Math.random() < dt * 30) burst(e.pos.clone().setY(0.2), [COL.smoke, COL.ink], 1, 1.5, 0.12, { g: -2, life: 0.4 });
     e.trailT = (e.trailT || 0) - dt;
     if (e.trailT <= 0) {
       e.trailT = 0.045;
@@ -142,7 +162,7 @@ function updUsher(e, dt, dist, ux, uz, mv) {
       e.stagger = 1.2;
       e.tilt.rotation.x = 0;
       SFX.boom();
-      floatWord('BONK', e.pos.clone().setY(2.8 * K), '#ece6da', 0.8 * K);
+      floatWord('BONK', e.pos.clone().setY(2.8 * K), HEX.paper, 0.8 * K);
       e.chargeCd = 2.5;
       cam.shake = Math.max(cam.shake, 0.15 * K * K);
     } else if (e.t <= 0 || dist < e.r + hero.r + 0.2) {
@@ -156,7 +176,8 @@ function updUsher(e, dt, dist, ux, uz, mv) {
       e.tilt.rotation.x = 0;
       e.chargeCd = rand(1.6, 2.4);
     }
-  } else if (e.st === 'wind') {
+  },
+  wind(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (animTick) shake(e.tilt, 0.07);
     e.arms.forEach((a, i) => (a.rotation.z = (i ? -1 : 1) * 2.6));
     if (e.t <= 0) {
@@ -166,7 +187,8 @@ function updUsher(e, dt, dist, ux, uz, mv) {
       e.lz = uz;
       SFX.growl();
     }
-  } else if (e.st === 'lunge') {
+  },
+  lunge(e, dt, dist, ux, uz, mv, K, cs, aim) {
     mv.x = e.lx;
     mv.z = e.lz;
     mv.sp = 8;
@@ -176,22 +198,11 @@ function updUsher(e, dt, dist, ux, uz, mv) {
       e.t = 0.55;
       e.tilt.position.set(0, 0, 0);
     }
-  } else if (e.st === 'recover') {
+  },
+  recover(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (e.t <= 0) e.st = 'chase';
   }
-  if (e.st !== 'aim' && e.st !== 'idle' && animTick)
-    e.brows.forEach(b => {
-      b.rotation.z = b.userData.rz;
-      b.position.y = 0.8;
-    });
-  e.eyes.forEach(s => {
-    s.visible = e.st === 'aim' || e.st === 'charge';
-    if (s.visible) s.scale.setScalar(0.34 + Math.random() * 0.08);
-  });
-  e.mom = Math.max(0, (e.mom || 0) - dt);
-  if (dist < e.r + hero.r + 0.15 && e.stagger <= 0 && hurtHero(e.st === 'charge' || (K > 1 && (e.st === 'lunge' || e.mom > 0)) ? 2 : 1, e.pos))
-    hero.knock.multiplyScalar(K); // a big one's charge and lunge take two hearts
-}
+};
 
 const skidGeo = share(new THREE.PlaneGeometry(0.95, 0.5)); // the charge's skid marks
 // behind the charge: a red-tinted smear of his face hangs in the air, and his feet leave skid marks
@@ -203,7 +214,7 @@ function usherTrail(e) {
   s.scale.set(1.44 * k, 1.31 * k, 1);
   scene.add(s);
   trail.push({ s, life: 0.32, max: 0.32, base: 0.5 });
-  const sk = new THREE.Mesh(skidGeo, new THREE.MeshBasicMaterial({ color: 0x0d0b0a, transparent: true, opacity: 0.5, depthWrite: false }));
+  const sk = new THREE.Mesh(skidGeo, new THREE.MeshBasicMaterial({ color: COL.ink, transparent: true, opacity: 0.5, depthWrite: false }));
   sk.rotation.x = -Math.PI / 2;
   sk.rotation.z = Math.atan2(e.lx, e.lz) + Math.PI / 2;
   sk.position.set(e.pos.x + rand(-0.15, 0.15), heightAt(e.pos.x, e.pos.z) + 0.025, e.pos.z + rand(-0.15, 0.15));
@@ -215,8 +226,29 @@ TALKERS.B = {
   update: updUsher,
   warn: e =>
     e.st === 'aim'
-      ? { c: '#d8212a', k: clamp(1 - e.t / (0.42 + ((e.k || 1) - 1) * 0.4), 0, 1), cue: 'B' }
+      ? { c: HEX.tie, k: clamp(1 - e.t / (0.42 + ((e.k || 1) - 1) * 0.4), 0, 1), cue: 'B' }
       : e.st === 'wind'
-        ? { c: '#d8212a', k: 1, cue: 'b' }
-        : null
+        ? { c: HEX.tie, k: 1, cue: 'b' }
+        : null,
+  // the biggest Usher will not stand being yo-yoed in the face: the 4th hit in a row and he charges
+  struck: (e, n, weapon) => {
+    if (weapon && (e.k || 1) >= 1.5 && e.st !== 'charge' && e.st !== 'aim') {
+      const now = performance.now() / 1000;
+      e.spam = now - (e.spamAt || -9) < 2.5 ? (e.spam || 0) + 1 : 1;
+      e.spamAt = now;
+      if (e.spam >= 4) {
+        e.spam = 0;
+        e.rage = 1.4;
+        e.wantCharge = true;
+        floatWord('ENOUGH!', e.pos.clone().setY(3 * e.k + 0.4), HEX.tie, 1.3, true);
+      }
+    }
+    return n;
+  },
+  // the biggest Usher leaves a heart when Red Cap is hurt, else pebbles
+  drops: e => {
+    if ((e.k || 1) < 1.5) dropsDefault(e);
+    else if (hero.hp < hero.maxHp) dropHeart(e.pos.x, e.pos.z);
+    else giveAmmo(Math.random() < 0.5 ? 2 : 3, e.pos);
+  }
 };

@@ -31,7 +31,7 @@ const YY_TRAIL = { n: 48, k: 0.2, w: 0.075 },
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(YY_TRAIL.n * 6), 3));
     g.setIndex(idx);
     g.setDrawRange(0, 0);
-    const m = new THREE.Mesh(g, share(new THREE.MeshBasicMaterial({ color: 0x0d0b0a, side: THREE.DoubleSide })));
+    const m = new THREE.Mesh(g, share(new THREE.MeshBasicMaterial({ color: COL.ink, side: THREE.DoubleSide })));
     m.frustumCulled = false;
     m.userData = { pts: [], clock: 0, span: 0.1 };
     return m;
@@ -67,7 +67,7 @@ function yyTrailTick(dt, p) {
 }
 const pebbles = [];
 const pebbleGeo = share(new THREE.IcosahedronGeometry(0.13, 0)),
-  pebbleMat = share(new THREE.MeshBasicMaterial({ color: 0x8d8579 }));
+  pebbleMat = share(new THREE.MeshBasicMaterial({ color: COL.smoke }));
 let slingG = null,
   slingT = 0, // the pull's time left (0.62 s: draw back, release at 0.13 s, the band settles)
   slingFired = true;
@@ -127,7 +127,7 @@ function yoyo() {
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.away) continue;
     const d = Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z);
-    if (d < e.r + 0.9 && (e.type === 'Y' || los(hero.pos, e.pos))) {
+    if (d < e.r + 0.9 && (TALKERS[e.type].noCover || los(hero.pos, e.pos))) {
       hero.yy.hit.add(e);
       damage(e, YOYO_DMG * hero.yy.power * hero.yy.mixP, fx * hero.yy.power, fz * hero.yy.power, false, true);
       yoyoStop(hero.yy);
@@ -145,13 +145,13 @@ function updYoyo(dt) {
   const hand = new THREE.Vector3(hero.pos.x + y.fz * 0.25 * hero.flip, 1.05 + hero.pos.y, hero.pos.z - y.fx * 0.25 * hero.flip),
     p = yoyoTip(y, hand, k);
   if (y.cut && y.t < YOYO_CUT_BLEND) p.lerp(y.cut, 1 - y.t / YOYO_CUT_BLEND);
-  burst(p, [0xd8212a, 0xf0cf2e, 0xece6da], y.power > 1 ? 3 : 1, y.power > 1 ? 0.9 : 0.4, y.power > 1 ? 0.26 : 0.2, { g: 0, life: 0.3 });
+  burst(p, [COL.tie, COL.bile, COL.paper], y.power > 1 ? 3 : 1, y.power > 1 ? 0.9 : 0.4, y.power > 1 ? 0.26 : 0.2, { g: 0, life: 0.3 });
   // a wall turns it back
   const [ix, iz] = cellOf(p.x, p.z);
   if (solid(ix, iz) && k < 0.5) {
     y.t = y.dur * (1 - k);
     y.k0next = 1 - k;
-    burst(p, [0xece6da, 0x0d0b0a], 5, 3, 0.12);
+    burst(p, [COL.paper, COL.ink], 5, 3, 0.12);
   }
   yoyoMesh.position.copy(p);
   yyTrailTick(dt, p);
@@ -199,7 +199,12 @@ function yoyoHits(y, hand, p) {
       py = lerp(hand.y, p.y, t) - (e.gy || 0),
       tip = t > 0.96,
       g = YOYO_GRACE;
-    if (d < e.r + (tip ? 0.45 : 0.32) + g && py > e.y0 - 0.5 - g && py < e.y1 + 0.5 + g && (e.type === 'Y' || yoyoClear(hand, qx, qz, e.pos))) {
+    if (
+      d < e.r + (tip ? 0.45 : 0.32) + g &&
+      py > e.y0 - 0.5 - g &&
+      py < e.y1 + 0.5 + g &&
+      (TALKERS[e.type].noCover || yoyoClear(hand, qx, qz, e.pos))
+    ) {
       y.hit.add(e);
       damage(e, YOYO_DMG * y.power * y.mixP, y.fx * y.power, y.fz * y.power, false, true);
       cam.shake = Math.max(cam.shake, y.power > 1 ? 0.22 : 0.15);
@@ -228,7 +233,7 @@ function buildSling() {
   const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.5, 8), wood);
   handle.position.y = -0.25;
   g.add(handle);
-  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.078, 0.2, 8), new THREE.MeshBasicMaterial({ color: 0xf0cf2e }));
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.078, 0.2, 8), new THREE.MeshBasicMaterial({ color: COL.bile }));
   grip.position.y = -0.34;
   g.add(grip);
   [-1, 1].forEach(s => {
@@ -294,14 +299,14 @@ function giveAmmo(n, pos) {
   hero.ammo += add;
   updAmmo();
   SFX.pickup();
-  floatWord('+' + add + ' PEBBLES', pos.clone().setY(2.6), '#f0cf2e', 0.7);
+  floatWord('+' + add + ' PEBBLES', pos.clone().setY(2.6), HEX.bile, 0.7);
 }
 function sling() {
   if (state !== 'play' || hero.slingCd > 0 || hero.dodgeT > 0 || hero.stun > 0) return;
   if (hero.ammo <= 0) {
     hero.slingCd = 0.35;
     sTone({ f: 220, dur: 0.05, type: 'square', gain: 0.08 });
-    floatWord('EMPTY', hero.pos.clone().setY(2.6), '#8d8579', 0.7);
+    floatWord('EMPTY', hero.pos.clone().setY(2.6), HEX.smoke, 0.7);
     return;
   }
   hero.ammo--;
@@ -339,8 +344,8 @@ function fireSling() {
   m.position.copy(from).addScaledVector(dir, 0.2);
   G.group.add(m);
   pebbles.push({ m, v: dir.multiplyScalar(26), life: 1.3, target: a.target, pw: hero.slingMixP || 1 });
-  floatWord('THWIP', from.clone().setY(2.4), '#ece6da', 0.6);
-  burst(from, [0xece6da, 0xf0cf2e], 5, 3, 0.1, { g: 0, life: 0.4 });
+  floatWord('THWIP', from.clone().setY(2.4), HEX.paper, 0.6);
+  burst(from, [COL.paper, COL.bile], 5, 3, 0.1, { g: 0, life: 0.4 });
 }
 // pebbles fly in three steps a frame; walls, the floor, range and anything they meet stop them; the Grump is too thick
 function updPebbles(dt) {
@@ -359,14 +364,14 @@ function updPebbles(dt) {
       b.went = (b.went || 0) + (b.v.length() * dt) / steps;
       if (b.went > PEBBLE_RANGE) {
         dead = true;
-        burst(b.m.position, [0x8d8579, 0xece6da], 3, 2, 0.1);
+        burst(b.m.position, [COL.smoke, COL.paper], 3, 2, 0.1);
         break;
       }
       const p = b.m.position;
       const [ix, iz] = cellOf(p.x, p.z);
       if (solid(ix, iz) || p.y < 0) {
         dead = true;
-        burst(p, [0x8d8579, 0xece6da], 4, 3, 0.1);
+        burst(p, [COL.smoke, COL.paper], 4, 3, 0.1);
         break;
       }
       if (hitGhost(p, 0.15) || hitHolo(p, 0.1) || hitTotem(p, 0.1) || hitPyr(p, 0.1) || kickFace(p, 0.2) || hitPlaque(p, 0.1) || hitNpc(p, 0.1)) {
@@ -379,9 +384,9 @@ function updPebbles(dt) {
           dead = true;
           if (e.type === 'U') {
             SFX.tink();
-            burst(p.clone(), [0x8d8579, 0xece6da], 5, 3, 0.1);
-            bigWord('BOUNCE', '#ece6da', 1 / 1.7);
-            floatWord(pick(['TOO THICK', 'HA']), e.pos.clone().setY(5.2 + rand(0, 1.2)), '#ece6da', 1.1);
+            burst(p.clone(), [COL.smoke, COL.paper], 5, 3, 0.1);
+            bigWord('BOUNCE', HEX.paper, 1 / 1.7);
+            floatWord(pick(['TOO THICK', 'HA']), e.pos.clone().setY(5.2 + rand(0, 1.2)), HEX.paper, 1.1);
             break;
           }
           const l = Math.hypot(b.v.x, b.v.z) || 1;

@@ -219,6 +219,7 @@ const PUFF_GEO = (() => {
   return share(g);
 })();
 const PUFF_MAX = 45,
+  PUFF_LOW = 25, // the most on a slow machine (resScale below RES_MIN)
   PUFF_CAP = 96; // puffs one draw holds (PUFF_MAX alive, plus the ones fading out fast)
 const PUFF_DRAWS = 8;
 const PUFF_MESHES = [...Array(PUFF_DRAWS)].map(() => {
@@ -315,11 +316,12 @@ function puffSync() {
     g.attributes.aPos.needsUpdate = g.attributes.aSro.needsUpdate = true;
   }
 }
-// a puff of smoke; past PUFF_MAX the oldest puff still at full life fades out quickly (its life runs six times as fast)
+// a puff of smoke; past PUFF_MAX (PUFF_LOW on a slow machine) the oldest puff still at full life fades out quickly (its life
+// runs six times as fast)
 function smokePuff(pos, size, life, rise) {
   let live = 0;
   for (const p of puffs) if (!p.fast) live++;
-  if (live >= PUFF_MAX) {
+  if (live >= (resScale < RES_MIN ? PUFF_LOW : PUFF_MAX)) {
     const o = puffs.find(p => !p.fast);
     if (o) o.fast = true;
   }

@@ -10,7 +10,7 @@ function makeGeezer(e, add) {
     r: 1.4,
     hgt: 4.8,
     y1: 4.9,
-    palette: [0x2a2a1a, 0xece6da, 0x8a2a1a, 0x9a9a9a],
+    palette: [0x2a2a1a, COL.paper, 0x8a2a1a, 0x9a9a9a],
     boss: true,
     exhaust: 0,
     flashT: 0
@@ -49,15 +49,22 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
   // the page swirls as his eyes light up: full within 9 m, gone by 22 m
   const seenK = (dist <= 9 ? 1 : Math.max(0, 1 - (dist - 9) / 13)) * (los(e.pos, hero.pos) ? 1 : 0.05);
   G.psyWind = Math.max(G.psyWind, (glow * 0.5 + (e.flashT > 0 ? 0.8 : 0)) * seenK);
-  if (e.st === 'idle') {
+  const step = GEEZER_ST[e.st];
+  if (step) step(e, dt, dist, ux, uz, mv, now, p2, seenK);
+  if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
+}
+// his states, one step each (updGeezer runs the one he is in)
+const GEEZER_ST = {
+  idle(e, dt, dist, ux, uz, mv, now, p2, seenK) {
     if (hero.pos.z > 9 * CELL && los(e.pos, hero.pos)) {
       e.st = 'drift';
       e.t = 1.8;
       SFX.growl();
-      floatWord('YOUNG MAN', e.pos.clone().setY(5.3), '#ece6da', 1.2);
+      floatWord('YOUNG MAN', e.pos.clone().setY(5.3), HEX.paper, 1.2);
       toast('When his eyes light up, hide or dodge.');
     }
-  } else if (e.st === 'drift') {
+  },
+  drift(e, dt, dist, ux, uz, mv, now, p2, seenK) {
     if (dist > 3.4) {
       [mv.x, mv.z] = steer(e);
       mv.sp = p2 ? 2.6 : 2.0;
@@ -69,7 +76,7 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
         e.tWind = e.t = rand(0.55, 0.8);
         e.lashes = p2 && Math.random() < 0.35 ? 2 : 1;
         e.side = Math.random() < 0.5 ? 1 : -1;
-        floatWord('HMMPH', e.pos.clone().setY(5.2), '#ece6da', 1);
+        floatWord('HMMPH', e.pos.clone().setY(5.2), HEX.paper, 1);
         SFX.growl();
       } else if (!losCover(e.pos, hero.pos) ? Math.random() < 0.5 : p2 && Math.random() < 0.45) {
         // hidden from him (or now and then in his second half): he blinks to where he can see you
@@ -88,7 +95,8 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
         floatWord('LOOK AT ME', e.pos.clone().setY(5.3), '#b48cff', 1.1);
       }
     }
-  } else if (e.st === 'gaze') {
+  },
+  gaze(e, dt, dist, ux, uz, mv, now, p2, seenK) {
     if (animTick) shake(e.tilt, 0.04);
     if (e.t <= 0) {
       e.flashT = 0.25;
@@ -106,7 +114,7 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
         }
       } else if (hero.stun <= 0) {
         e.missed = true;
-        bigWord('MISSED', '#ece6da');
+        bigWord('MISSED', HEX.paper);
       }
       e.flashes--;
       if (e.flashes > 0) {
@@ -117,14 +125,15 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
         const winded = e.missed && !e.snap;
         if (winded) {
           e.exhaust = rand(1.6, 2.2) * (p2 ? 0.85 : 1);
-          floatWord('*WHEEZE*', e.pos.clone().setY(5.2), '#f0cf2e', 1.1);
+          floatWord('*WHEEZE*', e.pos.clone().setY(5.2), HEX.bile, 1.1);
         }
         e.st = 'recover';
         e.t = winded ? e.exhaust : rand(0.5, 0.9);
         e.tilt.position.x = e.tilt.position.z = 0;
       }
     }
-  } else if (e.st === 'sweep') {
+  },
+  sweep(e, dt, dist, ux, uz, mv, now, p2, seenK) {
     // a beard lash all around him
     if (animTick) e.tilt.rotation.z = (1 - e.t / e.tWind) * 0.36 * e.side;
     if (e.t <= 0) {
@@ -143,14 +152,15 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
       if (--e.lashes > 0) {
         e.tWind = e.t = 0.42;
         e.side = -e.side;
-        floatWord('AND AGAIN', e.pos.clone().setY(5.2), '#ece6da', 0.9);
+        floatWord('AND AGAIN', e.pos.clone().setY(5.2), HEX.paper, 0.9);
         SFX.growl();
       } else {
         e.st = 'recover';
         e.t = rand(0.5, 0.9);
       }
     }
-  } else if (e.st === 'blink') {
+  },
+  blink(e, dt, dist, ux, uz, mv, now, p2, seenK) {
     // vanishes and reappears somewhere he can see you, already staring
     const k = clamp(e.t / 0.45, 0, 1);
     e.body.scale.setScalar(Math.max(0.05, k));
@@ -167,7 +177,7 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
         }
       }
       e.body.scale.setScalar(1);
-      burst(e.pos.clone().setY(2.5), [0xb48cff, 0x2a2a1a, 0xece6da], 20, 5, 0.25);
+      burst(e.pos.clone().setY(2.5), [0xb48cff, 0x2a2a1a, COL.paper], 20, 5, 0.25);
       e.st = 'gaze';
       e.tWind = e.t = rand(0.85, 1.2);
       e.flashes = 1;
@@ -175,7 +185,8 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
       e.missed = false;
       SFX.psyRise(e.tWind);
     }
-  } else if (e.st === 'recover') {
+  },
+  recover(e, dt, dist, ux, uz, mv, now, p2, seenK) {
     if (animTick && e.exhaust > 0) e.tilt.rotation.z = Math.sin(now * 4) * 0.12;
     if (e.t <= 0) {
       e.st = 'drift';
@@ -183,8 +194,7 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
       e.tilt.rotation.z = 0;
     }
   }
-  if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
-}
+};
 TALKERS.Y = {
   make: makeGeezer,
   update: updGeezer,
@@ -193,8 +203,39 @@ TALKERS.Y = {
     e.st === 'gaze'
       ? { c: '#b48cff', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'Y' + e.flashes }
       : e.st === 'sweep'
-        ? { c: '#ece6da', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'y' + e.lashes }
+        ? { c: HEX.paper, k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'y' + e.lashes }
         : e.st === 'blink'
           ? { c: '#b48cff', k: 0, cue: 'Y' }
-          : null
+          : null,
+  // winded, he takes double; hit again and again up close and he snaps into a quick stare (or a lash)
+  struck: (e, n) => {
+    if (e.exhaust > 0) {
+      floatWord('WINDED', e.pos.clone().setY(5.2), HEX.bile, 0.8);
+      return n * 2;
+    }
+    if (e.dazedT > 0) return n;
+    e.pressure = (e.pressure || 0) + 1;
+    if (e.pressure >= 1.8 && (e.st === 'drift' || e.st === 'recover')) {
+      e.pressure = 0;
+      e.tilt.rotation.z = 0;
+      if (Math.random() < 0.45 && Math.hypot(hero.pos.x - e.pos.x, hero.pos.z - e.pos.z) < 4.6) {
+        e.st = 'sweep';
+        e.tWind = e.t = rand(0.38, 0.5);
+        e.lashes = 1;
+        e.side = Math.random() < 0.5 ? 1 : -1;
+        floatWord('HMMPH', e.pos.clone().setY(5.2), HEX.paper, 1);
+        SFX.growl();
+      } else {
+        e.st = 'gaze';
+        e.tWind = e.t = rand(0.38, 0.6);
+        e.flashes = 1;
+        e.snap = true;
+        e.missed = false;
+        SFX.psyRise(e.tWind);
+      }
+    }
+    return n;
+  },
+  stagger: 0.12,
+  noCover: true // the yo-yo reaches him through walls: he is in every mirror
 };

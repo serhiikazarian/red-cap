@@ -14,7 +14,7 @@ function makePriest(e, add) {
     r: 0.75,
     hgt: 2.6,
     y1: 2.6,
-    palette: [0x0d0b0a, 0xb3202f, 0xe6b48c, 0xe8c628],
+    palette: [COL.ink, COL.cap, 0xe6b48c, 0xe8c628],
     boss: true
   });
   const m = add(paper('priest', 2.6, 0.12));
@@ -23,7 +23,7 @@ function makePriest(e, add) {
   e.t = 1.5;
   const shield = new THREE.Mesh(
     new THREE.RingGeometry(1.15, 1.5, 36),
-    new THREE.MeshBasicMaterial({ color: 0xece6da, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide })
+    new THREE.MeshBasicMaterial({ color: COL.paper, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide })
   );
   shield.rotation.x = -Math.PI / 2;
   shield.position.y = 0.06;
@@ -62,12 +62,37 @@ function updPriest(e, dt, dist, ux, uz, mv) {
     e.ghosts.forEach(g => (g.m.visible = g.wait <= 0));
   }
   const seen = dist < 20 && !hero.inSmoke && los(e.pos, hero.pos);
-  if (e.st === 'idle') {
+  const step = PRIEST_ST[e.st];
+  if (step) step(e, dt, dist, ux, uz, mv, seen);
+  if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
+  e.rainCd -= dt;
+  e.shieldFlash = Math.max(0, (e.shieldFlash || 0) - dt);
+  const shielded = e.ghosts.some(g => g.wait <= 0);
+  if (e.ghostsBack > 0 && (e.ghostsBack -= dt) <= 0) {
+    // all three rise again at once
+    e.ghostsBack = 0;
+    for (const g of e.ghosts) {
+      g.wait = 0;
+      g.m.visible = true;
+      burst(e.pos.clone().setY(1.2), [0xd8d4cc, 0x6c6a66, COL.ink], 6, 3, 0.12);
+    }
+    floatWord('RISE', e.pos.clone().setY(3.6), '#d8d4cc', 1);
+    sTone({ f: 200, f2: 600, dur: 0.4, gain: 0.1 });
+  }
+  e.shield.visible = shielded;
+  e.shield.material.opacity = e.shieldFlash > 0 ? 0.8 : 0.3;
+  if (animTick) e.shield.rotation.z += 0.3;
+  updGhosts(e, dt);
+}
+// his states, one step each (updPriest runs the one he is in)
+const PRIEST_ST = {
+  idle(e, dt, dist, ux, uz, mv, seen) {
     if (seen || dist < 10) {
       e.st = 'walk';
       e.t = 1;
     }
-  } else if (e.st === 'walk') {
+  },
+  walk(e, dt, dist, ux, uz, mv, seen) {
     if (dist > 5) {
       [mv.x, mv.z] = steer(e);
       mv.sp = 1.9;
@@ -78,10 +103,10 @@ function updPriest(e, dt, dist, ux, uz, mv) {
       e.t = 1;
       e.rainCd = 6.5;
       SFX.bless();
-      floatWord('PREY', e.pos.clone().setY(3.8), '#d8212a', 1.5, true, 1.6);
+      floatWord('PREY', e.pos.clone().setY(3.8), HEX.tie, 1.5, true, 1.6);
       const ring = new THREE.Mesh(
         RAIN_RING_GEO,
-        new THREE.MeshBasicMaterial({ color: 0xd8212a, transparent: true, depthWrite: false, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({ color: COL.tie, transparent: true, depthWrite: false, side: THREE.DoubleSide })
       );
       ring.rotation.x = -Math.PI / 2;
       ring.position.set(e.pos.x, 0.07, e.pos.z);
@@ -91,9 +116,10 @@ function updPriest(e, dt, dist, ux, uz, mv) {
       e.st = 'wind';
       e.t = 0.8;
       SFX.bless();
-      floatWord('KNEEL', e.pos.clone().setY(3.4), '#ece6da', 1);
+      floatWord('KNEEL', e.pos.clone().setY(3.4), HEX.paper, 1);
     }
-  } else if (e.st === 'rainWind') {
+  },
+  rainWind(e, dt, dist, ux, uz, mv, seen) {
     // arms up: blood will rain inside the red circle
     if (animTick) {
       e.tilt.rotation.x = -0.25;
@@ -111,7 +137,8 @@ function updPriest(e, dt, dist, ux, uz, mv) {
         b.kind = 'rain';
       }
     }
-  } else if (e.st === 'rain') {
+  },
+  rain(e, dt, dist, ux, uz, mv, seen) {
     if (e.t <= 0) {
       G.group.remove(e.rainRing);
       e.st = 'walk';
@@ -120,7 +147,8 @@ function updPriest(e, dt, dist, ux, uz, mv) {
       if (dist < 4.6 && hurtHero(1, e.pos)) hero.knock.set(ux * 11, uz * 11);
       for (let k = 0; k < 4; k++) bloodPool(e.pos.x + rand(-3.5, 3.5), e.pos.z + rand(-3.5, 3.5), rand(0.5, 1.1));
     }
-  } else if (e.st === 'wind') {
+  },
+  wind(e, dt, dist, ux, uz, mv, seen) {
     if (animTick) {
       e.tilt.rotation.x = -(0.8 - e.t) * 0.35;
       shake(e.tilt, 0.03);
@@ -133,7 +161,8 @@ function updPriest(e, dt, dist, ux, uz, mv) {
       sprayStart();
       e.tilt.position.set(0, 0, 0);
     }
-  } else if (e.st === 'spray') {
+  },
+  spray(e, dt, dist, ux, uz, mv, seen) {
     e.tilt.rotation.x = lerp(e.tilt.rotation.x, 0.12, 0.2);
     e.aim += angDiff(e.aim, Math.atan2(ux, uz)) * (1 - Math.exp(-1.6 * dt));
     const sweep = e.aim + Math.sin((1.9 - e.t) * 4.2) * 0.38;
@@ -153,26 +182,7 @@ function updPriest(e, dt, dist, ux, uz, mv) {
       e.tilt.rotation.x = 0;
     }
   }
-  if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
-  e.rainCd -= dt;
-  e.shieldFlash = Math.max(0, (e.shieldFlash || 0) - dt);
-  const shielded = e.ghosts.some(g => g.wait <= 0);
-  if (e.ghostsBack > 0 && (e.ghostsBack -= dt) <= 0) {
-    // all three rise again at once
-    e.ghostsBack = 0;
-    for (const g of e.ghosts) {
-      g.wait = 0;
-      g.m.visible = true;
-      burst(e.pos.clone().setY(1.2), [0xd8d4cc, 0x6c6a66, 0x0d0b0a], 6, 3, 0.12);
-    }
-    floatWord('RISE', e.pos.clone().setY(3.6), '#d8d4cc', 1);
-    sTone({ f: 200, f2: 600, dur: 0.4, gain: 0.1 });
-  }
-  e.shield.visible = shielded;
-  e.shield.material.opacity = e.shieldFlash > 0 ? 0.8 : 0.3;
-  if (animTick) e.shield.rotation.z += 0.3;
-  updGhosts(e, dt);
-}
+};
 // the ghosts circle him, bobbing; touching one hurts
 function updGhosts(e, dt) {
   const now = performance.now() / 1000;
@@ -198,8 +208,8 @@ function hitGhost(p, rad) {
       if (Math.hypot(gp.x - p.x, gp.z - p.z) < rad + 0.4 && Math.abs(gp.y + 0.3 - p.y) < 1) {
         g.wait = Infinity;
         if (e.ghosts.every(q => q.wait > 0)) e.ghostsBack = 7;
-        burst(gp.clone().setY(gp.y + 0.3), [0xd8d4cc, 0x6c6a66, 0x0d0b0a], 8, 3, 0.12);
-        floatWord('POPPED', gp.clone().setY(gp.y + 1.2), '#ece6da', 0.55);
+        burst(gp.clone().setY(gp.y + 0.3), [0xd8d4cc, 0x6c6a66, COL.ink], 8, 3, 0.12);
+        floatWord('POPPED', gp.clone().setY(gp.y + 1.2), HEX.paper, 0.55);
         SFX.pop();
         return true;
       }
@@ -219,5 +229,41 @@ TALKERS.R = {
   bar: e => {
     const n = e.ghosts.filter(g => g.wait <= 0).length;
     return n ? ['Shielded by ' + n + ' ghost' + (n > 1 ? 's' : ''), false] : ['', false, 'EXPOSED'];
+  },
+  // the ghosts shield him while any is left
+  shielded: e => {
+    if (!e.ghosts.some(g => g.wait <= 0)) return false;
+    SFX.tink();
+    e.shieldFlash = 0.3;
+    floatWord('SHIELDED', e.pos.clone().setY(3.4 + rand(0, 0.3)), '#d8d4cc', 0.8);
+    return true;
+  },
+  // reeling: two blows finish him if all three ghosts were round him when he reeled, else one
+  struck: (e, n, weapon) => {
+    if (!(e.dazedT > 0 && weapon)) return n;
+    e.reelHits = (e.reelHits ?? 1) - 1;
+    return e.reelHits <= 0 ? e.hp + 1 : Math.min(n, Math.max(0, e.hp - 0.05));
+  },
+  // a blow stops his spray
+  hurt: e => {
+    if (e.st !== 'spray') return;
+    e.st = 'walk';
+    e.t = 1.4;
+    sprayStop();
+  },
+  // a trap leaves him reeling: he stops spraying, and two blows finish him if all his ghosts are round him, else one
+  trapped: e => {
+    e.reelHits = e.ghosts.every(g => g.wait <= 0) ? 2 : 1;
+    if (e.st !== 'spray') return;
+    e.st = 'walk';
+    e.t = 2.6;
+    sprayStop();
+  },
+  torn: e => {
+    e.ghosts.forEach(g => {
+      burst(g.m.position, [0xd8d4cc, 0x6c6a66], 6, 3, 0.12);
+      G.group.remove(g.m);
+    });
+    if (e.rainRing) G.group.remove(e.rainRing);
   }
 };

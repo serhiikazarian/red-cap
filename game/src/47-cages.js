@@ -36,7 +36,7 @@ function buildCages(F) {
         ropes.add(t);
       }
       e.tilt.add(ropes);
-      const scorchM = new THREE.Mesh(decalGeo, new THREE.MeshBasicMaterial({ color: 0x0d0b0a, transparent: true, opacity: 0.5, depthWrite: false }));
+      const scorchM = new THREE.Mesh(decalGeo, new THREE.MeshBasicMaterial({ color: COL.ink, transparent: true, opacity: 0.5, depthWrite: false }));
       scorchM.rotation.x = -Math.PI / 2;
       scorchM.position.y = 0.02;
       scorchM.scale.setScalar(1.2);
@@ -86,7 +86,7 @@ function breakCage(c, byHit) {
     G.group.add(c.pole);
     G.stakes.push({ x: wp.x, z: wp.z, r: 0.27 });
     sNoise({ dur: 0.3, f: 1800, f2: 600, q: 2, gain: 0.25 });
-    burst(new THREE.Vector3(c.x, 1.3 + c.g.position.y, c.z), [0x9a7a4a, 0x6a4a2a, 0xff7a1a], 26, 6, 0.2);
+    burst(new THREE.Vector3(c.x, 1.3 + c.g.position.y, c.z), [0x9a7a4a, 0x6a4a2a, COL.hot], 26, 6, 0.2);
     cam.shake = Math.max(cam.shake, 0.25);
   } else {
     SFX.boom();
@@ -98,7 +98,7 @@ function breakCage(c, byHit) {
   e.caged = false;
   if (byHit) {
     e.stagger = 1.6;
-    floatWord('HUH?', e.pos.clone().setY(3), '#ece6da', 0.9);
+    floatWord('HUH?', e.pos.clone().setY(3), HEX.paper, 0.9);
   } else {
     e.enraged = true;
     e.t = 0;
@@ -106,7 +106,7 @@ function breakCage(c, byHit) {
       dz = hero.pos.z - e.pos.z,
       d = Math.hypot(dx, dz) || 1;
     e.knock.set((dx / d) * 7, (dz / d) * 7);
-    floatWord('LET ME OUT', e.pos.clone().setY(3.2), '#d8212a', 1);
+    floatWord('LET ME OUT', e.pos.clone().setY(3.2), HEX.tie, 1);
   }
 }
 // rattling while Red Cap is near and in sight; it gives after 0.9 s of it

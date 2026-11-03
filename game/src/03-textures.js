@@ -92,7 +92,7 @@ function inkCard(m, inks) {
         rad: { value: new THREE.Vector2(t / w, t / h) },
         pad: { value: new THREE.Vector2(pw / w, ph / h) },
         opacity: { value: 1 },
-        ink: { value: new THREE.Color(0x0d0b0a) }
+        ink: { value: new THREE.Color(COL.ink) }
       },
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
       fragmentShader: `uniform sampler2D map; uniform vec2 rad, pad; uniform float opacity; uniform vec3 ink; varying vec2 vUv;
@@ -162,7 +162,7 @@ const WORDS_USED = [new Map(), new Map(), new Map()],
     '+2 PEBBLES',
     '+3 PEBBLES',
     'BIG HEART'
-  ].map(w => [w, /^(THWIP|TORN)$/.test(w) ? '#ece6da' : w === 'EMPTY' ? '#8d8579' : /^\+|BIG/.test(w) ? '#f0cf2e' : '#d8212a']),
+  ].map(w => [w, /^(THWIP|TORN)$/.test(w) ? HEX.paper : w === 'EMPTY' ? HEX.smoke : /^\+|BIG/.test(w) ? HEX.bile : HEX.tie]),
   // each floor's words, as word|colour with _ for a space
   WORDS_FLOOR = [
     'POPPED|#ece6da YOUNG_MAN|#ece6da WINDED|#f0cf2e BONK|#ece6da HMMPH|#ece6da MISSED|#ece6da LOOK_AT_ME|#b48cff *WHEEZE*|#f0cf2e boo|#d8d4cc BOO!|#d8d4cc !!|#d8212a',
@@ -170,7 +170,7 @@ const WORDS_USED = [new Map(), new Map(), new Map()],
     "ENOUGH|#d8212a RETURN_TO_SENDER|#f0cf2e SILENCE|#d8212a WELCOME|#ece6da CATCH|#ece6da BACK_ON|#ece6da CRACK|#ece6da PSST|#ece6da HA|#ece6da HA!|#ece6da HA_HA|#ece6da HUSH|#ece6da TOO_THICK|#ece6da TINK|#ece6da BOUNCE|#ece6da NOPE|#ece6da MISS_ME?|#ece6da I'LL_TAKE_A_BREAK|#ece6da STOP_TALKIN’|#f0cf2e RING_ME|#f0cf2e QUIET|#f0cf2e HUSH|#f0cf2e HA_HA_HA|#f0cf2e HEE|#f0cf2e WHEE|#f0cf2e ?|#f0cf2e @|#f0cf2e GRRR|#d8212a GRR|#0d0b0a SHUT_UP|#0d0b0a STOP|#0d0b0a BLAH|#0d0b0a \u2026|#0d0b0a *COUGH*|#8d8579 *HACK*|#8d8579"
   ].map(l => l.split(' ').map(p => p.replace(/_/g, ' ').split('|')));
 // a word on a 512 x 176 canvas, inked round, on two lines if long, shrunk until it fits
-function wordTex(text, color = '#d8212a', stroke = '#0d0b0a') {
+function wordTex(text, color = HEX.tie, stroke = HEX.ink) {
   if (G && WORDS_USED[floorIdx]) WORDS_USED[floorIdx].set(text + '|' + color, [text, color]);
   const face = /^[+-]\d/.test(text) || HERO_WORDS.has(text) ? MARKER_FONT : WORLD_FONT;
   const key = text + color;
@@ -246,17 +246,17 @@ function makeWaveTex() {
   for (let i = 0; i <= 1024; i += 32) x.lineTo(i, i % 64 ? 30 - amp : 30 + amp);
   for (let i = 1024; i >= 0; i -= 32) x.lineTo(i, i % 64 ? 98 + amp : 98 - amp);
   x.closePath();
-  x.fillStyle = '#f0cf2e';
+  x.fillStyle = HEX.bile;
   x.fill();
   x.lineWidth = 7;
-  x.strokeStyle = '#0d0b0a';
+  x.strokeStyle = HEX.ink;
   x.stroke();
   const say = 'STOP  TALKIN’  SH#T';
   x.font = '40px ' + WORLD_FONT;
   const m = x.measureText(say),
     fs = Math.floor(40 * Math.min(1, 460 / (m.actualBoundingBoxLeft + m.actualBoundingBoxRight))); // room at the seam
   x.font = fs + 'px ' + WORLD_FONT;
-  x.fillStyle = '#0d0b0a';
+  x.fillStyle = HEX.ink;
   x.textAlign = 'center';
   x.textBaseline = 'middle';
   x.fillText(say, 256, 66);
@@ -281,7 +281,7 @@ function chevronTex() {
   return canvasTex(128, 128, (x, w) => {
     x.fillStyle = '#e9e1cf';
     x.fillRect(0, 0, w, w);
-    x.fillStyle = '#0d0b0a';
+    x.fillStyle = HEX.ink;
     for (let r = -1; r < 5; r++) {
       x.beginPath();
       for (let k = 0; k <= 8; k++) x.lineTo(k * 16, r * 32 + (k % 2 ? 16 : 0));

@@ -37,7 +37,7 @@ function hitTotem(p, rad) {
         const mate = G.totems.filter(o => !o.mini && o !== t).sort((a, b) => Math.hypot(a.x - t.x, a.z - t.z) - Math.hypot(b.x - t.x, b.z - t.z))[0];
         if (mate) mate.cd = Math.max(mate.cd, TOTEM_CD);
       }
-      burst(new THREE.Vector3(t.x, t.mini ? 1 : 1.5, t.z), [0xf0cf2e, 0x4fa9df, 0x9bd12c], 10, 4, 0.16);
+      burst(new THREE.Vector3(t.x, t.mini ? 1 : 1.5, t.z), [COL.bile, 0x4fa9df, 0x9bd12c], 10, 4, 0.16);
       const m = new THREE.Mesh(
         t.mini ? TOTEM_MINI_GEO : TOTEM_GEO,
         new THREE.MeshBasicMaterial({ map: waveTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false })
@@ -46,8 +46,8 @@ function hitTotem(p, rad) {
       m.scale.set(0.8, 1, 0.8);
       G.group.add(m);
       t.waves.push({ m, r: 0.8, hit: false, struck: new Set() });
-      floatWord(t.mini ? 'SHUSH' : 'STOP TALKIN’', new THREE.Vector3(t.x, t.mini ? 2.6 : 3.6, t.z), '#f0cf2e', t.mini ? 0.8 : 1);
-    } else floatWord('\u2026', new THREE.Vector3(t.x, 3.4, t.z), '#0d0b0a', 0.6);
+      floatWord(t.mini ? 'SHUSH' : 'STOP TALKIN’', new THREE.Vector3(t.x, t.mini ? 2.6 : 3.6, t.z), HEX.bile, t.mini ? 0.8 : 1);
+    } else floatWord('\u2026', new THREE.Vector3(t.x, 3.4, t.z), HEX.ink, 0.6);
     return true;
   }
   return false;
@@ -71,11 +71,11 @@ function updTotems(dt) {
     t.m.userData.mat.color.setHex(t.cd > 0 ? 0x5a5a5a : 0xffffff);
     if (t.m.userData.mat.emissive) t.m.userData.mat.emissive.copy(totemGlow.setRGB(0.95, 0.8, 0.15).multiplyScalar(fk * 0.85));
     if (flash && Math.random() < dt * 6)
-      burst(new THREE.Vector3(t.x + rand(-0.6, 0.6), rand(0.6, 2.6), t.z + rand(-0.6, 0.6)), [0xf0cf2e, 0xfff2a0, 0xece6da], 2, 2, 0.14, {
+      burst(new THREE.Vector3(t.x + rand(-0.6, 0.6), rand(0.6, 2.6), t.z + rand(-0.6, 0.6)), [COL.bile, 0xfff2a0, COL.paper], 2, 2, 0.14, {
         g: -2,
         life: 0.8
       });
-    if (flash && !t.nagged) floatWord('RING ME', new THREE.Vector3(t.x, 3.6, t.z), '#f0cf2e', 0.9);
+    if (flash && !t.nagged) floatWord('RING ME', new THREE.Vector3(t.x, 3.6, t.z), HEX.bile, 0.9);
     t.nagged = flash;
     const base = t.mini ? 0.7 : 1;
     if (t.mini)
@@ -106,7 +106,7 @@ function updTotems(dt) {
             e.st = 'hover';
             e.t = 2.5;
           }
-          floatWord(pick(['SHH', 'HUSH', 'QUIET']), e.pos.clone().setY(hitHeight(e) + 1.4), '#f0cf2e', 0.8);
+          floatWord(pick(['SHH', 'HUSH', 'QUIET']), e.pos.clone().setY(hitHeight(e) + 1.4), HEX.bile, 0.8);
         }
       }
       if (w.r > maxR) {

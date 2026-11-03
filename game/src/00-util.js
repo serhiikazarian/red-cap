@@ -5,6 +5,10 @@
 // 2x-3x the talkers (shared code, then one file each), 4x floor features, 5x building a floor, 6x screens, input, camera, loop.
 
 const $ = s => document.querySelector(s);
+// The game's core colours, as numbers (COL, for three.js) and as CSS strings (HEX, for canvases and the page); style.css has
+// the same ones as variables (--ink, --paper ...)
+const COL = { ink: 0x0d0b0a, paper: 0xece6da, cap: 0xb3202f, tie: 0xd8212a, bile: 0xf0cf2e, smoke: 0x8d8579, hot: 0xff7a1a },
+  HEX = Object.fromEntries(Object.entries(COL).map(([k, v]) => [k, '#' + v.toString(16).padStart(6, '0')]));
 const TAU = Math.PI * 2,
   CELL = 3; // metres per map cell
 const UP = new THREE.Vector3(0, 1, 0);

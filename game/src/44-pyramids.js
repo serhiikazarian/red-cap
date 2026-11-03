@@ -1,6 +1,6 @@
 // Pyramids (floor two's 'T' cells): Serj's model with a glowing core and a turning orb, an ink rim drawn right after it, a red
 // pool of light, and a tie half-seen inside. Three blows shatter one (it screams at the first two); it leaves a heart, or one
-// or two hold a bomb. Walkers keep out of its square foot; sight lines and shots meet its two-piece shape (pyrParts).
+// or two hold a bomb (48-bombs.js). Walkers keep out of its square foot; sight lines and shots meet its two-piece shape (pyrParts).
 const PYR_H = 2.3, // metres from its foot to its tip (its foot is 1.4 m square: Red Cap passes one in a corridor)
   PYR_R = 0.25 * PYR_H, // its body's half-width at mid-height: the round part sight lines and pebbles are stopped by (propR)
   PYR_PAD = 0.05, // metres beyond its square foot that Red Cap and the talkers are kept (collide, pyrPush)
@@ -19,11 +19,6 @@ const PYR_HP = 3, // blows to shatter a pyramid
   PYR_TIE_Y = -0.53, // its foot this far above the seam (its middle 28 cm below it: the body hides its lowest tip)
   PYR_TIE_A = 0.2, // how strongly it shows through: barely
   PYR_RIM = 3; // its ink rim's width in screen pixels (of the page, before the device's pixel ratio)
-// one or two pyramids hold a bomb: it goes off as the pyramid shatters
-const BOMB_R = 4.5, // metres: the blast's reach (one tie)
-  BOMB_CLOSE = 2, // metres: this close, two ties
-  BOMB_DMG = 3; // what it does to a talker in reach
-const BOMB_SEEN = {}; // the bomb seen inside its pyramid: its shape, made once
 // floor two's pyramid in a cell (G.pyr, set by buildLevel): where it stands and how its square foot is turned
 const pyrAt = (ix, iz) => (G && G.pyr ? G.pyr[ix + iz * G.w] : undefined);
 
@@ -145,7 +140,7 @@ function pyramid() {
       PYR.rimGeo = share(rg);
       PYR.rimMat = share(
         new THREE.ShaderMaterial({
-          uniforms: { res: { value: new THREE.Vector2(1, 1) }, w: { value: PYR_RIM }, ink: { value: new THREE.Color(0x0d0b0a) } },
+          uniforms: { res: { value: new THREE.Vector2(1, 1) }, w: { value: PYR_RIM }, ink: { value: new THREE.Color(COL.ink) } },
           vertexShader: `uniform vec2 res; uniform float w;
             void main(){
               vec4 c = projectionMatrix * modelViewMatrix * vec4(position, 1.);
@@ -243,22 +238,6 @@ function buildPyramid(x, z, cx, cz, rng) {
   G.group.add(tie, pool);
   q.tie = tie;
   q.pool = pool;
-}
-// 1 or 2 pyramids hold a bomb instead of the tie: a fresh pick each time the floor starts (its own dice: the layout stays)
-function hideBombs() {
-  const ks = Object.keys(G.pyr).sort(() => Math.random() - 0.5);
-  for (const k of ks.slice(0, Math.random() < 0.5 ? 1 : 2)) {
-    const q = G.pyr[k],
-      old = q.tie,
-      m = new THREE.Mesh(BOMB_SEEN.g || (BOMB_SEEN.g = share(new THREE.PlaneGeometry(0.62, 0.62).translate(0, 0.27, 0))), old.userData.mat.clone());
-    m.material.map = bombTex();
-    m.material.side = THREE.DoubleSide;
-    m.position.copy(old.position);
-    G.group.remove(old);
-    G.group.add(m);
-    q.tie = m;
-    q.bomb = true;
-  }
 }
 // the pyramids' glow breathes, all together: their core and scratches (emissive) and the pools on the floor
 function pyrGlow() {
@@ -365,9 +344,9 @@ function hitPyr(p, rad) {
       sNoise({ dur: 0.2, f: 1600, f2: 500, q: 2, gain: 0.22, at: 0.01 });
     }
     AU.at = at;
-    burst(new THREE.Vector3(q.x, q.y + 1.2, q.z), [0x5a1210, 0xb3202f, 0x2a2a2a, 0xf0cf2e], 10, 4, 0.16);
+    burst(new THREE.Vector3(q.x, q.y + 1.2, q.z), [0x5a1210, COL.cap, 0x2a2a2a, COL.bile], 10, 4, 0.16);
     cam.shake = Math.max(cam.shake, 0.14);
-    if (q.hp > 0) floatWord(q.hp === 1 ? 'AAAH!' : 'EEK!', new THREE.Vector3(q.x, q.y + PYR_H + 0.8, q.z), '#f0cf2e', 0.9);
+    if (q.hp > 0) floatWord(q.hp === 1 ? 'AAAH!' : 'EEK!', new THREE.Vector3(q.x, q.y + PYR_H + 0.8, q.z), HEX.bile, 0.9);
     else pyrShatter(k, q);
     return true;
   }
@@ -386,7 +365,7 @@ function pyrShatter(k, q) {
   AU.at = at;
   cam.shake = Math.max(cam.shake, 0.35);
   for (let i = 0; i < 4; i++)
-    burst(new THREE.Vector3(q.x, q.y + 0.3 + i * 0.5, q.z), [0x5a1210, 0xb3202f, 0x2a2a2a, 0xece6da, 0xf0cf2e], 22, 7, 0.26, { g: 14 });
+    burst(new THREE.Vector3(q.x, q.y + 0.3 + i * 0.5, q.z), [0x5a1210, COL.cap, 0x2a2a2a, COL.paper, COL.bile], 22, 7, 0.26, { g: 14 });
   for (let i = 0; i < 5; i++)
     smokePuff(new THREE.Vector3(q.x + rand(-0.8, 0.8), q.y + rand(0.3, 1.6), q.z + rand(-0.8, 0.8)), rand(1.2, 2), 0.9, 0.6);
   const c = q.see;
@@ -404,77 +383,6 @@ function pyrShatter(k, q) {
   G.map[iz] = G.map[iz].slice(0, ix) + '.' + G.map[iz].slice(ix + 1);
   if (q.bomb) bombBlast(q.x, q.z);
   else spawnPickup(...heartRoom(q.x, q.z));
-}
-// a bomb drawn on paper: a round black ball with a pale ink rim and shine, its fuse and a spark (seen faintly inside a pyramid)
-function bombTex() {
-  if (BOMB_SEEN.t) return BOMB_SEEN.t;
-  const c = document.createElement('canvas');
-  c.width = c.height = 128;
-  const x = c.getContext('2d');
-  x.lineCap = 'round';
-  x.strokeStyle = '#ece6da';
-  x.lineWidth = 7;
-  x.beginPath();
-  x.moveTo(78, 34);
-  x.quadraticCurveTo(92, 14, 104, 18);
-  x.stroke();
-  x.strokeStyle = '#8a6a40';
-  x.lineWidth = 4;
-  x.stroke();
-  x.fillStyle = '#ece6da';
-  x.beginPath();
-  x.arc(60, 76, 44, 0, TAU);
-  x.fill();
-  x.fillStyle = '#141012';
-  x.beginPath();
-  x.arc(60, 76, 38, 0, TAU);
-  x.fill();
-  x.fillStyle = '#ece6da';
-  x.fillRect(66, 30, 18, 12);
-  x.beginPath();
-  x.ellipse(46, 60, 9, 5, -0.7, 0, TAU);
-  x.fill();
-  const sp = x.createRadialGradient(106, 16, 1, 106, 16, 16);
-  sp.addColorStop(0, '#fff6c0');
-  sp.addColorStop(0.5, '#ff8a20');
-  sp.addColorStop(1, 'rgba(255,90,20,0)');
-  x.fillStyle = sp;
-  x.fillRect(88, 0, 36, 34);
-  BOMB_SEEN.t = own(new THREE.CanvasTexture(c));
-  return BOMB_SEEN.t;
-}
-// the bomb goes off: a flash, a moment of slow motion, a heart or two from Red Cap in reach, a big blow to the talkers
-function bombBlast(x, z) {
-  const p = new THREE.Vector3(x, heightAt(x, z) + 0.8, z),
-    at = AU.at;
-  AU.at = null; // full loudness wherever Red Cap is
-  sTone({ f: 70, f2: 22, dur: 1.4, gain: 0.8 });
-  sTone({ f: 140, f2: 40, dur: 0.6, type: 'sawtooth', gain: 0.35, filt: [900, 120] });
-  sNoise({ dur: 1.3, f: 3000, f2: 120, q: 0.5, gain: 0.8 });
-  sNoise({ dur: 0.4, f: 7000, f2: 1500, q: 0.8, gain: 0.4, at: 0.03 });
-  for (let i = 0; i < 6; i++) sNoise({ dur: 0.12, f: rand(400, 1600), q: 2, gain: 0.25, at: 0.25 + i * rand(0.08, 0.16) }); // debris coming down
-  AU.at = at;
-  cam.shake = Math.max(cam.shake, 1.1);
-  slowT = Math.max(slowT, 0.25);
-  const fl = $('#flash');
-  fl.classList.add('on');
-  setTimeout(() => fl.classList.remove('on'), 110);
-  SFX.boom();
-  for (let i = 0; i < 3; i++) burst(p.clone().setY(p.y + i * 0.6), [0xfff0a0, 0xf0cf2e, 0xff7a1a, 0xd8212a, 0x1a1618], 45, 13, 0.36, { g: 9 });
-  for (let i = 0; i < 12; i++) smokePuff(p.clone().add(new THREE.Vector3(rand(-2.2, 2.2), rand(0, 2), rand(-2.2, 2.2))), rand(2, 3.4), 1.6, 1.2);
-  floatWord('BOOM', p.clone().setY(p.y + 3), '#f0cf2e', 1.8, true);
-  const d = Math.hypot(hero.pos.x - x, hero.pos.z - z);
-  if (d < BOMB_R) hurtHero(d < BOMB_CLOSE ? 2 : 1, p, true);
-  for (const e of G.enemies) {
-    if (e.dead || e.dying || e.dormant || e.hidden) continue;
-    const dx = e.pos.x - x,
-      dz = e.pos.z - z,
-      de = Math.hypot(dx, dz);
-    if (de >= BOMB_R + (e.r || 0.5)) continue;
-    const caged = e.caged;
-    damage(e, BOMB_DMG, dx / (de || 1), dz / (de || 1), true);
-    if (caged && !e.caged) damage(e, BOMB_DMG, dx / (de || 1), dz / (de || 1), true); // a cage or stake breaks, and the blast still lands
-  }
 }
 // each frame: the orb turns, the tie keeps to the face the camera sees, and a struck pyramid shakes
 function pyrTick(dt) {

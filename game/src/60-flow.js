@@ -5,15 +5,10 @@ function startGame(later) {
   if (state === 'leave' || state === 'build') return; // already on the way into a floor
   auInit();
   if (later !== true) slidesOn(false); // otherwise the slides go once the ink has covered them
-  hero.ammo = 7;
+  hero.ammo = START_AMMO;
   hero.hp = hero.maxHp;
   hero.ammoFloor = -1;
-  hero.hasJaw = false;
-  if (hero.jawBuddy) {
-    scene.remove(hero.jawBuddy);
-    hero.jawBuddy = hero.jawBuddyJ = null;
-  }
-  $('#wJaw').hidden = true;
+  loseJaw();
   stats.kills = 0;
   stats.hits = 0;
   stats.deaths = 0;
@@ -91,14 +86,7 @@ function enterFloor(i, later) {
   } else {
     hero.ammo = hero.floorAmmo;
     hero.hp = hero.floorHp;
-    if (hero.hasJaw && !hero.floorJaw) {
-      hero.hasJaw = false;
-      if (hero.jawBuddy) {
-        scene.remove(hero.jawBuddy);
-        hero.jawBuddy = hero.jawBuddyJ = null;
-      }
-      $('#wJaw').hidden = true;
-    }
+    if (hero.hasJaw && !hero.floorJaw) loseJaw();
   }
   hero.stun = 0;
   updAmmo();
@@ -186,7 +174,7 @@ const CAL_MS = 13,
 function calibrate() {
   const gl = renderer.getContext(),
     px = new Uint8Array(4),
-    cap = Math.min(devicePixelRatio || 1, innerWidth < 700 ? 1.5 : 1.75);
+    cap = resCap();
   const timed = () => {
     const t0 = performance.now();
     render();
@@ -198,12 +186,12 @@ function calibrate() {
     for (let n = 0; n < 3; n++) {
       const cur = Math.min(resScale, cap),
         ms = view();
-      if (ms <= limit || cur <= 0.75) return;
+      if (ms <= limit || cur <= RES_LOW) return;
       if (!post.uniforms.lite.value) {
         post.uniforms.lite.value = 1; // single ink lines first
         continue;
       }
-      resScale = Math.max(0.75, Math.floor(cur * Math.sqrt(limit / ms) * 20) / 20); // pixels cost by area
+      resScale = Math.max(resFloor(cur), Math.floor(cur * Math.sqrt(limit / ms) * 20) / 20); // pixels cost by area
       resize();
     }
   };

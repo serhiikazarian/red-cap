@@ -98,12 +98,10 @@ function openGate() {
   SFX.boom();
   sink();
   if (G.fogWall) G.fogWall.going = true;
-  setTimeout(() => {
-    if (G) {
-      G.gateClosed = false;
-      flowField();
-    }
-  }, 900);
+  later(0.9, () => {
+    G.gateClosed = false;
+    flowField();
+  });
 }
 // a talker gone: the count, the hidden boss's stages, the door
 function checkClear() {
@@ -255,10 +253,10 @@ function updPaperTrail(dt) {
 function buildDoor(cx, cz) {
   const g = new THREE.Group();
   g.position.set(cx, 0, cz);
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.4, 0.25), new THREE.MeshBasicMaterial({ color: 0x0d0b0a }));
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.4, 0.25), new THREE.MeshBasicMaterial({ color: COL.ink }));
   frame.position.y = 1.7;
   g.add(frame);
-  const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 3), new THREE.MeshBasicMaterial({ color: 0xd8212a, fog: false }));
+  const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 3), new THREE.MeshBasicMaterial({ color: COL.tie, fog: false }));
   hole.position.set(0, 1.6, 0.14);
   g.add(hole);
   const hole2 = hole.clone();
