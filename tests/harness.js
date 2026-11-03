@@ -18,7 +18,14 @@ async function openGame(browser, build, errs) {
   });
   await pg.goto('file://' + path.resolve(build));
   await pg.waitForSelector('#startBtn:not([disabled])', { timeout: 120000 });
-  await pg.click('#startBtn');
+  // straight into floor one, without the loading cut (its calibration draws dozens of full frames on the CPU: 10 s; the harness
+  // sets the drawing quality itself) and without warming its shaders: every run rebuilds and warms its own floor (R.start)
+  await pg.evaluate(() => {
+    const warm = warmUp;
+    warmUp = () => {};
+    startGame();
+    warmUp = warm;
+  });
   await pg.waitForFunction("state === 'intro'", null, { timeout: 180000 });
   await pg.evaluate(() => slidesOn(false));
   await pg.evaluate(install);

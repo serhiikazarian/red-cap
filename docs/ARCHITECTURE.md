@@ -109,11 +109,15 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Playwright + swiftshader (`tests/browser.js`), viewport 880×500. First render of new shaders is slow (tens of seconds).
 - `tests/harness.js`: frozen clock, seeded dice (fixed from the page's first line, so start-up drawing such as the smoke
   texture repeats; three.js ids on their own dice), sound off, a scripted player; used by the replay and picture tests that
-  prove a change alters nothing. `tools/same.sh` runs them; by hand: `tests/replay.js build out.json [quick]` +
-  `tests/replay-cmp.js a.json b.json`, `tests/pics.js build dir` + `tests/pics-cmp.py dirA dirB [diffDir]` (diffDir gets
-  side-by-side + difference images). The harness fixes the drawing quality (`RES_MIN`, single ink lines). Run with
-  `NODE_PATH=$(npm root -g)`, one browser at a time. When a replay differs and the cause isn't obvious: `DEEP=1 node tests/replay.js …` for both builds, then `node tests/replay-deep.js a.json b.json`
-  names the first dice roll (with its call stack) or field where they part.
+  prove a change alters nothing. The scenarios and pictures are listed in `tests/jobs.js`; `tools/same.sh` runs them all
+  (`tests/same.js`: `JOBS` pages at a time, default 3; the floors touched since `main` first, by `FLOOR_FILES`; the run kept in
+  `out/same` with the build's fingerprint, which `new` turns into the baselines). By hand: `tests/replay.js build outDir [name…]`
+  + `tests/replay-cmp.js dirA dirB`, `tests/pics.js build dir` + `tests/pics-cmp.py dirA dirB [diffDir] [name]` (diffDir gets
+  side-by-side + difference images). The harness enters floor one without its loading cut or shader warm-up (each run
+  rebuilds its own floor) and fixes the drawing quality (`RES_MIN`, single ink lines); opening a page is most of a job's
+  time (~4 s), the frames are cheap (600 in under a second). Run with `NODE_PATH=$(npm root -g)`, one browser at a time. When
+  a replay differs and the cause isn't obvious: `DEEP=1 node tests/replay.js build outDir name` for both builds, then
+  `node tests/replay-deep.js dirA dirB` names the first dice roll (with its call stack) or field where they part.
 - Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (`<js>` is one expression:
   wrap statements in `(async () => { ... })()`; what it returns is printed as JSON). To pin the camera, wrap
   `renderer.render` and set the camera when `c===camera`.
