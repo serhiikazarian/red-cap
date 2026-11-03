@@ -143,7 +143,7 @@ const GEEZER_ST = {
       for (let k = 0; k < 30; k++) {
         const a = rand(0, TAU),
           r = rand(1.5, 4.8);
-        burst(e.pos.clone().add(new THREE.Vector3(Math.cos(a) * r, rand(0.4, 1.6), Math.sin(a) * r)), [0xd8d4cc, 0x9a9a9a, 0x2a2a1a], 1, 2, 0.22, {
+        burst(fxAt(e.pos, Math.cos(a) * r, rand(0.4, 1.6), Math.sin(a) * r), [0xd8d4cc, 0x9a9a9a, 0x2a2a1a], 1, 2, 0.22, {
           g: 4,
           life: 0.6
         });

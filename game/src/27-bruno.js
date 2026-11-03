@@ -121,14 +121,10 @@ function updBruno(e, dt, dist, ux, uz, mv) {
       cam.shake = Math.max(cam.shake, 0.35);
       for (let k = 0; k < 56; k++) {
         const a = rand(0, TAU);
-        burst(
-          e.pos.clone().add(new THREE.Vector3(Math.cos(a) * rand(1, BRUNO_FLARE), 0.3, Math.sin(a) * rand(1, BRUNO_FLARE))),
-          [COL.hot, COL.bile, COL.tie],
-          1,
-          3,
-          0.3,
-          { g: -6, life: 0.8 }
-        );
+        burst(fxAt(e.pos, Math.cos(a) * rand(1, BRUNO_FLARE), 0.3, Math.sin(a) * rand(1, BRUNO_FLARE)), [COL.hot, COL.bile, COL.tie], 1, 3, 0.3, {
+          g: -6,
+          life: 0.8
+        });
       }
     }
   } else if (e.st === 'flare') {
@@ -210,7 +206,7 @@ function brunoFire(e, dt, now) {
       seg.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && los(e.pos, tmpW);
     }
   if (Math.random() < dt * 50)
-    burst(e.pos.clone().add(new THREE.Vector3(rand(-1, 1), rand(0.1, 1.2), rand(-1, 1))), [COL.hot, COL.bile, COL.tie], 1, 2, 0.28, {
+    burst(fxAt(e.pos, rand(-1, 1), rand(0.1, 1.2), rand(-1, 1)), [COL.hot, COL.bile, COL.tie], 1, 2, 0.28, {
       g: -5,
       life: 0.8
     });

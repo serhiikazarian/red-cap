@@ -316,52 +316,58 @@ function flowField() {
     }
   }
 }
-// a prop ahead and close to the line of travel bends the heading round it, to the same side for a given walker and prop
+// a prop ahead and close to the line of travel bends the heading round it, to the same side for a given walker and prop: the
+// round props in the 3 x 3 cells round the walker, then the stakes, each adding its push to AVOID (reused: no garbage a frame)
+const AVOID = { x: 0, z: 0 };
 function avoidProps(e, vx, vz) {
   const [cx, cz] = cellOf(e.pos.x, e.pos.z);
-  let ox = 0,
-    oz = 0;
-  const near = [];
+  AVOID.x = AVOID.z = 0;
   for (let iz = cz - 1; iz <= cz + 1; iz++)
     for (let ix = cx - 1; ix <= cx + 1; ix++) {
       const pr = pyrAt(ix, iz) ? PYR.foot * Math.SQRT2 : propR(ch(ix, iz));
-      if (pr) near.push([(ix + 0.5) * CELL, (iz + 0.5) * CELL, pr, ix + iz * 999]);
+      if (pr) avoidOne(e, vx, vz, (ix + 0.5) * CELL, (iz + 0.5) * CELL, pr, ix + iz * 999);
     }
-  G.stakes.forEach((st, k) => near.push([st.x, st.z, st.r + Math.max(0, (e.wide || 0) - e.r), -1 - k]));
-  for (const [qx, qz, pr, key] of near) {
-    const px = qx - e.pos.x,
-      pz = qz - e.pos.z,
-      ahead = px * vx + pz * vz,
-      lat = px * -vz + pz * vx,
-      clear = pr + e.r + 0.3;
-    if (ahead <= -0.2 || ahead > clear + 2 || Math.abs(lat) >= clear) continue;
-    let side = e.avCell === key ? e.avSide : 0;
-    if (!side) {
-      const room = sd => {
-          let m = 9;
-          for (let k = 0; k <= 8; k++) {
-            const t = (k / 8) * Math.PI,
-              R = pr + e.r + 0.05,
-              qx = Math.cos(t) * vx + Math.sin(t) * -vz * sd,
-              qz = Math.cos(t) * vz + Math.sin(t) * vx * sd;
-            m = Math.min(m, wallDist(px + e.pos.x + qx * R, pz + e.pos.z + qz * R));
-          }
-          return m;
-        },
-        nat = Math.abs(lat) < 0.05 ? (Math.sin(e.seed) > 0 ? 1 : -1) : -Math.sign(lat);
-      side = room(nat) >= e.r * 0.95 || room(nat) >= room(-nat) ? nat : -nat;
-      e.avCell = key;
-      e.avSide = side;
-    }
-    const w = (1 - Math.abs(lat) / clear) * 2.2;
-    ox += -vz * side * w;
-    oz += vx * side * w;
+  for (let k = 0; k < G.stakes.length; k++) {
+    const st = G.stakes[k];
+    avoidOne(e, vx, vz, st.x, st.z, st.r + Math.max(0, (e.wide || 0) - e.r), -1 - k);
   }
+  const ox = AVOID.x,
+    oz = AVOID.z;
   if (!ox && !oz) return [vx, vz];
   const nx = vx + ox,
     nz = vz + oz,
     l = Math.hypot(nx, nz) || 1;
   return [nx / l, nz / l];
+}
+// one prop of radius pr at (qx, qz); key names it, so a walker keeps the side it chose
+function avoidOne(e, vx, vz, qx, qz, pr, key) {
+  const px = qx - e.pos.x,
+    pz = qz - e.pos.z,
+    ahead = px * vx + pz * vz,
+    lat = px * -vz + pz * vx,
+    clear = pr + e.r + 0.3;
+  if (ahead <= -0.2 || ahead > clear + 2 || Math.abs(lat) >= clear) return;
+  let side = e.avCell === key ? e.avSide : 0;
+  if (!side) {
+    const room = sd => {
+        let m = 9;
+        for (let k = 0; k <= 8; k++) {
+          const t = (k / 8) * Math.PI,
+            R = pr + e.r + 0.05,
+            ux = Math.cos(t) * vx + Math.sin(t) * -vz * sd,
+            uz = Math.cos(t) * vz + Math.sin(t) * vx * sd;
+          m = Math.min(m, wallDist(px + e.pos.x + ux * R, pz + e.pos.z + uz * R));
+        }
+        return m;
+      },
+      nat = Math.abs(lat) < 0.05 ? (Math.sin(e.seed) > 0 ? 1 : -1) : -Math.sign(lat);
+    side = room(nat) >= e.r * 0.95 || room(nat) >= room(-nat) ? nat : -nat;
+    e.avCell = key;
+    e.avSide = side;
+  }
+  const w = (1 - Math.abs(lat) / clear) * 2.2;
+  AVOID.x += -vz * side * w;
+  AVOID.z += vx * side * w;
 }
 // the heading for a talker going to target: straight when the way is clear and level, else down the flow field; round props
 function steer(e, target = hero.pos) {

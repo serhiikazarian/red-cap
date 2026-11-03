@@ -3,6 +3,7 @@
 // fog gate to the Jester.
 const GRUMP_SHADE = { w: 1.5, full: 2, end: 3.2 }, // a block's shelter: half its width beyond its middle, full this far behind it, none past end
   GRUMP_REACH = 33, // how far a ring can hurt
+  GRUMP_SWELL = new THREE.Vector3(1.1, 1.1, 1.3), // his size between two rings while he shouts (each ring puffs him up past it)
   WAVE_SH_N = 16, // blocks one ring can be cut by
   WAVE_T = { value: 0 }; // the rings' clock (their tears move)
 // how much a block still protects: whole while its top box stands; once that falls it thins steadily to nothing at 15 % health
@@ -73,7 +74,7 @@ function updGrump(e, dt, dist, ux, uz, mv) {
         e.st = 'pause';
         e.t = 2.3;
       }
-    } else if (animTick) e.body.scale.lerp(new THREE.Vector3(1.1, 1.1, 1.3), 0.4);
+    } else if (animTick) e.body.scale.lerp(GRUMP_SWELL, 0.4);
   }
   updWaves(e, dt, dist, ux, uz);
   if (dist < e.r + hero.r) {
@@ -194,13 +195,13 @@ function grumpWear(e, w) {
     w.blk.add(k);
     b.flashT = 3; // it flashes either way: at first only to show what shouting does to a block
     if (e.wearOn) b.hp -= 0.0224; // about nine bursts of shouting from whole to spent
-    burst(new THREE.Vector3(b.x, 0.9, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 4, 3, 0.14);
+    burst(FX_AT.set(b.x, 0.9, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 4, 3, 0.14);
     // the shout splashes against it: bits of the ring thrown back and up off its face
     const ux = (e.pos.x - b.x) / (dd || 1),
       uz = (e.pos.z - b.z) / (dd || 1);
     for (let q = 0; q < 3; q++)
       burst(
-        new THREE.Vector3(b.x + ux * 0.9 + rand(-0.6, 0.6), rand(0.4, 1.6), b.z + uz * 0.9 + rand(-0.6, 0.6)),
+        FX_AT.set(b.x + ux * 0.9 + rand(-0.6, 0.6), rand(0.4, 1.6), b.z + uz * 0.9 + rand(-0.6, 0.6)),
         [COL.bile, COL.paper, 0x4fa9df, COL.ink],
         4,
         4,
@@ -222,8 +223,8 @@ function grumpWear(e, w) {
       const [ix, iz] = cellOf(b.x, b.z);
       G.map[iz] = G.map[iz].slice(0, ix) + '.' + G.map[iz].slice(ix + 1);
       delete G.props[k];
-      burst(new THREE.Vector3(b.x, 1, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 24, 6, 0.26);
-      for (let p = 0; p < 6; p++) smokePuff(new THREE.Vector3(b.x + rand(-0.8, 0.8), rand(0.4, 1.8), b.z + rand(-0.8, 0.8)), rand(1.2, 2), 0.9, 0.6);
+      burst(FX_AT.set(b.x, 1, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 24, 6, 0.26);
+      for (let p = 0; p < 6; p++) smokePuff(FX_AT.set(b.x + rand(-0.8, 0.8), rand(0.4, 1.8), b.z + rand(-0.8, 0.8)), rand(1.2, 2), 0.9, 0.6);
       sNoise({ dur: 0.45, f: 900, f2: 200, q: 0.8, gain: 0.3 });
     }
   }

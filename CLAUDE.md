@@ -8,7 +8,8 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - Serj does not code: plain language, they/them unless told otherwise. Reply with what changed, what was tested, what to check in play.
 - Implement **only what is asked**. If look, sound or play is ambiguous, ask one short question first (AskUserQuestion, with options).
 - The game is settled for a festival demo: nothing that changes how it plays, looks or sounds unless Serj asks.
-- When a task is done and every check passes, say so and **ask whether to push**. Never push without their yes.
+- When a task is done and every check passes, say so and **ask whether to ship**. Never push `main` without their yes
+  (saving to the work branch, `tools/wip.sh`, is fine).
 
 ## Working surgically (tokens matter)
 - Find before reading: `rg -n "name" game/src` (always give a path: bare `rg` waits on stdin). Definitions:
@@ -20,6 +21,9 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - Comments describe how things work now, never what they used to be or what was changed.
 - Tuning numbers sit at the top of each file; many files open with a comment explaining their rules: read that first.
 - Don't reread docs already in context. One screenshot only when the change is visual.
+- Commands: use the `tools/` scripts (one line in, one word out: `OK`, `SAME`, `SAVED`, `SHIPPED`); a sequence needed twice
+  becomes a script there. Cut long output (`tail`, `grep`); run long checks in the background and wait for their notice,
+  never poll. A probe: `tests/shot.js` with one expression, not a new file, unless it will be reused.
 
 ## Layout
 - `game/src/*.js`: the game, one file per part, joined in name order into one script by `game/build.py` (one shared scope: any
@@ -45,14 +49,16 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
   and releases each version.
 
 ## Ship (only after Serj says yes)
-1. Version = current + 0.01, two digits after the point (1.06 → 1.07; 1.09 → 1.10; 1.99 → 2.00). Set the title label to match
-   (`#version` in `game/index.html`: `v1.07`). Append `## N.NN (date)` to `docs/HISTORY.md`: short plain bullets, key names
-   in backticks.
-2. One commit with the subject exactly `N.NN` on the finished state, `git push origin main`. Pages updates in ~3 min; then CI
-   tags it `vN.NN` and makes a GitHub release with that version's game file (cloud sessions can't push tags themselves: the
-   git proxy refuses). Never push a draft version commit you may replace later.
-3. Undo: `git revert <commit>`, push (a new version). Back to an older version: `git fetch --tags`, then
+1. Version = current + 0.01, two digits after the point (1.06 → 1.07; 1.09 → 1.10; 1.99 → 2.00), unless Serj names one. Set the
+   title label (`#version` in `game/index.html`: `v1.07`) and append `## N.NN (date)` to `docs/HISTORY.md` (short plain
+   bullets, key names in backticks). A change to play or looks: `tools/same.sh new` first (remakes the baselines).
+2. `tools/ship.sh N.NN "<attribution lines>"` → `SHIPPED N.NN`: checks, one commit `N.NN` on top of `main` with exactly the
+   current files, pushes `main`, and links the work branch to it. Never merge, squash or force-push by hand: that is what made
+   1.21 conflict. Pages updates in ~3 min; CI then tags `vN.NN` and makes the release (cloud sessions can't push tags).
+3. Undo: `git revert <commit>`, ship as a new version. Back to an older version: `git fetch --tags`, then
    `git checkout vN.NN -- game`, check, ship as a new version. Never rewrite `main`'s history (tags and releases point into it).
+- Saving work between versions (the session's stop hook asks for it): `tools/wip.sh "message" "<attribution lines>"` →
+  `SAVED`: commits and pushes the work branch only, which publishes nothing. Never push `main` any other way.
 
 ## Rules that bite
 - **Load rule: anything new is prepared during the loading screen, never mid-game.** A new material or shader variant goes into

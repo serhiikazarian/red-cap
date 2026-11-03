@@ -89,12 +89,7 @@ const SMOKER_ST = {
       e.side = Math.random() < 0.5 ? 1 : -1;
       const k2 = e.smoky || 1;
       for (let k = 0; k < 7 * k2; k++)
-        smokePuff(
-          e.pos.clone().add(new THREE.Vector3(rand(-1.6, 1.6) * k2, e.fly + rand(-1.2, 0.8), rand(-1.6, 1.6) * k2)),
-          rand(2.4, 3.6) * k2,
-          4.5,
-          0.12
-        );
+        smokePuff(fxAt(e.pos, rand(-1.6, 1.6) * k2, e.fly + rand(-1.2, 0.8), rand(-1.6, 1.6) * k2), rand(2.4, 3.6) * k2, 4.5, 0.12);
       floatWord('*COUGH*', e.pos.clone().setY(e.fly + 1.2), HEX.smoke, 0.8);
       sNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
     }
@@ -152,8 +147,7 @@ function smokerReturns(e) {
   e.st = 'hover';
   e.t = rand(1.5, 2.5);
   const k2 = e.smoky || 1;
-  for (let k = 0; k < 7 * k2; k++)
-    smokePuff(e.pos.clone().add(new THREE.Vector3(rand(-1.4, 1.4) * k2, 2 + rand(-1, 1), rand(-1.4, 1.4) * k2)), rand(2, 3.2) * k2, 3.5, 0.1);
+  for (let k = 0; k < 7 * k2; k++) smokePuff(fxAt(e.pos, rand(-1.4, 1.4) * k2, 2 + rand(-1, 1), rand(-1.4, 1.4) * k2), rand(2, 3.2) * k2, 3.5, 0.1);
   floatWord('MISS ME?', e.pos.clone().setY(3.8), HEX.paper, 1);
   sNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
 }
@@ -165,7 +159,7 @@ function smokerCough(e, dt, dist, ux, uz) {
     sNoise({ dur: 0.35, f: 380, f2: 160, q: 1.5, gain: 0.28 });
     later(0.26, () => sNoise({ dur: 0.3, f: 340, f2: 150, q: 1.5, gain: 0.22 }));
     floatWord('*COUGH*', e.pos.clone().setY(e.fly + 2.6), HEX.smoke, 1);
-    for (let k = 0; k < 6; k++) smokePuff(e.pos.clone().add(new THREE.Vector3(ux * k * 1.2, e.fly - 0.4, uz * k * 1.2)), rand(1.8, 2.8), 2.5, 0.2);
+    for (let k = 0; k < 6; k++) smokePuff(fxAt(e.pos, ux * k * 1.2, e.fly - 0.4, uz * k * 1.2), rand(1.8, 2.8), 2.5, 0.2);
     if (dist < 8.5 && los(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
   }
 }
@@ -194,8 +188,7 @@ TALKERS.W = {
     e.t = 12;
     e.root.visible = false;
     e.st = 'hover';
-    for (let k = 0; k < 14; k++)
-      smokePuff(e.pos.clone().add(new THREE.Vector3(rand(-1.6, 1.6), (e.fly || 2) + rand(-1, 1), rand(-1.6, 1.6))), rand(2.4, 3.6), 4.5, 0.1);
+    for (let k = 0; k < 14; k++) smokePuff(fxAt(e.pos, rand(-1.6, 1.6), (e.fly || 2) + rand(-1, 1), rand(-1.6, 1.6)), rand(2.4, 3.6), 4.5, 0.1);
     // the first time the game says it; the second time he does, and his line wins over the curse from the blow that sent him off
     if (e.lives === 2) toast('He went up in smoke. Beware');
     else floatWord("I'LL TAKE A BREAK", e.pos.clone().setY(3.8), HEX.paper, 1.1, true);
