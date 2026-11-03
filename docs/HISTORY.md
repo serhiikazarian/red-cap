@@ -223,3 +223,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Shorter loading screens: the sharpness search ends within `TUNE_MAX` 3 s (the controller goes on from there), settling
   within `SETTLE_MAX` 60 frames; the scissors' run is never planned past `LOAD_MAX` 5 s; `LOAD_GUESS` 2 s for floors one and two.
 - Title label `v1.29`.
+
+## 1.30 (3 Nov 2026)
+- Floor three: the Grump's rings end, torn, at the first wall (or the closed fog gate) in each direction, as the rules already
+  had it (`waveWalls`: the distance in `WAVE_WALL_N` directions, measured once at build, read by the rings' shader as `uWall`).
+- `G.texs`: textures a floor makes that no mesh holds yet; `warmUp` uploads them.
+- Title label `v1.30`.

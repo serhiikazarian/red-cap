@@ -35,6 +35,7 @@ function warmSet() {
   WARM.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true })));
   const wm = new THREE.MeshBasicMaterial({ map: waveTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false });
   wm.userData.uSh = { value: Array.from({ length: WAVE_SH_N }, () => new THREE.Vector4()) };
+  wm.userData.uWall = { value: waveOpen() };
   wm.onBeforeCompile = waveCompile;
   WARM.add(new THREE.Mesh(g, wm)); // the Grump's rings
   WARM.add(new THREE.Mesh(g, holoMat(fireTex))); // the niche holograms
@@ -66,6 +67,7 @@ function warmUp() {
   for (const [w, c] of [...WORDS_SEED, ...(WORDS_FLOOR[floorIdx] || []), ...(WORDS_USED[floorIdx] || new Map()).values()]) texs.add(wordTex(w, c));
   renderer.compile(postScene, postCam);
   if (floorIdx === 2) texs.add(maskGlow());
+  for (const t of G.texs) texs.add(t);
   for (const t of texs) if (t && t.image) renderer.initTexture(t);
   renderer.setRenderTarget(rt);
   renderer.render(scene, camera);
