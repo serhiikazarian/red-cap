@@ -25,7 +25,7 @@ function makeBruno(e, add, x, z) {
     pebbleDmg: 1
   });
   e.hot = { x: x, z: z, r: 0, k: 1.6, see: true }; // his heat zone: off while he is tied up; a wall keeps it off Red Cap
-  (G.hot = G.hot || []).push(e.hot);
+  G.hot.push(e.hot);
   const m = add(paper('bruno', 3, 0.14));
   e.body = m;
   e.t = 2;

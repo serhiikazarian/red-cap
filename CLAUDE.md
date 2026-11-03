@@ -75,7 +75,11 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - What is special about one talker goes in its own `TALKERS` entry (hooks and traits listed at the top of 20-talkers.js), never
   as `e.type === 'X'` in shared code.
 - Core colours: `COL.ink` / `HEX.paper` … (00-util) in code, `var(--ink)` … in style.css; never retype their hex values.
-- A delay in play: `later(sec, fn)` (held while paused, dropped with the floor), never `setTimeout`.
+- A delay in play: `later(sec, fn)` (held while paused, dropped with the floor), never `setTimeout`. Game rules (timings, where
+  a talker can be hit) run on `playT` (seconds of play: stops while paused, slows with hit-stop and the finale); the wall clock
+  `performance.now()` only for cosmetic wobble. Motion that belongs to a floor goes in `G.anim`, never its own animation loop.
+- The floor's state `G` declares every field in `newFloor` (50-level): add a new one there, never `G.x = G.x || []`.
+- Loudness: `VOL` (01-audio), one share per sound name; never retype gains to make a sound louder or quieter.
 
 ## Game
 - Floors: 1 *The Usher's Corridor* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged, pyramids

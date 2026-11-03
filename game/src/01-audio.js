@@ -1,8 +1,16 @@
 // Sound: everything is synthesised with Web Audio except a few recorded clips (assets/sfx, as SOUNDS).
 // AU.at is where the sound being made comes from (null: Red Cap or the whole floor); sounds fade with distance from Red Cap.
-const AU = { ctx: null, master: null, muted: false, drone: [], at: null },
+const AU = { ctx: null, master: null, muted: false, drone: [], at: null, vol: 1 }, // vol: the VOL share of the SFX entry playing
   MASTER_GAIN = 0.75,
   SND_NEAR = 4; // full volume within this many metres
+// how loud each named sound plays: an SFX entry by its name, a recorded clip by its file's (1, or left out: as it is made). The
+// one place to turn a sound up or down
+const VOL = {
+  pop: 0.5, // a Priest's ghost
+  shadePop: 0.5,
+  death_exhale: 0.3, // Red Cap's last breath
+  vomit: 0.6 // the Priest's spray
+};
 function auK(p) {
   if (!p) return 1;
   const d = Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z);
@@ -41,8 +49,9 @@ function auInit() {
     );
   }
 }
-// a recorded clip; returns its source and gain so it can be faded out
-function sPlay(name, gain = 1) {
+// a recorded clip, at its VOL share; returns its source and gain so it can be faded out
+function sPlay(name) {
+  const gain = VOL[name] ?? 1;
   if (!AU.ctx || !AU.buf || !AU.buf[name]) return null;
   const s = AU.ctx.createBufferSource(),
     g = AU.ctx.createGain();
@@ -62,7 +71,7 @@ function env(g, t, a, peak, dur) {
 // filtered noise; at delays it, a is the attack
 function sNoise({ dur = 0.2, f = 1200, f2 = null, q = 1, type = 'bandpass', gain = 0.4, at = 0, a = 0.005 }) {
   if (!AU.ctx) return;
-  gain *= auK(AU.at);
+  gain *= auK(AU.at) * AU.vol;
   const t = AU.ctx.currentTime + at;
   const s = AU.ctx.createBufferSource();
   s.buffer = AU.noise;
@@ -83,7 +92,7 @@ function sNoise({ dur = 0.2, f = 1200, f2 = null, q = 1, type = 'bandpass', gain
 // an oscillator, optionally gliding to f2 and through a gliding band-pass (filt: [from, to])
 function sTone({ f = 440, f2 = null, dur = 0.2, type = 'sine', gain = 0.3, at = 0, a = 0.005, filt = null }) {
   if (!AU.ctx) return;
-  gain *= auK(AU.at);
+  gain *= auK(AU.at) * AU.vol;
   const t = AU.ctx.currentTime + at;
   const o = AU.ctx.createOscillator();
   o.type = type;
@@ -208,17 +217,17 @@ const SFX = {
   },
   pop() {
     // a Priest's ghost bursting like a soap bubble
-    sNoise({ dur: 0.03, f: 5000, q: 0.8, gain: 0.225, a: 0.001 });
-    sTone({ f: 380, f2: 1500, dur: 0.14, type: 'sine', gain: 0.225, a: 0.002 });
-    sTone({ f: 1500, f2: 700, dur: 0.1, type: 'triangle', gain: 0.075, at: 0.06, a: 0.002 });
-    sNoise({ dur: 0.15, f: 2500, f2: 900, q: 1.2, gain: 0.07, at: 0.03 });
+    sNoise({ dur: 0.03, f: 5000, q: 0.8, gain: 0.45, a: 0.001 });
+    sTone({ f: 380, f2: 1500, dur: 0.14, type: 'sine', gain: 0.45, a: 0.002 });
+    sTone({ f: 1500, f2: 700, dur: 0.1, type: 'triangle', gain: 0.15, at: 0.06, a: 0.002 });
+    sNoise({ dur: 0.15, f: 2500, f2: 900, q: 1.2, gain: 0.14, at: 0.03 });
   },
   shadePop() {
     // a Shade going like a burst gum bubble (lower than a ghost's pop)
-    sNoise({ dur: 0.03, f: 3000, q: 0.7, gain: 0.25, a: 0.001 });
-    sTone({ f: 700, f2: 150, dur: 0.22, type: 'sine', gain: 0.3, a: 0.002 });
-    sTone({ f: 260, f2: 90, dur: 0.12, type: 'triangle', gain: 0.15, a: 0.002 });
-    sNoise({ dur: 0.18, f: 1200, f2: 400, q: 1, gain: 0.06, at: 0.01 });
+    sNoise({ dur: 0.03, f: 3000, q: 0.7, gain: 0.5, a: 0.001 });
+    sTone({ f: 700, f2: 150, dur: 0.22, type: 'sine', gain: 0.6, a: 0.002 });
+    sTone({ f: 260, f2: 90, dur: 0.12, type: 'triangle', gain: 0.3, a: 0.002 });
+    sNoise({ dur: 0.18, f: 1200, f2: 400, q: 1, gain: 0.12, at: 0.01 });
   },
   unmask() {
     sNoise({ dur: 0.3, f: 800, f2: 3000, q: 3, gain: 0.15 });
@@ -254,16 +263,24 @@ const SFX = {
     sTone({ f: 55, f2: 38, dur: 0.14, gain: 0.25, at: 0.2 });
   }
 };
+// each SFX entry plays at its VOL share
+for (const [name, play] of Object.entries(SFX))
+  SFX[name] = (...args) => {
+    const was = AU.vol;
+    AU.vol = was * (VOL[name] ?? 1);
+    play(...args);
+    AU.vol = was;
+  };
 // the Priest's spray: one looping clip whose loudness follows him
 let sprayNode = null;
 function sprayStart() {
   if (sprayNode) return;
-  sprayNode = sPlay('vomit', 0.6);
+  sprayNode = sPlay('vomit');
   if (sprayNode) sprayNode.at = AU.at;
 }
 function sprayFollow() {
   if (!sprayNode || !sprayNode.at) return;
-  sprayNode.g.gain.setTargetAtTime(0.6 * auK(sprayNode.at), AU.ctx.currentTime, 0.08);
+  sprayNode.g.gain.setTargetAtTime(VOL.vomit * auK(sprayNode.at), AU.ctx.currentTime, 0.08);
 }
 function sprayStop() {
   if (!sprayNode) return;

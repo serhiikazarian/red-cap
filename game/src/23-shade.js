@@ -11,7 +11,7 @@ function makeShade(e, add) {
 // then it flees for a while
 function updShade(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
-  const now = performance.now() / 1000;
+  const now = playT;
   e.fly = 1.6 + Math.sin(now * 2.3 + e.seed) * 0.35;
   e.y0 = e.fly - 0.7;
   e.y1 = e.fly + 0.7;

@@ -185,7 +185,7 @@ const PRIEST_ST = {
 };
 // the ghosts circle him, bobbing; touching one hurts
 function updGhosts(e, dt) {
-  const now = performance.now() / 1000;
+  const now = playT;
   for (const g of e.ghosts) {
     if (g.wait > 0) {
       g.m.visible = false;
@@ -220,6 +220,10 @@ function hitGhost(p, rad) {
 TALKERS.R = {
   make: makePriest,
   update: updPriest,
+  // the soft lock aims at his ghosts one by one, while he stands and they are out
+  aimParts: (e, aim) => {
+    for (const g of e.ghosts) if (!(g.wait > 0 || e.dazedT > 0)) aim(g.m.position, g.tgt);
+  },
   // reeling, he stops spraying and his ghosts leave him
   dazed: e => {
     sprayStop();

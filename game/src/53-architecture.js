@@ -163,7 +163,7 @@ function addWebs(w, faces) {
       cx = fx + b * t * 0.5,
       cz = fz + a * t * 0.5;
     if (used.some(([ux, uz]) => Math.hypot(ux - cx, uz - cz) < 2.2)) continue;
-    if ((G.wallWords || []).some(([wx, wz]) => Math.hypot(wx - cx, wz - cz) < 1.8)) continue;
+    if (G.wallWords.some(([wx, wz]) => Math.hypot(wx - cx, wz - cz) < 1.8)) continue;
     const W = 0.8 + r() * 0.4,
       yt = h - 0.32,
       drop = Math.min(1.2 + r() * 0.7, yt - 1.9);
@@ -189,7 +189,7 @@ function addWebs(w, faces) {
     const k = [Math.floor(fx / (CELL * 4)), Math.floor(fz / (CELL * 4)), a, b].join();
     if (!(take[k] ??= r() < STRIP.odds)) continue;
     if (used.some(([ux, uz]) => Math.hypot(ux - fx, uz - fz) < 1.6)) continue;
-    if ((G.wallWords || []).some(([wx, wz]) => Math.hypot(wx - fx, wz - fz) < 1.8)) continue;
+    if (G.wallWords.some(([wx, wz]) => Math.hypot(wx - fx, wz - fz) < 1.8)) continue;
     const yt = h - 0.32,
       drop = Math.min(STRIP.drop[0] + r() * (STRIP.drop[1] - STRIP.drop[0]), yt - 1.9),
       W = STRIP.half;

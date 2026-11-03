@@ -86,7 +86,7 @@ function talkerArt(e) {
     if (o.userData && o.userData.frame && o.userData.mat && o.userData.mat.map && (!best || o.userData.frame[1] > best.userData.frame[1])) best = o;
   });
   if (best) return { map: best.userData.mat.map, aspect: best.userData.frame[0] / best.userData.frame[1] };
-  return e.type === 'G' ? { map: TEX.grin_fire, aspect: SHAPES.grin_fire.aspect } : null; // a Grin is a ball: its drawing
+  return TALKERS[e.type].holo ? TALKERS[e.type].holo() : null;
 }
 // the hologram of the talker nearest the niche
 function holoShow(n) {
@@ -117,7 +117,7 @@ function holoGone(n) {
 }
 // a niche looked at long enough shows its hologram; looking away, it fades; it flickers and jitters while it shows
 function updNiches(dt) {
-  if (!G.niches) return;
+  if (!G.niches.length) return;
   const now = performance.now() / 1000,
     fx = -Math.sin(cam.yaw),
     fz = -Math.cos(cam.yaw);
@@ -149,7 +149,7 @@ function updNiches(dt) {
 }
 // a hologram struck: it bursts, and the blessing slows Red Cap (less than the Priest's)
 function hitHolo(p, rad) {
-  for (const n of G.niches || []) {
+  for (const n of G.niches) {
     if (!n.holo || n.holo.a < 0.3) continue;
     const q = n.holo.m.position;
     if (Math.hypot(q.x - p.x, q.z - p.z) < 0.55 + rad && Math.abs(q.y - p.y) < n.holo.m.scale.y / 2 + 0.3) {

@@ -9,9 +9,12 @@
 //     pops: it pops instead of tearing (no hit sound for its last blow)
 //     escape(e): true when it gets away instead (kill stops there); torn(e): before it falls apart
 //     tornWord: the word when torn (default TORN, null for none); drops(e): what it leaves (default dropsDefault); gone(e): after
-//     trapped(e): a bear trap leaves it reeling (42-traps)
+//     trapped(e): a bear trap leaves it reeling (42-traps); bounce(e, p): a pebble bounces off it at p (its reaction)
+//     hushed(e): what else a totem's ring does to it (43-totems); aimParts(e, aim): parts the soft lock aims at, aim(at, tgt) each
+//     holo(): its drawing for a niche's hologram when it has no drawn frame (45-niches)
 //   and traits: rim { col, a, k } (its rim light: colour, opacity, thickness), harmless (does not count as a talker left),
-//     loud (its sounds fill the floor instead of coming from where it is), noCover (the yo-yo reaches it without a clear line) }
+//     loud (its sounds fill the floor instead of coming from where it is), noCover (the yo-yo reaches it without a clear line),
+//     totemProof (a totem's ring passes it by), totemDaze (seconds a ring dazes it, default TOTEM_DAZE) }
 // update decides the move (mv: direction x, z and speed sp); returning STOP skips the shared movement and collision.
 const TALKERS = {},
   STOP = 'stop',
@@ -108,7 +111,7 @@ function updEnemy(e, dt) {
   if (e.dead) return;
   if (e.caged) {
     faceCam(e, dt);
-    const c = (G.cages || []).find(q => q.e === e);
+    const c = G.cages.find(q => q.e === e);
     if (c && animTick) {
       shake(e.tilt, c.rattle > 0 ? 0.12 : 0.02);
       if (c.pole) e.tilt.position.z = Math.abs(e.tilt.position.z) * 0.5;
@@ -189,7 +192,7 @@ function updEnemy(e, dt) {
     collide(e.pos, e.r, ey, e);
     collide(e.pos, e.r, ey, e);
     if (e.fly == null)
-      for (const c of G.clutter || []) {
+      for (const c of G.clutter) {
         const ox = e.pos.x - c.x,
           oz = e.pos.z - c.z,
           od = Math.hypot(ox, oz);
@@ -198,7 +201,7 @@ function updEnemy(e, dt) {
           e.pos.z = c.z + (oz / od) * (c.r + e.r);
         }
       }
-    for (const c of G.cages || [])
+    for (const c of G.cages)
       if (!c.broken && c.e !== e) {
         const ox = e.pos.x - c.x,
           oz = e.pos.z - c.z,
@@ -247,7 +250,7 @@ function hitHeight(e) {
 // What is special about a talker comes from its TALKERS entry (see the top of this file), in this order: shielded, struck, hurt
 function damage(e, n, dx, dz, force, weapon) {
   if (e.caged) {
-    const c = (G.cages || []).find(q => q.e === e);
+    const c = G.cages.find(q => q.e === e);
     if (c) breakCage(c, true);
     return;
   }

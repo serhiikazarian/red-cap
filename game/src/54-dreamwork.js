@@ -136,8 +136,6 @@ function chairParts(list, m) {
   add(0, 0.78, -0.23, 0.5, 0.55, 0.05);
 }
 function dreamwork(F, rng) {
-  G.anim = [];
-  G.grins = [];
   const fw = G.w * CELL,
     fh = G.h * CELL;
   if (F.deco === 'corridor') dreamCorridor(rng, fw, fh);
@@ -332,12 +330,12 @@ function dreamMouth(rng, fw, fh) {
   const nrng = mulberry(777);
   wallFaces(nrng, 0.16, (x, z, yaw) => {
     const y = 0.55 + nrng() * 0.5;
-    if ((G.wallWords || []).some(([wx, wz]) => Math.hypot(wx - x, wz - z) < 0.5)) return; // a word is painted there
+    if (G.wallWords.some(([wx, wz]) => Math.hypot(wx - x, wz - z) < 0.5)) return; // a word is painted there
     const m = still(new THREE.Mesh(archNiche().g, archNiche().m));
     m.position.set(x, y, z);
     m.rotation.y = yaw;
     G.group.add(m);
-    (G.niches = G.niches || []).push({ m, nx: Math.sin(yaw), nz: Math.cos(yaw), look: 0 }); // read after wallFaces lifts it
+    G.niches.push({ m, nx: Math.sin(yaw), nz: Math.cos(yaw), look: 0 }); // read after wallFaces lifts it
   });
   const thornM = new THREE.MeshLambertMaterial({ color: 0x1a0d0a, emissive: 0x1a0302 });
   for (const [x, z] of wallTops(rng, 6, 9)) {

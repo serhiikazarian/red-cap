@@ -92,14 +92,13 @@ function fogWall(row) {
 // the Grump beaten: the gate sinks, the fog thins away, the way to the Jester opens
 function openGate() {
   toast('The shoutin’ stops.');
-  const t0 = performance.now();
-  const sink = () => {
-    const k = Math.min((performance.now() - t0) / 1600, 1);
-    G.gate.forEach(m => (m.position.y = m.userData.y0 - k * (m.userData.h + 0.2)));
-    if (k < 1) requestAnimationFrame(sink);
-  };
+  const t0 = playT;
+  // the gate sinks over 1.6 s of play, with the floor's other motion (it stops while paused and goes with the floor)
+  G.anim.push(() => {
+    const k = Math.min((playT - t0) / 1.6, 1);
+    for (const m of G.gate) m.position.y = m.userData.y0 - k * (m.userData.h + 0.2);
+  });
   SFX.boom();
-  sink();
   if (G.fogWall) G.fogWall.going = true;
   later(0.9, () => {
     G.gateClosed = false;
@@ -132,7 +131,7 @@ function trailClear(a, b) {
 // the way from Red Cap to the door: cells by breadth-first search from the door, then straightened where the line is clear
 function trailPath() {
   const W = G.w,
-    D = (G.trailD = G.trailD || new Int32Array(G.w * G.h)),
+    D = G.trailD,
     [dx, dz] = cellOf(G.portal.x, G.portal.z),
     [hx, hz] = cellOf(hero.pos.x, hero.pos.z);
   D.fill(-1);

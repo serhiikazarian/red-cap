@@ -55,7 +55,7 @@ const SEE_A = 0.25,
   seeB = new THREE.Vector3(),
   seeCol = new THREE.Color();
 function seeThru(o, dyn, how) {
-  (G.see = G.see || []).push({
+  G.see.push({
     o,
     dyn,
     hard: how === 'hard',
@@ -166,14 +166,14 @@ function seeSide(s, p) {
 }
 // after baking: the meshes each thing is drawn with now
 function seeMeshes() {
-  for (const c of G.see || [])
+  for (const c of G.see)
     if (!c.hard)
       c.o.traverse(m => {
         if (m.isMesh && !isStill(m) && !c.meshes.includes(m)) c.meshes.push(m);
       });
 }
 function seeShapes() {
-  if (!G || !G.see) return;
+  if (!G || !G.see.length) return;
   for (const c of G.see) {
     if (c.off) continue;
     if (!c.baked && !c.inst && !c.o.parent) {
@@ -221,7 +221,7 @@ function seeIn(p, s, pad) {
     : p.distanceToSquared(s.c) < (s.r + pad) * (s.r + pad);
 }
 function seeInside(p, pad) {
-  for (const c of G.see || []) {
+  for (const c of G.see) {
     if (c.off || c.gone || !c.near) continue;
     for (const s of c.w) if (seeIn(p, s, pad)) return true;
   }
@@ -363,7 +363,7 @@ function seeSolid(c, dt, cp, fo) {
 }
 function seeTick(dt) {
   SEE.on = SEE.gr = SEE.dyn = false;
-  if (!G || !G.see) return;
+  if (!G || !G.see.length) return;
   // what the camera must see: Red Cap (chest and head), the locked target, any boss in the fight
   const fo = [seeA.set(hero.pos.x, hero.pos.y + 0.9, hero.pos.z).clone(), seeA.set(hero.pos.x, hero.pos.y + 1.6, hero.pos.z).clone()];
   if (SEE.tg && !SEE.tg.dead) fo.push(new THREE.Vector3(SEE.tg.pos.x, hitHeight(SEE.tg), SEE.tg.pos.z));
@@ -498,7 +498,7 @@ function seeMask() {
 }
 // behind the floor card: draw every see-through thing faded once, so their shaders are built before play
 function seeWarm() {
-  if (!G || !G.see) return;
+  if (!G || !G.see.length) return;
   const was = G.see.filter(c => !c.off && !c.hard && !c.on);
   for (const c of was) seeOn(c, true);
   renderer.compile(scene, camera);

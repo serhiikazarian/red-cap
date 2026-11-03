@@ -76,16 +76,20 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 
 ## Talkers (20-talkers, 22–31)
 - Registry `TALKERS[letter]`: `make`, `update`, optional `dying`, `dazed`, `bar`, `warn`, the hit and kill hooks (`shielded`,
-  `struck`, `hurt`, `escape`, `torn`, `drops`, `gone`, `trapped`) and traits (`stagger`, `knock`, `pops`, `tornWord`, `rim`,
-  `harmless`, `loud`, `noCover`), all listed at the top of 20-talkers.js; shared `damage`, `kill` call them in a fixed order
+  `struck`, `hurt`, `escape`, `torn`, `drops`, `gone`, `trapped`, `bounce`, `hushed`, `aimParts`, `holo`) and traits
+  (`stagger`, `knock`, `pops`, `tornWord`, `rim`, `harmless`, `loud`, `noCover`, `totemProof`, `totemDaze`), all listed at the
+  top of 20-talkers.js; shared code never asks `e.type`; shared `damage`, `kill` call them in a fixed order
   (keep it: the dice rolls must stay in the same order). Long fights run one step per state (`JESTER_ST[e.st]` …).
   Each talker's file holds its build, fight and helpers, tuning at the top. Attack warnings: a talker's `warn(e)` (07-hud
   `warnOf`, `updWarn`).
 - `e.mats` are reset to white (or the hit flash) every frame: coloured parts use textures or vertex colours.
 
 ## Sound (01-audio)
-- Synth: `sTone`, `sNoise`, `SFX.*`. Recorded clips: `sPlay(name, gain)` → `{ s, g }` (null before decoding; `AU.buf` is filled
+- Synth: `sTone`, `sNoise`, `SFX.*`. Recorded clips: `sPlay(name)` → `{ s, g }` (null before decoding; `AU.buf` is filled
   by `auInit` on the first click). Clips live in `game/assets/sfx/`.
+- Loudness: `VOL[name]` (an `SFX` entry's name or a clip's file name; left out = 1) is the one place to turn a sound up or
+  down. Each `SFX` entry runs with `AU.vol` set to its share (nested entries multiply), `sTone`/`sNoise` scale by it, and
+  `sPlay` starts a clip at its share.
 - Where a sound comes from: `AU.at`; the loop sets it to each talker's position around its update, and sounds scale by
   `auK(AU.at)`. `hurtHero` clears it, so Red Cap's own sounds never fade. A long clip that follows its source keeps `.at`
   (`sprayFollow`). The Jester's laugh and the Grump are never distance-faded.

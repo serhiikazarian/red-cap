@@ -163,20 +163,20 @@ function aimInfo(pyr) {
       bestS = sc;
       best = e;
     }
-    if (e.type === 'R')
-      for (const g of e.ghosts) {
-        if (g.wait > 0 || e.dazedT > 0) continue;
-        const gx = g.m.position.x - hero.pos.x,
-          gz = g.m.position.z - hero.pos.z,
+    const T = TALKERS[e.type];
+    if (T.aimParts)
+      T.aimParts(e, (at, tgt) => {
+        const gx = at.x - hero.pos.x,
+          gz = at.z - hero.pos.z,
           gd = Math.hypot(gx, gz);
-        if (gd > 22 || gd < 0.5) continue;
+        if (gd > 22 || gd < 0.5) return;
         const ga = Math.acos(clamp((gx * fx + gz * fz) / gd, -1, 1)),
           gs = ga + gd * 0.012 - 0.03;
-        if (ga < 0.42 && gs < bestS && los(hero.pos, g.m.position)) {
+        if (ga < 0.42 && gs < bestS && los(hero.pos, at)) {
           bestS = gs;
-          best = g.tgt;
+          best = tgt;
         }
-      }
+      });
   }
   for (const k in (pyr && G.pyr) || {}) {
     const q = G.pyr[k];
@@ -370,7 +370,7 @@ function heroMove(dt, tvx, tvz) {
     hero.pos.z += (vz * dt) / nSub;
     collide(hero.pos, hero.r, hero.pos.y);
     collide(hero.pos, hero.r, hero.pos.y);
-    for (const c of G.clutter || []) {
+    for (const c of G.clutter) {
       const ox = hero.pos.x - c.x,
         oz = hero.pos.z - c.z,
         od = Math.hypot(ox, oz);
@@ -379,7 +379,7 @@ function heroMove(dt, tvx, tvz) {
         hero.pos.z = c.z + (oz / od) * (c.r + hero.r);
       }
     }
-    for (const c of G.cages || [])
+    for (const c of G.cages)
       if (!c.broken) {
         const ox = hero.pos.x - c.x,
           oz = hero.pos.z - c.z,
@@ -430,7 +430,7 @@ function heroPose(moving, rx, rz) {
 // standing in the heat of a brazier or a candle stake: a short grace, HOT, then it burns
 function heroHeat(dt) {
   let nearFire = 0;
-  for (const f of G.hot || [])
+  for (const f of G.hot)
     if (Math.hypot(hero.pos.x - f.x, hero.pos.z - f.z) < f.r && (!f.see || los(f, hero.pos))) nearFire = Math.max(nearFire, f.k || 1);
   if (nearFire) {
     hero.heat = (hero.heat || 0) + dt * nearFire;

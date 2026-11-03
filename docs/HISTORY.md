@@ -158,3 +158,18 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   then links the work branch to it; `tools/wip.sh "message"` saves work to the work branch only. `CLAUDE.md` and `README.md`:
   both required, never merge, squash or force-push by hand; commands kept short (scripts that answer in one word).
 - Title label `v1.22`.
+
+## 1.23 (3 Nov 2026)
+- Game rules run on a play clock (`playT`: stops while paused, slows with hit-stop and the finale) instead of the wall clock:
+  the yo-yo combo and shot-chain windows, the big Usher's spam count, where Shades, Grins, Smokers and the hidden boss hover
+  (their hit heights), the Priest's ghosts' circling, the Jester's weave, and the fog gate sinking (now in `G.anim`: it
+  holds while paused and goes with the floor). Pausing no longer drops a combo; floaters freeze in hit-stop. Cosmetic wobble
+  keeps the wall clock.
+- One volume table, `VOL` (01-audio): each `SFX` entry and recorded clip plays at its share (pops 0.5, Red Cap's death
+  exhale 0.3, the Priest's spray 0.6), the same loudness as 1.21–1.22.
+- Shared code no longer asks a talker's type: new `TALKERS` hooks and traits `bounce` (the Grump and pebbles), `hushed` and
+  `totemDaze` (Smokers and totems), `totemProof` (Jester, Grump), `aimParts` (the Priest's ghosts), `holo` (a Grin's
+  hologram); `tuneUshers` moved to 22-usher.
+- The floor's state `G` declares its fields in `newFloor`; the `G.x || []` guards are gone (`pyr`, `props`: null on floors
+  without them).
+- Test baselines remade. Title label `v1.23`.

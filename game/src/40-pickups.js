@@ -18,7 +18,7 @@ function openSpot(x, z) {
     !propR(ch(ix, iz)) &&
     ch(ix, iz) !== 'g' &&
     wallDist(x, z) > 0.6 &&
-    !(G.clutter || []).some(c => Math.hypot(c.x - x, c.z - z) < c.r + 0.6)
+    !G.clutter.some(c => Math.hypot(c.x - x, c.z - z) < c.r + 0.6)
   );
 }
 // a dropped heart lands on clear floor on the same level, in sight of where it fell; it moves the shortest way there (rings
@@ -73,7 +73,7 @@ function dropHeart(x, z, big) {
         c === 'X' ||
         kindAt(ix, iz) === 2 ||
         !far(cx, cz) ||
-        (G.cages || []).some(q => !q.broken && Math.hypot(q.x - cx, q.z - cz) < 2)
+        G.cages.some(q => !q.broken && Math.hypot(q.x - cx, q.z - cz) < 2)
       )
         continue;
       best = [cx, cz];
@@ -155,7 +155,7 @@ function pebblePile(x, z) {
   const glow = new THREE.Sprite(PILE.glow.clone());
   glow.position.set(x, m.position.y + 0.45, z);
   G.group.add(glow);
-  (G.piles = G.piles || []).push({ m, x, z, glow, ph: x + z });
+  G.piles.push({ m, x, z, glow, ph: x + z });
 }
 // a tie (a heart) floating over a glow; big: all hearts back
 function spawnPickup(x, z, big) {
@@ -202,13 +202,13 @@ function updPickups(dt) {
       if (!p.big) floatWord('+1 TIE', p.g.position.clone().setY(2.2), HEX.bile, 0.75);
     }
   }
-  for (const p of G.piles || [])
+  for (const p of G.piles)
     if (!p.taken) {
       const k = 0.5 + 0.5 * Math.sin(now * 3.2 + p.ph);
       p.glow.material.opacity = 0.45 + 0.4 * k + (Math.sin(now * 17 + p.ph * 3) > 0.93 ? 0.3 : 0);
       p.glow.scale.setScalar(1.3 + 0.35 * k);
     }
-  for (const p of G.piles || [])
+  for (const p of G.piles)
     if (!p.taken && hero.ammo < hero.maxAmmo && Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z) < 1.1) {
       p.taken = true;
       G.group.remove(p.m);

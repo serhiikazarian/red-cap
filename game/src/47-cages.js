@@ -111,7 +111,7 @@ function breakCage(c, byHit) {
 }
 // rattling while Red Cap is near and in sight; it gives after 0.9 s of it
 function updCages(dt) {
-  for (const c of G.cages || []) {
+  for (const c of G.cages) {
     if (c.broken) continue;
     const d = Math.hypot(hero.pos.x - c.x, hero.pos.z - c.z);
     if (d < 5.5 && los(hero.pos, new THREE.Vector3(c.x, 0, c.z))) {

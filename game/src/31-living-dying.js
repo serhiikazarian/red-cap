@@ -59,7 +59,7 @@ function makeLivingDying(e, add, x, z, part) {
 // a piece waiting its turn circles the arena out of reach; the others fight in their own way (LD_PARTS)
 function updLivingDying(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
-  const now = performance.now() / 1000;
+  const now = playT;
   e.daze = Math.max(0, e.daze - dt);
   e.y0 = e.fly - e.partH / 2;
   e.y1 = e.fly + e.partH / 2;
