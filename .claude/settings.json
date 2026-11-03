@@ -1,5 +1,39 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(tools/check.sh:*)",
+      "Bash(tools/same.sh:*)",
+      "Bash(tools/build-at.sh:*)",
+      "Bash(tools/lint.sh:*)",
+      "Bash(python3 game/build.py:*)",
+      "Bash(python3 tools/:*)",
+      "Bash(python3 tests/:*)",
+      "Bash(node tests/:*)",
+      "Bash(node tools/:*)",
+      "Bash(export NODE_PATH=:*)",
+      "Bash(NODE_PATH=:*)",
+      "Bash(npm root -g)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(sed -n:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir -p out:*)",
+      "Bash(rm -rf out/:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git revert:*)",
+      "Bash(git push origin main)"
+    ],
     "deny": ["Read(./game/vendor/**)", "Read(./game/red-cap*.html)", "Read(./out/**/*.html)"]
   }
 }
