@@ -17,11 +17,13 @@ function updLeft() {
   if (n === 1 && G.leftN > 1) lastCall();
   G.leftN = n;
 }
-// a big word in the middle of the screen (HOT, MISSED, FRENZY ...)
-function bigWord(text, color, size = 1) {
+// a big word in the middle of the screen (HOT, MISSED, FRENZY ...), with an optional smaller line under it
+function bigWord(text, color, size = 1, under = '') {
   const el = $('#bigWord');
   el.style.fontSize = size === 1 ? '' : `clamp(${(2.4 * size).toFixed(3)}rem, ${(8 * size).toFixed(3)}vw, ${(5.4 * size).toFixed(3)}rem)`;
-  el.firstChild.textContent = text;
+  const [word, line] = el.firstChild.children;
+  word.textContent = text;
+  line.textContent = under;
   el.style.color = color;
   el.classList.remove('on');
   void el.offsetWidth; // restart the animation
@@ -41,7 +43,8 @@ function lastCall() {
   AU.at = at;
 }
 let bossShown = null,
-  bossFill = -1;
+  bossFill = -1,
+  bossWord = null;
 const EL = {
   spook: $('#spook'),
   boss: $('#boss'),
@@ -62,13 +65,14 @@ function bossBar(e) {
   const b = EL.boss;
   if (!e) {
     if (!b.hidden) b.hidden = true;
-    bossShown = null;
+    bossShown = bossWord = null;
     return;
   }
   if (bossShown !== e) {
     EL.bossName.textContent = e.name;
     bossShown = e;
     bossFill = -1;
+    bossWord = null;
   }
   if (b.hidden) b.hidden = false;
   const fp = Math.max(0, Math.round((e.hp / e.maxHp) * 1000) / 10);
@@ -76,11 +80,14 @@ function bossBar(e) {
     bossFill = fp;
     EL.bossFill.style.width = fp + '%';
   }
-  // the status under the bar: [text, open] where open means "now's your chance" (highlighted)
+  // the status under the bar: [text, lit, word]. lit highlights the line; word ("now's your chance": EXPOSED, WINDED…)
+  // flashes big mid-screen once as that state begins, and the line stays empty while it lasts
   const T = TALKERS[e.type],
-    [text, open] = (T && T.bar && T.bar(e)) || ['', false];
+    [text, lit, word = null] = (T && T.bar && T.bar(e)) || ['', false];
   txt(EL.bossState, text);
-  EL.bossState.classList.toggle('open', open);
+  EL.bossState.classList.toggle('open', lit);
+  if (word && word !== bossWord) bigWord(word, 'var(--bile)', 1, 'Attack him!');
+  bossWord = word;
 }
 // attack warnings: a marker over the Usher about to charge and the Geezer about to stare or lash (warnOf)
 const WARN_N = 3,

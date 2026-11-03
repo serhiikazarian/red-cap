@@ -71,7 +71,9 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Loading does real work: `warmUp` pre-draws `WORDS_SEED` + `WORDS_FLOOR[floor]` + words used this session and every `TEX`;
   `warmSet` compiles every material/shader variant from stand-ins; then `calibrate()`. The loading scrap stays ≥ 0.7 s.
 - The death screen stops drawing the world (`deadStill`). HUD elements are cached in `EL`; write to the DOM only on change.
-  Big centred words: `bigWord(text, color, size)`; hints: `toast(msg, ms)`.
+  Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms)`.
+  The boss bar (`bossBar`) shows a talker's `bar(e)`: `[text, lit, word]`, where `word` (EXPOSED, UNMASKED, WINDED) flashes
+  as a big word with "Attack him!" once as the opening begins, and the small line under the name stays empty meanwhile.
 
 ## Testing (tests/)
 - Playwright + swiftshader, viewport 880×500. First render of new shaders is slow (tens of seconds). A CSS compositor animation

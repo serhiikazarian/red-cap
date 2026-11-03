@@ -218,6 +218,6 @@ TALKERS.R = {
   },
   bar: e => {
     const n = e.ghosts.filter(g => g.wait <= 0).length;
-    return [n ? 'Shielded by ' + n + ' ghost' + (n > 1 ? 's' : '') : 'Exposed — hit him', !n];
+    return n ? ['Shielded by ' + n + ' ghost' + (n > 1 ? 's' : ''), false] : ['', false, 'EXPOSED'];
   }
 };

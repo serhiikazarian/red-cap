@@ -22,6 +22,9 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #lastCall small { display: block; margin-top: .25em; font-size: .38em; color: #f0cf2e; }
 #lastCall.on { animation: lastCall 3.8s ease-out forwards; }
 #bigWord { display: grid; place-items: center; opacity: 0; font-family: var(--display); font-size: clamp(2.4rem, 8vw, 5.4rem); line-height: 1; text-align: center; text-shadow: 5px 5px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink); }
+#bigWord small { display: block; font-size: .65em; margin-top: .1em; color: #ff3b30; animation: underPulse .3s ease-in-out infinite alternate; }
+@keyframes underPulse { to { transform: scale(1.14); } }
+#bigWord small:empty { display: none; }
 #bigWord.on { animation: bigWord 1.3s ease-out forwards; }
 @keyframes bigWord { 0% { opacity: 0; transform: scale(2) rotate(-4deg); } 12% { opacity: 1; transform: scale(.95) rotate(-3deg); } 18% { transform: scale(1.03) rotate(-2deg); } 70% { opacity: 1; transform: scale(1) rotate(-2deg); } 100% { opacity: 0; transform: scale(1.06) rotate(-2deg); } }
 @keyframes lastCall { 0% { opacity: 0; transform: translateY(-14vh) scale(2.4) rotate(-5deg); } 7% { opacity: 1; transform: translateY(-14vh) scale(.94) rotate(-4deg); } 11% { transform: translateY(-14vh) scale(1.04) rotate(-3deg); } 15%, 78% { opacity: 1; transform: translateY(-14vh) scale(1) rotate(-3deg); } 100% { opacity: 0; transform: translateY(-14vh) scale(1) rotate(-3deg); } }

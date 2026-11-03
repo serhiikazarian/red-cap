@@ -1,7 +1,7 @@
 // Talkers (the enemies): what they all share. Each type lives in its own file (22-31) and registers itself:
 //   TALKERS[letter] = { make(e, add, x, z, part, type), update(e, dt, dist, ux, uz, mv), and optionally
 //     dying(e, dt): its own death (default: it topples), dazed(e): what else happens while it reels,
-//     bar(e): [status text, open] for the boss bar, warn(e): an attack warning (07-hud) }
+//     bar(e): [status text, lit, big word] for the boss bar (bossBar), warn(e): an attack warning (07-hud) }
 // update decides the move (mv: direction x, z and speed sp); returning STOP skips the shared movement and collision.
 // damage and kill hold the rules of being hit and torn, special cases included, in one place.
 const TALKERS = {},

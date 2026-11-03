@@ -558,5 +558,5 @@ function updSlabs(dt) {
 TALKERS.M = {
   make: makeJester,
   update: updJester,
-  bar: e => [e.masked ? 'Masked — immune' : 'Unmasked — hit him', !e.masked]
+  bar: e => (e.masked ? ['Masked — immune', false] : ['', false, 'UNMASKED'])
 };

@@ -21,3 +21,11 @@ read it whole. Versions before 1.05 (the old numbering, up to 7.2) are not in th
   lets fades finish and fixes the dice from the page's first line (the smoke texture is drawn at random at start-up), and
   shows each floor the same way every run; its baselines were remade.
 - Title label `v1.06`.
+
+## 1.07 (3 Nov 2026)
+- When a boss opens up, a big yellow word flashes mid-screen in the marker font: `EXPOSED` (the Priest loses his last ghost),
+  `UNMASKED` (the Jester's mask breaks), `WINDED` (the Geezer runs out of breath). Under it, a smaller red line
+  `Attack him!` swells in and out. The small yellow "— hit him" line under the boss's name is gone.
+- When the Geezer misses his last stare, `WINDED` takes over from `MISSED` at once.
+- `bigWord(text, color, size, under)` takes an optional smaller line; a talker's `bar(e)` returns `[text, lit, word]`.
+- Title label `v1.07`.

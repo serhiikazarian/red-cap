@@ -188,7 +188,7 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
 TALKERS.Y = {
   make: makeGeezer,
   update: updGeezer,
-  bar: e => [e.exhaust > 0 ? 'Winded — hit him' : e.st === 'gaze' ? 'Eyes lightin’ up — take cover' : '', e.exhaust > 0],
+  bar: e => (e.exhaust > 0 ? ['', false, 'WINDED'] : [e.st === 'gaze' ? 'Eyes lightin’ up — take cover' : '', false]),
   warn: e =>
     e.st === 'gaze'
       ? { c: '#b48cff', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'Y' + e.flashes }
