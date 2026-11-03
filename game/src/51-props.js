@@ -143,5 +143,5 @@ function buildProp(F, cx, cz, rng) {
   // a bear trap lies flat; an easel and the Grump's sound blocks never fade; the Jester chamber's stacks fade without a contour
   if (F.deco !== 'mouth') G.group.add(seeThru(g, false, F.deco === 'corridor' || iz > 8 ? 'hard' : 'plain'));
   else G.group.add(g);
-  if (F.deco === 'blocks' && iz > 8) (G.props = G.props || {})[cellOf(cx, cz)[0] + ',' + iz] = { g, x: cx, z: cz, hp: 1, flashT: 0, tint: 1 };
+  if (F.deco === 'blocks' && iz > 8) (G.props ??= {})[cellOf(cx, cz)[0] + ',' + iz] = { g, x: cx, z: cz, hp: 1, flashT: 0, tint: 1 };
 }

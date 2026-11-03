@@ -147,7 +147,7 @@ TALKERS.U = {
   // pebbles bounce off him
   bounce: (e, p) => {
     SFX.tink();
-    burst(p.clone(), [COL.smoke, COL.paper], 5, 3, 0.1);
+    burst(p, [COL.smoke, COL.paper], 5, 3, 0.1);
     bigWord('BOUNCE', HEX.paper, 1 / 1.7);
     floatWord(pick(['TOO THICK', 'HA']), e.pos.clone().setY(5.2 + rand(0, 1.2)), HEX.paper, 1.1);
   },

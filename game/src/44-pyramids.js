@@ -182,7 +182,7 @@ function buildPyramid(x, z, cx, cz, rng) {
   t.position.set(cx, 0, cz);
   t.rotation.y = Math.floor(rng() * 4) * (TAU / 4);
   const turn = t.rotation.y - PYR.turn;
-  const q = ((G.pyr = G.pyr || {})[x + z * w] = { x: cx, z: cz, y: 0, cs: Math.cos(turn), sn: Math.sin(turn), hp: PYR_HP, cd: 0 });
+  const q = ((G.pyr ??= {})[x + z * w] = { x: cx, z: cz, y: 0, cs: Math.cos(turn), sn: Math.sin(turn), hp: PYR_HP, cd: 0 });
   G.group.add(seeThru(still(t), false, 'pyramid'));
   q.see = G.see[t.userData.seeId - 1];
   // what the slingshot's aim locks on (aimInfo), like a talker: the reticle and a pebble go for its orb
