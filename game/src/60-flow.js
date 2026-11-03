@@ -123,18 +123,20 @@ function enterFloor(i, later) {
         setTimeout(() => {
           if (!live()) return;
           floorBuilt(i);
-          calibrate();
-          setTimeout(
-            () => {
-              if (!live()) return;
-              // in: the veil dissolves into the new floor and the card fades in with it
-              $('#cutting').hidden = true;
-              floorShow(i);
-              $('#card').classList.add('enter');
-              veilOff();
-            },
-            snipEnd(plan, performance.now() - t0)
-          );
+          settle(SETTLE_ROUNDS[i], live, () => {
+            calibrate();
+            setTimeout(
+              () => {
+                if (!live()) return;
+                // in: the veil dissolves into the new floor and the card fades in with it
+                $('#cutting').hidden = true;
+                floorShow(i);
+                $('#card').classList.add('enter');
+                veilOff();
+              },
+              snipEnd(plan, performance.now() - t0)
+            );
+          });
         }, 280)
       )
     );
@@ -164,35 +166,69 @@ function floorBuilt(i) {
 // behind the scrap (under the ink): real frames of the new floor, timed to the GPU, from its opening view and CAL_VIEWS more spread
 // over the floor. Each floor starts from the screen's full ratio with double ink lines; if the second-slowest view takes longer than
 // CAL_MS, single ink lines first, then the ratio it can hold. The heaviest moments (thick smoke, the fog wall) are left to the
-// controller (02-render), which steps down while they last and back up after
+// controller (02-render), which steps down while they last and back up after. Before floor three is timed, settle lets the GPU
+// finish what the build left it, so a busy start does not set the floor's ratio too low.
 const CAL_MS = 13,
   CAL_VIEWS = 4,
+  SETTLE_ROUNDS = [0, 0, 8], // per floor: settle's least rounds (0: none); it stops when two rounds in a row agree
+  SETTLE_TOL = 0.1, // within this share of each other
+  SETTLE_MAX = 40, // and gives up after this many rounds
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
   FIRST_SCRAP_MS = 1400, // and before floor one (its first build is the longest)
   SNIP_SLACK = 3, // the cut's own course is this many times its plan, easing out, so a long build never leaves it stuck at the end
   SNIP_END = 250; // ms: the rest of a cut whose build ran past its plan
-function calibrate() {
+const CAL_PX = new Uint8Array(4);
+// one real frame, timed until the GPU has finished it (ms)
+function calFrame() {
   const gl = renderer.getContext(),
-    px = new Uint8Array(4),
-    cap = resCap();
-  const timed = () => {
-    const t0 = performance.now();
-    render();
-    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); // waits for the GPU to finish the frame
-    return performance.now() - t0;
+    t0 = performance.now();
+  render();
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, CAL_PX); // waits for the GPU to finish the frame
+  return performance.now() - t0;
+}
+// the views timed while a floor loads, each a camera place and turn: the floor's opening view first, then CAL_VIEWS more
+function calViewsAll() {
+  updCamera(1 / 60);
+  return [[camera.position.clone(), camera.quaternion.clone()], ...calViews(CAL_VIEWS)];
+}
+function calLook([p, q]) {
+  camera.position.copy(p);
+  camera.quaternion.copy(q);
+  camera.updateMatrixWorld();
+}
+// at the screen's full ratio with double ink lines, one round of frames from every view each animation frame, at least `rounds`
+// of them, until the slowest view of two rounds in a row agrees within SETTLE_TOL (or SETTLE_MAX rounds); then done
+function settle(rounds, live, done) {
+  if (!rounds) return done();
+  post.uniforms.lite.value = 0;
+  resScale = resCap();
+  resize();
+  const views = calViewsAll();
+  let n = 0,
+    last = Infinity;
+  const round = () => {
+    if (!live()) return;
+    const ms = Math.max(...views.map(v => (calLook(v), calFrame())));
+    const steady = Math.abs(ms - last) <= SETTLE_TOL * last;
+    last = ms;
+    if (++n >= SETTLE_MAX || (n >= rounds && steady)) {
+      calLook(views[0]);
+      done();
+    } else requestAnimationFrame(round);
   };
-  const mid3 = () => [timed(), timed(), timed()].sort((a, b) => a - b)[1];
+  requestAnimationFrame(round);
+}
+function calibrate() {
+  const cap = resCap(),
+    mid3 = () => [calFrame(), calFrame(), calFrame()].sort((a, b) => a - b)[1];
   post.uniforms.lite.value = 0;
   resScale = cap;
   resize();
-  updCamera(1 / 60); // the floor's opening view
-  const views = [[camera.position.clone(), camera.quaternion.clone()], ...calViews(CAL_VIEWS)];
+  const views = calViewsAll();
   const slow = () => {
-    const ms = views.map(([p, q]) => {
-      camera.position.copy(p);
-      camera.quaternion.copy(q);
-      camera.updateMatrixWorld();
-      timed(); // anything this view needs that is still unready
+    const ms = views.map(v => {
+      calLook(v);
+      calFrame(); // anything this view needs that is still unready
       return mid3();
     });
     return ms.sort((a, b) => b - a)[Math.min(1, ms.length - 1)];
@@ -207,8 +243,7 @@ function calibrate() {
       resize();
     }
   }
-  camera.position.copy(views[0][0]);
-  camera.quaternion.copy(views[0][1]);
+  calLook(views[0]);
   resFresh();
 }
 // n views spread over the floor for calibrate: from open cells taken evenly through the map, Red Cap's eye height above the

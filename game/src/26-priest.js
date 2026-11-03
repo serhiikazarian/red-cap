@@ -1,7 +1,8 @@
 // The Priest (R): floor two's boss. God loves his children; the blessings are wet.
 // Three little ghosts circle him and shield him while any is left (pop them: they rise again 7 s after the last one goes).
 // He sprays blood from his mouth (KNEEL), and close up rains it inside a red circle (PREY). Blood soaks Red Cap (half speed).
-const PRIEST_GHOST = 1.8; // his ghosts' size
+const PRIEST_GHOST = 1.8, // his ghosts' size
+  RAIN_R = 4.6; // metres: as the rain lands it hurts Red Cap and strikes each pyramid this close to him
 const RAIN_RING_GEO = share(new THREE.RingGeometry(4.3, 4.7, 40)); // the red circle his blood rains inside
 
 // his paper figure, the white shield ring on the ground, and the ghosts; each ghost has a target stand-in so it can be aimed at
@@ -144,7 +145,9 @@ const PRIEST_ST = {
       e.st = 'walk';
       e.t = 1.4;
       e.tilt.rotation.x = 0;
-      if (dist < 4.6 && hurtHero(1, e.pos)) hero.knock.set(ux * 11, uz * 11);
+      if (dist < RAIN_R && hurtHero(1, e.pos)) hero.knock.set(ux * 11, uz * 11);
+      for (const q of Object.values(G.pyr || {}))
+        if (Math.hypot(q.x - e.pos.x, q.z - e.pos.z) < RAIN_R) hitPyr({ x: q.x, y: heightAt(q.x, q.z), z: q.z }, 0);
       for (let k = 0; k < 4; k++) bloodPool(e.pos.x + rand(-3.5, 3.5), e.pos.z + rand(-3.5, 3.5), rand(0.5, 1.1));
     }
   },
@@ -158,6 +161,7 @@ const PRIEST_ST = {
       e.t = 1.9;
       e.aim = Math.atan2(ux, uz);
       e.emit = 0;
+      e.volley = {}; // this spray's drops: one blow to each pyramid they reach
       sprayStart();
       e.tilt.position.set(0, 0, 0);
     }
@@ -172,7 +176,7 @@ const PRIEST_ST = {
       e.emit--;
       const a = sweep + rand(-0.09, 0.09),
         s = rand(7.5, 10);
-      bloodDrop(mouth, new THREE.Vector3(Math.sin(a) * s, rand(0.5, 2.4), Math.cos(a) * s));
+      bloodDrop(mouth, new THREE.Vector3(Math.sin(a) * s, rand(0.5, 2.4), Math.cos(a) * s)).volley = e.volley;
     }
     if (Math.random() < 0.2) bloodPool(e.pos.x + rand(-0.6, 0.6), e.pos.z + rand(-0.6, 0.6), rand(0.3, 0.7));
     if (e.t <= 0) {

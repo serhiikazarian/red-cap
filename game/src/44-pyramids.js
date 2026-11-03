@@ -1,6 +1,6 @@
 // Pyramids (floor two's 'T' cells): Serj's model with a glowing core and a turning orb, an ink rim drawn right after it, a red
-// pool of light, and a tie half-seen inside. Three blows shatter one (it screams at the first two); it leaves a heart, or one
-// or two hold a bomb (48-bombs.js). Walkers keep out of its square foot; sight lines and shots meet its two-piece shape (pyrParts).
+// pool of light, and a tie half-seen inside. Three blows shatter one, Red Cap's or the talkers' (it screams at the first two); it leaves a heart, but one
+// or two hold a bomb and one or two are empty (48-bombs.js). Walkers keep out of its square foot; sight lines and shots meet its two-piece shape (pyrParts).
 const PYR_H = 2.3, // metres from its foot to its tip (its foot is 1.4 m square: Red Cap passes one in a corridor)
   PYR_R = 0.25 * PYR_H, // its body's half-width at mid-height: the round part sight lines and pebbles are stopped by (propR)
   PYR_PAD = 0.05, // metres beyond its square foot that Red Cap and the talkers are kept (collide, pyrPush)
@@ -182,7 +182,18 @@ function buildPyramid(x, z, cx, cz, rng) {
   t.position.set(cx, 0, cz);
   t.rotation.y = Math.floor(rng() * 4) * (TAU / 4);
   const turn = t.rotation.y - PYR.turn;
-  const q = ((G.pyr ??= {})[x + z * w] = { x: cx, z: cz, y: 0, cs: Math.cos(turn), sn: Math.sin(turn), hp: PYR_HP, cd: 0 });
+  const q = ((G.pyr ??= {})[x + z * w] = {
+    x: cx,
+    z: cz,
+    y: 0,
+    cs: Math.cos(turn),
+    sn: Math.sin(turn),
+    hp: PYR_HP,
+    cd: 0,
+    bomb: false,
+    empty: false,
+    volley: null // the last volley that struck it (hitPyr)
+  });
   G.group.add(seeThru(still(t), false, 'pyramid'));
   q.see = G.see[t.userData.seeId - 1];
   // what the slingshot's aim locks on (aimInfo), like a talker: the reticle and a pebble go for its orb
@@ -326,14 +337,16 @@ function pyrScream(n) {
   vib.stop(t + dur + 0.05);
   sNoise({ dur: dur * 0.9, f: 1400, f2: 500, q: 1.4, gain: two ? 0.09 : 0.07, a: 0.08 }); // the breath under it
 }
-// a yo-yo or a pebble at p (radius rad) against the pyramids: true if it struck one
-function hitPyr(p, rad) {
+// a yo-yo, a pebble or a talker's shot at p (radius rad) against the pyramids: true if it struck one. A volley (the drops of one
+// spray) is one blow to each pyramid it reaches
+function hitPyr(p, rad, volley) {
   if (!G || !G.pyr) return false;
   for (const k in G.pyr) {
     const q = G.pyr[k];
     q.y = heightAt(q.x, q.z); // its foot (a pyramid on the raised ground stands higher)
     if (q.hp <= 0 || Math.hypot(p.x - q.x, p.z - q.z) > PYR.parts[0].b0 + rad || p.y > q.y + PYR_H + 0.2) continue;
-    if (q.cd > 0) return true;
+    if (q.cd > 0 || (volley && q.volley === volley)) return true;
+    q.volley = volley;
     q.cd = 0.25;
     q.hp--;
     q.shake = 0.35;
@@ -382,7 +395,7 @@ function pyrShatter(k, q) {
     iz = Math.floor(q.z / CELL);
   G.map[iz] = G.map[iz].slice(0, ix) + '.' + G.map[iz].slice(ix + 1);
   if (q.bomb) bombBlast(q.x, q.z);
-  else spawnPickup(...heartRoom(q.x, q.z));
+  else if (!q.empty) spawnPickup(...heartRoom(q.x, q.z));
 }
 // each frame: the orb turns, the tie keeps to the face the camera sees, and a struck pyramid shakes
 function pyrTick(dt) {

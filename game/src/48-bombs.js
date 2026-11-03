@@ -1,14 +1,18 @@
-// Bombs (floor two): one or two pyramids hold a bomb instead of a tie, picked fresh each time the floor starts. It shows
-// through the glass like the tie, and goes off as its pyramid shatters: one tie off Red Cap in reach (two close by), a heavy
-// blow to every talker in reach, and it breaks any cage it reaches.
+// Bombs (floor two): one or two pyramids hold a bomb instead of a tie, and one or two others are empty (no tie inside, no
+// heart), picked fresh each time the floor starts. The bomb shows through the glass like the tie, and goes off as its pyramid
+// shatters: one tie off Red Cap in reach (two close by), a heavy blow to every talker in reach, and it breaks any cage it reaches.
 const BOMB_R = 4.5, // metres: the blast's reach (one tie)
   BOMB_CLOSE = 2, // metres: this close, two ties
-  BOMB_DMG = 3; // what it does to a talker in reach
+  BOMB_DMG = 3, // what it does to a talker in reach
+  BOMB_TWO = 0.5, // the chance two pyramids hold a bomb (else one)
+  PYR_EMPTY_TWO = 0.3; // the chance two pyramids are empty (else one)
 const BOMB_SEEN = {}; // the bomb seen inside its pyramid: its shape, made once
-// 1 or 2 pyramids hold a bomb instead of the tie: a fresh pick each time the floor starts (its own dice: the layout stays)
+// a fresh pick each time the floor starts (its own dice: the layout stays): 1 or 2 bombs, then 1 or 2 of the rest empty
 function hideBombs() {
-  const ks = Object.keys(G.pyr).sort(() => Math.random() - 0.5);
-  for (const k of ks.slice(0, Math.random() < 0.5 ? 1 : 2)) {
+  const ks = Object.keys(G.pyr).sort(() => Math.random() - 0.5),
+    bombs = Math.random() < BOMB_TWO ? 2 : 1,
+    empty = Math.random() < PYR_EMPTY_TWO ? 2 : 1;
+  for (const k of ks.slice(0, bombs)) {
     const q = G.pyr[k],
       old = q.tie,
       m = new THREE.Mesh(BOMB_SEEN.g || (BOMB_SEEN.g = share(new THREE.PlaneGeometry(0.62, 0.62).translate(0, 0.27, 0))), old.userData.mat.clone());
@@ -19,6 +23,12 @@ function hideBombs() {
     G.group.add(m);
     q.tie = m;
     q.bomb = true;
+  }
+  for (const k of ks.slice(bombs, bombs + empty)) {
+    const q = G.pyr[k];
+    G.group.remove(q.tie);
+    q.tie = null;
+    q.empty = true;
   }
 }
 // a bomb drawn on paper: a round black ball with a pale ink rim and shine, its fuse and a spark (seen faintly inside a pyramid)

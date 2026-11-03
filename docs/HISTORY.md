@@ -173,3 +173,14 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - The floor's state `G` declares its fields in `newFloor`; the `G.x || []` guards are gone (`pyr`, `props`: null on floors
   without them).
 - Test baselines remade. Title label `v1.23`.
+
+## 1.24 (3 Nov 2026)
+- Floor two: besides the 1 or 2 bomb pyramids, 1 or 2 others (two: `PYR_EMPTY_TWO`, 30%) are empty: no tie seen inside, no
+  heart when they shatter (`hideBombs`, 48-bombs).
+- Floor two: talkers' shots (a Grin's fireball, Bruno's insults and embers, the Priest's blood spray) strike a pyramid like
+  Red Cap's blows, three to shatter it; one spray is one blow to each pyramid it reaches (`volley`), and the Priest's rain
+  strikes each pyramid inside his circle once as it lands (`RAIN_R`).
+- Floor three's loading: before `calibrate`, `settle` draws every timed view once an animation frame until two rounds agree
+  (`SETTLE_ROUNDS`, `SETTLE_TOL`, `SETTLE_MAX`), so the GPU's leftover build work no longer sets the floor's ratio too low and
+  it opens sharp instead of climbing during the first seconds.
+- Test baselines remade. Title label `v1.24`.
