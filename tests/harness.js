@@ -7,6 +7,16 @@ async function openGame(browser, build, errs) {
   const pg = await browser.newPage({ viewport: { width: 880, height: 500 } });
   pg.on('pageerror', e => errs.push(String(e)));
   pg.on('console', m => m.type() === 'error' && errs.push(m.text().slice(0, 300)));
+  // dice fixed from the first line of the page: what start-up draws at random (the smoke texture) is the same every run
+  await pg.addInitScript(() => {
+    let s = 7;
+    Math.random = () => {
+      s = (s + 0x6d2b79f5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  });
   await pg.goto('file://' + path.resolve(build));
   await pg.waitForSelector('#startBtn:not([disabled])', { timeout: 120000 });
   await pg.click('#startBtn');
@@ -203,10 +213,14 @@ function install() {
   };
   // one real picture of the current moment (the loop's own render, then the frame stays on the canvas)
   R.picture = () => {
-    // page animations (CSS) run on the browser's own clock: hold them all at their start
+    // page animations (CSS) run on the browser's own clock: fades (transitions) jump to their end, so the veil that lifts
+    // off a new floor is gone; looping animations are held at their start
     for (const a of document.getAnimations()) {
-      a.pause();
-      a.currentTime = 0;
+      if (a instanceof CSSTransition) a.finish();
+      else {
+        a.pause();
+        a.currentTime = 0;
+      }
     }
     renderer.render = H.draw;
     render();

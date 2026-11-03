@@ -120,7 +120,7 @@ const post = new THREE.ShaderMaterial({
         float Dn = min(min(D, min(ld(uv + vec2(o.x, 0.)), ld(uv - vec2(o.x, 0.)))), min(ld(uv + vec2(0., o.y)), ld(uv - vec2(0., o.y)))); // the nearest within 2 pixels: a figure's own ink rim writes no depth
         col = mix(col, inkCol, max(smoothstep(.15, .6, hi.r - lo.r) * (1. - foot) * smoothstep(pz + ${SOLID_GAP[0].toFixed(2)}, pz + ${SOLID_GAP[1].toFixed(2)}, Dn), smoothstep(.15, .6, hi.g - lo.g) * smoothstep(fz - 1., fz - .3, D)));
       }
-      col = clamp(col, 0., 1.);   // paper grain, one speck per page pixel, laid on like the old overlay layer at 12 %
+      col = clamp(col, 0., 1.);   // paper grain, one speck per page pixel, at 12 %
       float gv = gh(mod(floor(gl_FragCoord.xy / dpr) + grainOff, 160.));
       col = mix(col, mix(2. * col * gv, 1. - 2. * (1. - col) * (1. - gv), step(.5, col)), .12);
       float vt = length(cc * 2.) * .70710678, va = vt < .42 ? 0. : vt < .72 ? (vt - .42) / .3 * .32 : .32 + (vt - .72) / .28 * .46; // the vignette: clear to 42 %, darkening to the corners

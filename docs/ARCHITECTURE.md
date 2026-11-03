@@ -1,6 +1,6 @@
 # Red Cap: how the code fits together
 
-Read the section you need when a task touches it. File names are in `game/src/`. Why each rule exists: search `docs/HISTORY.md`.
+Read the section you need when a task touches it. File names are in `game/src/`. Why a rule exists: search `docs/HISTORY.md`, or for older versions `git show 0508438:HISTORY.md | rg -n "name"`.
 
 ## Geometry, memory, baking (03-textures, 54-bake, 50-level)
 - `paper(name, h, depth, lit, once)`: a painted cut-out from `SHAPES`. `once` for a one-off size (e.g. onlookers' random heights),
@@ -76,5 +76,18 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 ## Testing (tests/)
 - Playwright + swiftshader, viewport 880×500. First render of new shaders is slow (tens of seconds). A CSS compositor animation
   of the grain crashed swiftshader: keep the background-position version.
-- `tests/harness.js`: frozen clock, seeded dice (three.js ids on their own dice), sound off, a scripted player; used by the
-  replay and picture tests that prove a change alters nothing.
+- `tests/harness.js`: frozen clock, seeded dice (fixed from the page's first line, so start-up drawing such as the smoke
+  texture repeats; three.js ids on their own dice), sound off, a scripted player; used by the replay and picture tests that
+  prove a change alters nothing. `tools/same.sh` runs them; by hand: `tests/replay.js build out.json [quick]` +
+  `tests/replay-cmp.js a.json b.json`, `tests/pics.js build dir` + `tests/pics-cmp.py dirA dirB [diffDir]` (diffDir gets
+  side-by-side + difference images). Run with `NODE_PATH=$(npm root -g)`, one browser at a time.
+- Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (JS may be async and return
+  JSON). To pin the camera, wrap `renderer.render` and set the camera when `c===camera`.
+- Menus against an older version: `tools/build-at.sh N.NN`, then `node tests/menus.js out/red-cap-N.NN.html out/a &&
+  node tests/menus.js game/red-cap.html out/b && python3 tests/pics-cmp.py out/a out/b`.
+- Probe gotchas: headless game time runs 5–10× slow, and Red Cap is held at floor start, so move the thing to him instead.
+  Clicking `#startBtn` enters a floor in steps: wait for `state === 'intro'`. A probe entering floors directly calls
+  `slidesOn(false)` first, moves `hero.root` with `hero.pos` and turns `hero.parts.face` to `cam.yaw`. The test browser locks
+  the mouse in play: test hover on the title screen. God mode: type G-O-D in play (fills ties and pebbles, next floor; wins on
+  floor 3). CPU profiles are useless under swiftshader: count programs, uploads, draw calls (`renderer.info.autoReset=false`);
+  a material's program: `renderer.properties.get(m).currentProgram`. Some floor-2 ground is raised: use `heightAt`.
