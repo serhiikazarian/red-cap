@@ -96,7 +96,7 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #cutting .blade.b { animation-name: chopB; }
 @keyframes chopA { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(14deg); } }
 @keyframes chopB { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-14deg); } }
-@keyframes snip { 0% { transform: translateX(0); opacity: 0; } 4% { opacity: 1; } 33.3% { transform: translateX(150px); } 100% { transform: translateX(176px); opacity: 1; } } /* once, left to right: fade in, cut most of the way, crawl the rest (60-flow snipEnd finishes it as the floor shows) */
+@keyframes snip { 0% { transform: translateX(0); opacity: 0; } 4% { opacity: 1; } 100% { transform: translateX(176px); opacity: 1; } } /* once, left to right at one speed (its length and pace: 60-flow snipRun); the floor shows as it ends */
 #card.enter .sheet { animation: cardIn .5s .12s ease-out both; }
 @keyframes cardIn { from { opacity: 0; transform: translateY(-14px) rotate(-1deg); } to { opacity: 1; transform: rotate(1deg); } }
 @media (prefers-reduced-motion: reduce) { #cutting .snip, #card.enter .sheet { animation: none; } }

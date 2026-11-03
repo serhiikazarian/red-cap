@@ -195,3 +195,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   warm-up. Replay baselines are one file per scenario, one sample a line (`tests/baseline/replay/`); `tools/same.sh new`
   takes the last check's run of the same build and writes only what changed. `tools/check.sh` boots alongside lint.
 - Title label `v1.25`.
+
+## 1.26 (3 Nov 2026)
+- Loading scissors cross their line at one even speed and the floor shows as they arrive (`snipRun`, 60-flow); the run is
+  timed by how long that floor took to load in this browser (`redcap.load.v1`, guess `LOAD_GUESS` the first time); a load
+  that runs long slows them in even steps (`SNIP_SLOW_AT`, `SNIP_SLOW`) instead of stalling them at the end.
+- `CLAUDE.md` condensed; docs are now synced once, at the end of a chat.
+- Title label `v1.26`.

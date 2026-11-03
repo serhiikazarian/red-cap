@@ -113,10 +113,17 @@ function enterFloor(i, later) {
     for (const id of ['#hud', '#reticle', '#touch']) $(id).hidden = true;
     $('#toast').style.opacity = 0;
     $('#cutNum').textContent = FLOORS[i].num;
-    const plan = i === 2 ? FINAL_SCRAP_MS : i === 0 ? FIRST_SCRAP_MS : 700;
-    $('#cutting .snip').style.animationDuration = plan * SNIP_SLACK + 'ms'; // the cut slows as it goes (snipEnd finishes it)
+    const run = snipPlan(i);
+    $('#cutting .snip').style.animationDuration = run + 'ms';
     $('#cutting').hidden = false;
-    const t0 = performance.now();
+    const t0 = performance.now(),
+      snip = snipRun(run, live, () => {
+        // in: the veil dissolves into the new floor and the card fades in with it
+        $('#cutting').hidden = true;
+        floorShow(i);
+        $('#card').classList.add('enter');
+        veilOff();
+      });
     // two painted frames and a moment of snipping before the build holds the page, so the scissors are always seen moving
     requestAnimationFrame(() =>
       requestAnimationFrame(() =>
@@ -124,35 +131,71 @@ function enterFloor(i, later) {
           if (!live()) return;
           floorBuilt(i);
           tune(live, () => {
-            setTimeout(
-              () => {
-                if (!live()) return;
-                // in: the veil dissolves into the new floor and the card fades in with it
-                $('#cutting').hidden = true;
-                floorShow(i);
-                $('#card').classList.add('enter');
-                veilOff();
-              },
-              snipEnd(plan, performance.now() - t0)
-            );
+            loadMemSet(i, performance.now() - t0);
+            snip.loaded();
           });
         }, 280)
       )
     );
   }, 360);
 }
-// the floor is built after e ms of a cut planned for plan. The cut runs most of the way in plan, then crawls (snip in
-// style.css); from plan, or now if the build ran past it, its rest takes SNIP_END ms and the floor shows as the scissors arrive.
-// Returns the wait until then.
-function snipEnd(plan, e) {
-  const lead = Math.max(0, plan - e);
-  setTimeout(() => {
-    const a = $('#cutting .snip').getAnimations()[0];
-    if (!a) return;
-    const left = plan * SNIP_SLACK - a.currentTime;
-    if (left > 0) a.updatePlaybackRate(left / SNIP_END);
-  }, lead);
-  return lead + SNIP_END;
+// The scissors cross their line at one even speed while the floor loads, and the floor shows as they reach the end. Their
+// run is the floor's least scrap time, or how long it took to load here before (LOAD_KEY, with SNIP_MARGIN), or LOAD_GUESS
+// the first time. A floor still loading when SNIP_SLOW_AT of the line is left slows them to SNIP_SLOW of their speed, and again
+// each time that share of what was left remains (each slow stretch takes as long as the one before, so they never arrive
+// before the floor is ready); as it finishes they go back to their own speed.
+const LOAD_KEY = 'redcap.load.v1',
+  LOAD_GUESS = [6000, 4500, 6000], // ms per floor: its run before any load has been timed here
+  LOAD_FADE = 0.9, // a shorter load lowers the remembered time only this far each time (the first build is the longest)
+  SNIP_MARGIN = 1.15, // the run is this much longer than the remembered load
+  SNIP_SLOW_AT = 0.2,
+  SNIP_SLOW = 0.5;
+// how long floor i took to load here (ms), or undefined
+function loadMemGet(i) {
+  try {
+    return (JSON.parse(localStorage.getItem(LOAD_KEY)) || [])[i];
+  } catch {
+    return undefined;
+  }
+}
+function loadMemSet(i, ms) {
+  try {
+    const m = JSON.parse(localStorage.getItem(LOAD_KEY)) || [];
+    m[i] = Math.round(Math.max(ms, (m[i] || 0) * LOAD_FADE));
+    localStorage.setItem(LOAD_KEY, JSON.stringify(m));
+  } catch {
+    /* not remembered: the next run is planned from the guess */
+  }
+}
+function snipPlan(i) {
+  const least = i === 2 ? FINAL_SCRAP_MS : i === 0 ? FIRST_SCRAP_MS : 700,
+    mem = loadMemGet(i);
+  return Math.round(Math.max(least, mem ? mem * SNIP_MARGIN : LOAD_GUESS[i]));
+}
+// the scissors' run of `run` ms (the snip animation in style.css): arrive() as they reach the end, after loaded() is called
+function snipRun(run, live, arrive) {
+  const a = $('#cutting .snip').getAnimations()[0],
+    t0 = performance.now(),
+    go = () => live() && arrive();
+  if (!a) return { loaded: () => setTimeout(go, Math.max(0, t0 + run - performance.now())) }; // reduced motion: no scissors
+  let done = false,
+    slowAt = SNIP_SLOW_AT;
+  const hold = () => {
+    if (done || !live()) return;
+    if (run - (a.currentTime || 0) < slowAt * run) {
+      a.updatePlaybackRate(a.playbackRate * SNIP_SLOW);
+      slowAt *= SNIP_SLOW;
+    }
+    requestAnimationFrame(hold);
+  };
+  requestAnimationFrame(hold);
+  return {
+    loaded() {
+      done = true;
+      a.updatePlaybackRate(1);
+      a.finished.then(go, () => {}); /* cancelled: the floor was left while loading */
+    }
+  };
 }
 function veilOff() {
   $('#veil').classList.remove('on');
@@ -178,9 +221,7 @@ const CAL_MS = 13,
   TRY_FRAMES = 40, // then frames judged
   TRY_LATE = 1, // and how many of them may be late
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
-  FIRST_SCRAP_MS = 1400, // and before floor one (its first build is the longest)
-  SNIP_SLACK = 3, // the cut's own course is this many times its plan, easing out, so a long build never leaves it stuck at the end
-  SNIP_END = 250; // ms: the rest of a cut whose build ran past its plan
+  FIRST_SCRAP_MS = 1400; // and before floor one (its first build is the longest)
 const CAL_PX = new Uint8Array(4);
 // one real frame, timed until the GPU has finished it (ms)
 function calFrame() {
