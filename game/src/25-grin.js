@@ -224,7 +224,7 @@ function updGrin(e, dt, dist, ux, uz, mv) {
   }
   e.tilt.position.y = e.fly;
   if (Math.random() < dt * 18)
-    burst(e.pos.clone().add(new THREE.Vector3(rand(-0.6, 0.6), e.fly + rand(-0.1, 0.7), rand(-0.6, 0.6))), [COL.hot, COL.bile, COL.tie], 1, 1, 0.22, {
+    burst(fxAt(e.pos, rand(-0.6, 0.6), e.fly + rand(-0.1, 0.7), rand(-0.6, 0.6)), [COL.hot, COL.bile, COL.tie], 1, 1, 0.22, {
       g: -5,
       life: 0.6
     });

@@ -34,6 +34,9 @@ function partMat(p) {
   dummy.updateMatrix();
   PMESH.setMatrixAt(p.i, dummy.matrix);
 }
+// a reused point at p + (x, y, z), for effects that copy where they start (burst, smokePuff): no garbage a frame; never keep it
+const FX_AT = new THREE.Vector3();
+const fxAt = (p, x, y, z) => FX_AT.set(p.x + x, p.y + y, p.z + z);
 function burst(pos, colors, n = 14, spd = 5, size = 0.16, opts = {}) {
   for (let i = 0; i < n; i++) {
     const p = POOL[poolNext];

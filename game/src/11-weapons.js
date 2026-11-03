@@ -20,7 +20,12 @@ const mixCd = () => 1 - MIX.cd * (hero.mix || 0),
   mixPitch = () => (hero.mix && performance.now() / 1000 - hero.mixAt < MIX.win ? Math.pow(2, (MIX.semi * hero.mix) / 12) : 1);
 const yoyoNextThird = () => hero.combo === 2 && performance.now() / 1000 - (hero.lastThrow || -9) < 1.1;
 const yoyoStop = y => (hitStop = Math.max(hitStop, y.power > 1 ? 0.09 : 0.055)); // a beat of stillness when it connects
-const tmpY = new THREE.Vector3();
+// reused points (no garbage a frame): the throwing hand, the yo-yo, the string's in-between tips, the middle of a string or band
+const tmpY = new THREE.Vector3(),
+  yyHand = new THREE.Vector3(),
+  yyTip = new THREE.Vector3(),
+  yyStep = new THREE.Vector3(),
+  yyMid = new THREE.Vector3();
 // the yo-yo's tail in the air: a black ink stroke along the last part of its path (YY_TRAIL.k of a throw's time), thick at
 // the yo-yo and tapering to nothing; it shrinks away once the throw ends
 const YY_TRAIL = { n: 48, k: 0.2, w: 0.075 },
@@ -142,8 +147,8 @@ function updYoyo(dt) {
   }
   y.t += dt;
   const k = y.t / y.dur;
-  const hand = new THREE.Vector3(hero.pos.x + y.fz * 0.25 * hero.flip, 1.05 + hero.pos.y, hero.pos.z - y.fx * 0.25 * hero.flip),
-    p = yoyoTip(y, hand, k);
+  const hand = yyHand.set(hero.pos.x + y.fz * 0.25 * hero.flip, 1.05 + hero.pos.y, hero.pos.z - y.fx * 0.25 * hero.flip),
+    p = yoyoTip(y, hand, k, yyTip);
   if (y.cut && y.t < YOYO_CUT_BLEND) p.lerp(y.cut, 1 - y.t / YOYO_CUT_BLEND);
   burst(p, [COL.tie, COL.bile, COL.paper], y.power > 1 ? 3 : 1, y.power > 1 ? 0.9 : 0.4, y.power > 1 ? 0.26 : 0.2, { g: 0, life: 0.3 });
   // a wall turns it back
@@ -157,27 +162,27 @@ function updYoyo(dt) {
   yyTrailTick(dt, p);
   yoyoMesh.rotation.y = Math.atan2(y.fx, y.fz);
   yoyoMesh.children.forEach(c => (c.rotation.x += dt * 40));
-  const mid = hand.clone().add(p).multiplyScalar(0.5),
+  const mid = yyMid.copy(hand).add(p).multiplyScalar(0.5),
     len = hand.distanceTo(p);
   stringMesh.position.copy(mid);
   stringMesh.scale.set(1, Math.max(len, 0.01), 1);
-  stringMesh.quaternion.setFromUnitVectors(UP, p.clone().sub(hand).normalize());
+  stringMesh.quaternion.setFromUnitVectors(UP, tmpY.copy(p).sub(hand).normalize());
   const k0 = Math.min(y.k0 ?? 0, k),
     steps = Math.min(6, Math.max(1, Math.ceil((k - k0) * 12)));
   // the string is tested at most a twelfth of the swing apart, so a fast throw skips nothing
   y.k0 = y.k0next ?? k;
   y.k0next = null;
-  for (let i = 1; i <= steps; i++) yoyoHits(y, hand, i === steps ? p : yoyoTip(y, hand, k0 + ((k - k0) * i) / steps));
+  for (let i = 1; i <= steps; i++) yoyoHits(y, hand, i === steps ? p : yoyoTip(y, hand, k0 + ((k - k0) * i) / steps, yyStep));
   if (k >= 1) {
     hero.yy = null;
     yoyoMesh.visible = stringMesh.visible = false;
   }
 }
-// where the yo-yo is at k (0..1) of its swing: out on one side, back on the other, a wide loop that is easy to read
-function yoyoTip(y, hand, k) {
-  const out = Math.sin(Math.min(k, 1) * Math.PI),
+// where the yo-yo is at k (0..1) of its swing (into out): out on one side, back on the other, a wide loop that is easy to read
+function yoyoTip(y, hand, k, out) {
+  const o = Math.sin(Math.min(k, 1) * Math.PI),
     lat = y.side * 1.6 * Math.sin(Math.min(k, 1) * TAU);
-  return new THREE.Vector3(hand.x + y.fx * y.reach * out - y.fz * lat, 1.15 + hero.pos.y + out * 0.35, hand.z + y.fz * y.reach * out + y.fx * lat);
+  return out.set(hand.x + y.fx * y.reach * o - y.fz * lat, 1.15 + hero.pos.y + o * 0.35, hand.z + y.fz * y.reach * o + y.fx * lat);
 }
 // the string's point (x, z) is out in the open, reached from the hand, and sees the talker: no blows through a wall or round a
 // corner (the Geezer is left as he was)
@@ -282,10 +287,10 @@ function updSling(dt) {
   slingG.userData.bands.forEach((b, i) => {
     const tip = slingG.userData.tips[i],
       pp = pouch.position,
-      mid = tip.clone().add(pp).multiplyScalar(0.5);
+      mid = yyMid.copy(tip).add(pp).multiplyScalar(0.5);
     b.position.copy(mid);
     b.scale.y = Math.max(tip.distanceTo(pp), 0.01);
-    b.quaternion.setFromUnitVectors(UP, pp.clone().sub(tip).normalize());
+    b.quaternion.setFromUnitVectors(UP, tmpY.copy(pp).sub(tip).normalize());
   });
 }
 // the pebble count on the weapon buttons

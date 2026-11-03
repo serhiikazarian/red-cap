@@ -148,3 +148,13 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Quieter: the Shade's and the ghosts' pops at half volume; Red Cap's death exhale at 30 % (`DEATH_EXHALE`, was 60 %).
 - Test baselines remade.
 - Title label `v1.21`.
+
+## 1.22 (3 Nov 2026), no change to the game
+- Less garbage a frame (proved by `tools/same.sh`): the yo-yo's hand, tip, in-between tips and string middle are reused points
+  (`yyHand`, `yyTip`, `yyStep`, `yyMid`; `yoyoTip` writes into one); talkers' sparks and smoke start from one reused point
+  (`fxAt`, `FX_AT` in 06-fx); `avoidProps` adds each prop's push (`avoidOne`, `AVOID`) instead of building lists; the Grump's
+  swell is a constant (`GRUMP_SWELL`).
+- `tools/ship.sh N.NN` ships a version as one commit on top of `main` with exactly the current files (no merge, no force push),
+  then links the work branch to it; `tools/wip.sh "message"` saves work to the work branch only. `CLAUDE.md`: both required,
+  never merge, squash or force-push by hand; commands kept short (scripts that answer in one word, trimmed output).
+- Title label `v1.22`.
