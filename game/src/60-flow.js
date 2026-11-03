@@ -123,8 +123,7 @@ function enterFloor(i, later) {
         setTimeout(() => {
           if (!live()) return;
           floorBuilt(i);
-          settle(SETTLE_ROUNDS[i], live, () => {
-            calibrate();
+          tune(live, () => {
             setTimeout(
               () => {
                 if (!live()) return;
@@ -163,16 +162,21 @@ function floorBuilt(i) {
   buildLevel(i);
   warmUp();
 }
-// behind the scrap (under the ink): real frames of the new floor, timed to the GPU, from its opening view and CAL_VIEWS more spread
-// over the floor. Each floor starts from the screen's full ratio with double ink lines; if the second-slowest view takes longer than
-// CAL_MS, single ink lines first, then the ratio it can hold. The heaviest moments (thick smoke, the fog wall) are left to the
-// controller (02-render), which steps down while they last and back up after. Before floor three is timed, settle lets the GPU
-// finish what the build left it, so a busy start does not set the floor's ratio too low.
+// behind the scrap (under the ink), the floor's drawing settings are found from real frames of it: its opening view and
+// CAL_VIEWS more spread over it. settle draws them until their times stop changing (the GPU has finished what the build left
+// it); calibrate, timing each frame to the GPU, takes a first pick (the screen's full ratio with double ink lines; if the
+// second-slowest view takes longer than CAL_MS, single ink lines, then a ratio it can hold); climb then plays frames at the
+// better settings and keeps the best one that passes the controller's own test (02-render: frames over LATE_AT screen frames
+// are late), so play starts as sharp as it will stay. The heaviest moments (thick smoke, the fog wall) are left to the
+// controller, which steps down while they last and back up after.
 const CAL_MS = 13,
   CAL_VIEWS = 4,
-  SETTLE_ROUNDS = [0, 0, 8], // per floor: settle's least rounds (0: none); it stops when two rounds in a row agree
+  SETTLE_ROUNDS = 8, // settle's least rounds; it stops when two rounds in a row agree
   SETTLE_TOL = 0.1, // within this share of each other
   SETTLE_MAX = 40, // and gives up after this many rounds
+  TRY_WARM = 4, // climb: frames drawn at a setting before it is judged (new buffers, first draws)
+  TRY_FRAMES = 40, // then frames judged
+  TRY_LATE = 1, // and how many of them may be late
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
   FIRST_SCRAP_MS = 1400, // and before floor one (its first build is the longest)
   SNIP_SLACK = 3, // the cut's own course is this many times its plan, easing out, so a long build never leaves it stuck at the end
@@ -186,7 +190,7 @@ function calFrame() {
   gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, CAL_PX); // waits for the GPU to finish the frame
   return performance.now() - t0;
 }
-// the views timed while a floor loads, each a camera place and turn: the floor's opening view first, then CAL_VIEWS more
+// the views drawn while a floor loads, each a camera place and turn: the floor's opening view first, then CAL_VIEWS more
 function calViewsAll() {
   updCamera(1 / 60);
   return [[camera.position.clone(), camera.quaternion.clone()], ...calViews(CAL_VIEWS)];
@@ -196,14 +200,28 @@ function calLook([p, q]) {
   camera.quaternion.copy(q);
   camera.updateMatrixWorld();
 }
-// at the screen's full ratio with double ink lines, one round of frames from every view each animation frame, at least `rounds`
-// of them, until the slowest view of two rounds in a row agrees within SETTLE_TOL (or SETTLE_MAX rounds); then done
-function settle(rounds, live, done) {
-  if (!rounds) return done();
-  post.uniforms.lite.value = 0;
-  resScale = resCap();
+// a drawing setting: [ratio, single ink lines (1) or double (0)]
+function setRung([r, lite]) {
+  post.uniforms.lite.value = lite;
+  resScale = r;
   resize();
+}
+// the floor's drawing settings, found while it loads (settle, calibrate, climb); then done, from its opening view
+function tune(live, done) {
   const views = calViewsAll();
+  settle(views, live, () => {
+    calibrate(views);
+    climb(views, live, () => {
+      calLook(views[0]);
+      resFresh();
+      done();
+    });
+  });
+}
+// at the screen's full ratio with double ink lines, one round of frames from every view each animation frame, at least
+// SETTLE_ROUNDS of them, until the slowest view of two rounds in a row agrees within SETTLE_TOL (or SETTLE_MAX rounds)
+function settle(views, live, done) {
+  setRung([resCap(), 0]);
   let n = 0,
     last = Infinity;
   const round = () => {
@@ -211,20 +229,15 @@ function settle(rounds, live, done) {
     const ms = Math.max(...views.map(v => (calLook(v), calFrame())));
     const steady = Math.abs(ms - last) <= SETTLE_TOL * last;
     last = ms;
-    if (++n >= SETTLE_MAX || (n >= rounds && steady)) {
-      calLook(views[0]);
-      done();
-    } else requestAnimationFrame(round);
+    if (++n >= SETTLE_MAX || (n >= SETTLE_ROUNDS && steady)) done();
+    else requestAnimationFrame(round);
   };
   requestAnimationFrame(round);
 }
-function calibrate() {
+function calibrate(views) {
   const cap = resCap(),
     mid3 = () => [calFrame(), calFrame(), calFrame()].sort((a, b) => a - b)[1];
-  post.uniforms.lite.value = 0;
-  resScale = cap;
-  resize();
-  const views = calViewsAll();
+  setRung([cap, 0]);
   const slow = () => {
     const ms = views.map(v => {
       calLook(v);
@@ -243,8 +256,59 @@ function calibrate() {
       resize();
     }
   }
-  calLook(views[0]);
-  resFresh();
+}
+// the settings from the best down, as the controller steps them: the full ratio with double ink lines, then single lines,
+// then the ratio RES_UP at a time to RES_MIN, then RES_LOW
+function resLadder() {
+  const out = [
+    [resCap(), 0],
+    [resCap(), 1]
+  ];
+  for (let r = resCap(); r > RES_MIN + 1e-3; ) out.push([(r = Math.max(RES_MIN, Math.round((r - RES_UP) * 100) / 100)), 1]);
+  if (RES_LOW < RES_MIN) out.push([RES_LOW, 1]);
+  return out;
+}
+// from calibrate's pick, the best setting that passes tryRung: halving the rungs above the pick each try (about four)
+function climb(views, live, done) {
+  const pick = [Math.min(resScale, resCap()), post.uniforms.lite.value],
+    L = resLadder();
+  let lo = 0,
+    hi = L.findIndex(([r, lite]) => lite >= pick[1] && r <= pick[0] + 1e-3); // the first rung no better than the pick
+  if (hi < 0) hi = L.length;
+  const top = hi;
+  const next = () => {
+    if (lo >= hi) {
+      setRung(lo === top ? pick : L[lo]);
+      return done();
+    }
+    const mid = (lo + hi) >> 1;
+    tryRung(L[mid], views, live, ok => {
+      if (ok) hi = mid;
+      else lo = mid + 1;
+      next();
+    });
+  };
+  next();
+}
+// play frames at one setting, a view each animation frame, as the controller would judge them: after TRY_WARM frames,
+// TRY_FRAMES with at most TRY_LATE late (longer than LATE_AT of the screen's frames) pass; it fails as soon as more are late
+function tryRung(rung, views, live, ok) {
+  setRung(rung);
+  const lateAt = LATE_AT * clamp(RES.frame || 1000 / 60, 1000 / 60, 20.1);
+  let n = -TRY_WARM,
+    late = 0,
+    last = 0;
+  const step = now => {
+    if (!live()) return;
+    if (n > 0 && now - last > lateAt) late++;
+    last = now;
+    if (late > TRY_LATE) return ok(false);
+    if (++n > TRY_FRAMES) return ok(true);
+    calLook(views[(n + TRY_WARM) % views.length]);
+    render();
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }
 // n views spread over the floor for calibrate: from open cells taken evenly through the map, Red Cap's eye height above the
 // ground, looking down the longest clear run of cells

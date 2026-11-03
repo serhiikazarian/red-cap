@@ -184,3 +184,14 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   (`SETTLE_ROUNDS`, `SETTLE_TOL`, `SETTLE_MAX`), so the GPU's leftover build work no longer sets the floor's ratio too low and
   it opens sharp instead of climbing during the first seconds.
 - Test baselines remade. Title label `v1.24`.
+
+## 1.25 (3 Nov 2026)
+- Every floor's loading finds its drawing settings from real frames before play (`tune`, 60-flow): `settle` (now on every
+  floor) until frame times stop changing, `calibrate` for a first pick, then `climb`: frames played at the better settings
+  (`resLadder`) are judged by the controller's own late-frame rule (`tryRung`), and the best that passes is kept. A floor no
+  longer starts blurry and sharpens a few seconds into play on a machine that holds the sharper setting.
+- Checks: `tools/same.sh` runs every full replay and picture three at a time, the touched floors first, with a progress
+  line a job (~75 s, was ~3 min with short replays); the harness enters floor one without its loading cut and shader
+  warm-up. Replay baselines are one file per scenario, one sample a line (`tests/baseline/replay/`); `tools/same.sh new`
+  takes the last check's run of the same build and writes only what changed. `tools/check.sh` boots alongside lint.
+- Title label `v1.25`.

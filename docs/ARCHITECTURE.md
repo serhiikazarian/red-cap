@@ -44,10 +44,12 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   ink lines round them are not cut. The ink pass skips where the render target's alpha < 1.
 - Sorting: `renderer.setTransparentSort` draws far to near, but a figure of parts in a set order (a Grin: `userData.sortRank`,
   `sortZ` from `sortUnits()` each frame) sorts as one thing. Words keep `renderOrder` 10 (always on top).
-- Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). `calibrate()` (60-flow) times real frames
-  under the ink during loading, from the opening view and `CAL_VIEWS` more spread over the floor (`calViews`): each floor
-  starts from the screen's full ratio, and when the second-slowest view is over `CAL_MS` it switches to `lite` (single ink
-  lines), then lowers the ratio. Heavy moments (thick smoke, the fog wall) are left to the controller: each second of play it
+- Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). Under the ink during loading, `tune()`
+  (60-flow) draws real frames from the opening view and `CAL_VIEWS` more spread over the floor (`calViews`): `settle` until
+  their times stop changing, then `calibrate` (GPU-timed: from the screen's full ratio, when the second-slowest view is over
+  `CAL_MS` it switches to `lite`, single ink lines, then lowers the ratio), then `climb` (`tryRung`: frames at better
+  settings, judged by the controller's own late-frame rule, halving the rungs of `resLadder` each try), so play starts at
+  the best setting the machine holds. Heavy moments (thick smoke, the fog wall) are left to the controller: each second of play it
   counts late frames (over `LATE_AT` frames of a 60 Hz screen); over `LATE_DROP` it steps down (thinner smoke `RES.thin` →
   `PUFF_LOW`, only while there is that much smoke; then `lite`; then the ratio, to `RES_MIN`, then `RES_LOW`), and after three
   near-perfect seconds it steps back up in reverse order. A stray hitch moves nothing; a failed step up is undone and held back
