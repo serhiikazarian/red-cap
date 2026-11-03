@@ -80,7 +80,9 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   texture repeats; three.js ids on their own dice), sound off, a scripted player; used by the replay and picture tests that
   prove a change alters nothing. `tools/same.sh` runs them; by hand: `tests/replay.js build out.json [quick]` +
   `tests/replay-cmp.js a.json b.json`, `tests/pics.js build dir` + `tests/pics-cmp.py dirA dirB [diffDir]` (diffDir gets
-  side-by-side + difference images). Run with `NODE_PATH=$(npm root -g)`, one browser at a time.
+  side-by-side + difference images). Run with `NODE_PATH=$(npm root -g)`, one browser at a time. When a replay differs and
+  the cause isn't obvious: `DEEP=1 node tests/replay.js …` for both builds, then `node tests/replay-deep.js a.json b.json`
+  names the first dice roll (with its call stack) or field where they part.
 - Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (JS may be async and return
   JSON). To pin the camera, wrap `renderer.render` and set the camera when `c===camera`.
 - Menus against an older version: `tools/build-at.sh N.NN`, then `node tests/menus.js out/red-cap-N.NN.html out/a &&

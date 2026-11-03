@@ -14,8 +14,10 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - Find before reading: `rg -n "name" game/src` (always give a path: bare `rg` waits on stdin). Definitions:
   `rg -n "^(async )?function name\b|^(const|let) name\b" game/src`. Then read only the lines around the hit (offset/limit).
   Never read a whole file in `game/src`; never open `game/data/`, `game/vendor/`, `tests/baseline/` or a built HTML.
-- Change the fewest lines that do the job, in the file that owns the behaviour. No drive-by tidying, renaming or comments
-  about the change itself (comments describe how things work now, never what they used to be).
+- Make the change in the file that owns the behaviour. When rewriting code, tidy what you touch in the same pass: clearer
+  names, dead or duplicated lines, stale comments, a long function split into named steps (`node tools/sizes.js` lists the
+  longest). Tidying must not change play or looks: when the task itself doesn't alter play, prove it with `tools/same.sh`.
+- Comments describe how things work now, never what they used to be or what was changed.
 - Tuning numbers sit at the top of each file; many files open with a comment explaining their rules: read that first.
 - Don't reread docs already in context. One screenshot only when the change is visual.
 
