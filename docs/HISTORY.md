@@ -106,3 +106,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - `CLAUDE.md`: how tags and releases come about, and how to go back to an older version (`git checkout vN.NN -- game`).
   README and `docs/ARCHITECTURE.md`: older builds from 1.13 on.
 - Title label `v1.15`.
+
+## 1.16 (3 Nov 2026), no change to the game
+- CI's `versions` job makes each version's tag through a GitHub release (`gh release create --target`): GitHub refused the
+  tag pushed from CI on 1.05, the commit that brings in `.github/workflows/pages.yml`. Versions before 1.13 get a release
+  without a game file (they can no longer be built).
+- Title label `v1.16`.
