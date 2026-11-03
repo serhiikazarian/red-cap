@@ -112,3 +112,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   tag pushed from CI on 1.05, the commit that brings in `.github/workflows/pages.yml`. Versions before 1.13 get a release
   without a game file (they can no longer be built).
 - Title label `v1.16`.
+
+## 1.17 (3 Nov 2026), no change to the game
+- CI's `versions` job keeps going when GitHub refuses a version's release: CI's own token may only tag a commit whose
+  workflow file matches `main`'s ("Resource not accessible by integration"), so each new version gets its tag and release
+  as it is pushed, and older ones it cannot tag are left with a warning.
+- Title label `v1.17`.

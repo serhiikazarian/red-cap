@@ -64,8 +64,9 @@ jobs:
 
   # Every version (a commit whose subject is exactly N.NN) gets a GitHub release, which makes its tag vN.NN, with its built game
   # attached (red-cap-vN.NN.html: one file that plays offline), so any version is one download away. Done here because Claude's
-  # cloud sessions cannot push tags; made through the releases API, because GitHub refuses a pushed tag from CI on a commit
-  # that brings in a workflow file. Versions before 1.13 get a release without the file: they can no longer be built.
+  # cloud sessions cannot push tags. CI's own token may only tag a commit whose workflow file matches main's: a new version
+  # (the commit just pushed) always can; an older one GitHub refuses is left with a warning. Versions before 1.13 get a release
+  # without the file: they can no longer be built.
   versions:
     if: github.event_name == 'push'
     needs: deploy
@@ -84,12 +85,15 @@ jobs:
           git log --reverse --format='%H %s' | grep -E '^[0-9a-f]{40} [0-9]+\.[0-9]{2}$' | while read -r sha v; do
             gh release view "v$v" >/dev/null 2>&1 && continue
             notes=$(awk -v h="## $v " 'index($0, h) == 1 {f = 1; next} /^## / {f = 0} f' docs/HISTORY.md)
+            file=
             if tools/build-at.sh "$v" >/dev/null 2>&1; then
               cp "out/red-cap-$v.html" "out/red-cap-v$v.html"
-              gh release create "v$v" "out/red-cap-v$v.html" --target "$sha" --title "$v" --notes "${notes:-Version $v}"
+              file="out/red-cap-v$v.html"
             else
-              gh release create "v$v" --target "$sha" --title "$v" --notes "${notes:-Version $v}
+              notes="${notes:-Version $v}
 
           This version can no longer be built (its pictures are no longer in the history): no game file."
             fi
+            gh release create "v$v" $file --target "$sha" --title "$v" --notes "${notes:-Version $v}" ||
+              echo "::warning::v$v: GitHub refused its release (CI's token cannot tag a commit whose workflow differs from main's)"
           done
