@@ -77,6 +77,7 @@ let floorTok = 0; // a newer enterFloor cancels a build still waiting to run
 // to floor i: Red Cap's ties and pebbles are those he came in with (a retry restores them); later: through the veil and the
 // scrap, else at once
 function enterFloor(i, later) {
+  if (later === true && (state === 'leave' || state === 'build')) return; // a floor is already on its way in
   stats.npc[i] = 0;
   if (i !== hero.ammoFloor) {
     hero.ammoFloor = i;
@@ -139,17 +140,22 @@ function enterFloor(i, later) {
     );
   }, 360);
 }
-// The scissors cross their line at one even speed while the floor loads, and the floor shows as they reach the end. Their
-// run is the floor's least scrap time, or how long it took to load here before (LOAD_KEY, with SNIP_MARGIN), or LOAD_GUESS
-// the first time. A floor still loading when SNIP_SLOW_AT of the line is left slows them to SNIP_SLOW of their speed, and again
-// each time that share of what was left remains (each slow stretch takes as long as the one before, so they never arrive
-// before the floor is ready); as it finishes they go back to their own speed.
+// The scissors cross their line at one even speed while the floor loads, cutting it open behind them, and the floor shows as
+// they reach the end. Their run is the floor's least scrap time, or how long it took to load here (LOAD_KEY: the mean of the
+// last load and the one remembered before, with SNIP_MARGIN), or LOAD_GUESS the first time; never over LOAD_MAX. A floor
+// still loading when SNIP_SLOW_AT of the line is left slows them to SNIP_SLOW of their speed, and again each time that share
+// of what was left remains (each slow stretch takes as long as the one before), down to SNIP_RATE_MIN of it, where they keep
+// cutting at that pace; as it finishes they go back to their own speed. A change of speed keeps their place exactly (the
+// browser's own rate change can lose it after a long slow stretch). Their arrival is checked every SNIP_TICK ms against the
+// animation's own clock (or the wall clock, when there is no animation), so a floor always opens.
 const LOAD_KEY = 'redcap.load.v1',
-  LOAD_GUESS = [6000, 4500, 6000], // ms per floor: its run before any load has been timed here
-  LOAD_FADE = 0.9, // a shorter load lowers the remembered time only this far each time (the first build is the longest)
+  LOAD_GUESS = [3000, 3000, 3500], // ms per floor: its run before any load has been timed here
+  LOAD_MAX = 15000, // ms: a longer load (a hidden page) is not remembered, and no run is longer
   SNIP_MARGIN = 1.15, // the run is this much longer than the remembered load
   SNIP_SLOW_AT = 0.2,
-  SNIP_SLOW = 0.5;
+  SNIP_SLOW = 0.5,
+  SNIP_RATE_MIN = 1 / 16,
+  SNIP_TICK = 50; // ms
 // how long floor i took to load here (ms), or undefined
 function loadMemGet(i) {
   try {
@@ -159,9 +165,10 @@ function loadMemGet(i) {
   }
 }
 function loadMemSet(i, ms) {
+  if (document.hidden || ms > LOAD_MAX) return; // held up by a hidden page: it says nothing about this machine
   try {
     const m = JSON.parse(localStorage.getItem(LOAD_KEY)) || [];
-    m[i] = Math.round(Math.max(ms, (m[i] || 0) * LOAD_FADE));
+    m[i] = Math.round(m[i] ? (m[i] + ms) / 2 : ms);
     localStorage.setItem(LOAD_KEY, JSON.stringify(m));
   } catch {
     /* not remembered: the next run is planned from the guess */
@@ -170,30 +177,44 @@ function loadMemSet(i, ms) {
 function snipPlan(i) {
   const least = i === 2 ? FINAL_SCRAP_MS : i === 0 ? FIRST_SCRAP_MS : 700,
     mem = loadMemGet(i);
-  return Math.round(Math.max(least, mem ? mem * SNIP_MARGIN : LOAD_GUESS[i]));
+  return Math.round(clamp(mem ? mem * SNIP_MARGIN : LOAD_GUESS[i], least, LOAD_MAX));
 }
-// the scissors' run of `run` ms (the snip animation in style.css): arrive() as they reach the end, after loaded() is called
+// the scissors' run of `run` ms (the snip animation in style.css), from the start: arrive() once loaded() has been called and
+// they have reached the end
 function snipRun(run, live, arrive) {
   const a = $('#cutting .snip').getAnimations()[0],
-    t0 = performance.now(),
-    go = () => live() && arrive();
-  if (!a) return { loaded: () => setTimeout(go, Math.max(0, t0 + run - performance.now())) }; // reduced motion: no scissors
-  let done = false,
-    slowAt = SNIP_SLOW_AT;
-  const hold = () => {
-    if (done || !live()) return;
-    if (run - (a.currentTime || 0) < slowAt * run) {
-      a.updatePlaybackRate(a.playbackRate * SNIP_SLOW);
-      slowAt *= SNIP_SLOW;
-    }
-    requestAnimationFrame(hold);
+    t0 = performance.now();
+  const rate = r => {
+    const t = a.currentTime;
+    a.playbackRate = r;
+    a.currentTime = t;
   };
-  requestAnimationFrame(hold);
+  if (a) {
+    a.currentTime = 0;
+    rate(1);
+  }
+  let loaded = false,
+    slowAt = SNIP_SLOW_AT;
+  const clock = () => (a && a.playState !== 'idle' ? a.currentTime || 0 : performance.now() - t0), // ms of the run behind them
+    tick = () => {
+      if (!live()) return clearInterval(iv);
+      const left = run - clock();
+      if (!loaded) {
+        if (a && left < slowAt * run && a.playbackRate > SNIP_RATE_MIN) {
+          rate(Math.max(SNIP_RATE_MIN, a.playbackRate * SNIP_SLOW));
+          slowAt *= SNIP_SLOW;
+        }
+      } else if (left <= 1) {
+        clearInterval(iv);
+        arrive();
+      }
+    },
+    iv = setInterval(tick, SNIP_TICK);
   return {
     loaded() {
-      done = true;
-      a.updatePlaybackRate(1);
-      a.finished.then(go, () => {}); /* cancelled: the floor was left while loading */
+      loaded = true;
+      if (a && a.playState !== 'idle') rate(1);
+      tick();
     }
   };
 }
@@ -205,32 +226,24 @@ function floorBuilt(i) {
   buildLevel(i);
   warmUp();
 }
-// behind the scrap (under the ink), the floor's drawing settings are found from real frames of it: its opening view and
-// CAL_VIEWS more spread over it. settle draws them until their times stop changing (the GPU has finished what the build left
-// it); calibrate, timing each frame to the GPU, takes a first pick (the screen's full ratio with double ink lines; if the
-// second-slowest view takes longer than CAL_MS, single ink lines, then a ratio it can hold); climb then plays frames at the
-// better settings and keeps the best one that passes the controller's own test (02-render: frames over LATE_AT screen frames
-// are late), so play starts as sharp as it will stay. The heaviest moments (thick smoke, the fog wall) are left to the
-// controller, which steps down while they last and back up after.
-const CAL_MS = 13,
-  CAL_VIEWS = 4,
-  SETTLE_ROUNDS = 8, // settle's least rounds; it stops when two rounds in a row agree
-  SETTLE_TOL = 0.1, // within this share of each other
-  SETTLE_MAX = 40, // and gives up after this many rounds
-  TRY_WARM = 4, // climb: frames drawn at a setting before it is judged (new buffers, first draws)
-  TRY_FRAMES = 40, // then frames judged
+// Behind the scrap (under the ink), the floor's drawing settings are found from real frames of it, one each animation frame
+// (the page never stalls, so the scissors stay smooth), from its opening view and CAL_VIEWS more spread over it in turn.
+// First the frames settle: drawn at the screen's full ratio until their pace stops changing (the GPU has finished what the
+// build left it). Then settings of resLadder are tried, the best first, then halving the rungs, and the best whose frames pass the
+// controller's own test (02-render: a frame over LATE_AT screen frames is late) is kept, so play starts as sharp as it will
+// stay; RES_MIN with single ink lines is taken as passing. Anything failing, or the whole taking over TUNE_MAX ms, ends it
+// at the best setting found so far. The heaviest moments (thick smoke, the fog wall) are left to the controller.
+const CAL_VIEWS = 4,
+  SETTLE_MIN = 20, // frames: settling takes at least this many
+  SETTLE_RUN = 6, // until the mean gap of the last this-many frames is within SETTLE_TOL of the run before
+  SETTLE_TOL = 0.15,
+  SETTLE_MAX = 120, // or this many frames
+  TRY_WARM = 4, // a try: frames drawn at its setting before it is judged (new buffers, first draws)
+  TRY_FRAMES = 30, // then frames judged
   TRY_LATE = 1, // and how many of them may be late
+  TUNE_MAX = 15000, // ms
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
   FIRST_SCRAP_MS = 1400; // and before floor one (its first build is the longest)
-const CAL_PX = new Uint8Array(4);
-// one real frame, timed until the GPU has finished it (ms)
-function calFrame() {
-  const gl = renderer.getContext(),
-    t0 = performance.now();
-  render();
-  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, CAL_PX); // waits for the GPU to finish the frame
-  return performance.now() - t0;
-}
 // the views drawn while a floor loads, each a camera place and turn: the floor's opening view first, then CAL_VIEWS more
 function calViewsAll() {
   updCamera(1 / 60);
@@ -247,109 +260,83 @@ function setRung([r, lite]) {
   resScale = r;
   resize();
 }
-// the floor's drawing settings, found while it loads (settle, calibrate, climb); then done, from its opening view
-function tune(live, done) {
-  const views = calViewsAll();
-  settle(views, live, () => {
-    calibrate(views);
-    climb(views, live, () => {
-      calLook(views[0]);
-      resFresh();
-      done();
-    });
-  });
-}
-// at the screen's full ratio with double ink lines, one round of frames from every view each animation frame, at least
-// SETTLE_ROUNDS of them, until the slowest view of two rounds in a row agrees within SETTLE_TOL (or SETTLE_MAX rounds)
-function settle(views, live, done) {
-  setRung([resCap(), 0]);
-  let n = 0,
-    last = Infinity;
-  const round = () => {
-    if (!live()) return;
-    const ms = Math.max(...views.map(v => (calLook(v), calFrame())));
-    const steady = Math.abs(ms - last) <= SETTLE_TOL * last;
-    last = ms;
-    if (++n >= SETTLE_MAX || (n >= SETTLE_ROUNDS && steady)) done();
-    else requestAnimationFrame(round);
-  };
-  requestAnimationFrame(round);
-}
-function calibrate(views) {
-  const cap = resCap(),
-    mid3 = () => [calFrame(), calFrame(), calFrame()].sort((a, b) => a - b)[1];
-  setRung([cap, 0]);
-  const slow = () => {
-    const ms = views.map(v => {
-      calLook(v);
-      calFrame(); // anything this view needs that is still unready
-      return mid3();
-    });
-    return ms.sort((a, b) => b - a)[Math.min(1, ms.length - 1)];
-  };
-  for (let n = 0; n < 4; n++) {
-    const cur = Math.min(resScale, cap),
-      ms = slow();
-    if (ms <= CAL_MS || cur <= RES_LOW) break;
-    if (!post.uniforms.lite.value) post.uniforms.lite.value = 1;
-    else {
-      resScale = Math.max(resFloor(cur), Math.floor(cur * Math.sqrt(CAL_MS / ms) * 20) / 20); // pixels cost by area
-      resize();
-    }
-  }
-}
 // the settings from the best down, as the controller steps them: the full ratio with double ink lines, then single lines,
-// then the ratio RES_UP at a time to RES_MIN, then RES_LOW
+// then the ratio RES_UP at a time to RES_MIN
 function resLadder() {
   const out = [
     [resCap(), 0],
     [resCap(), 1]
   ];
   for (let r = resCap(); r > RES_MIN + 1e-3; ) out.push([(r = Math.max(RES_MIN, Math.round((r - RES_UP) * 100) / 100)), 1]);
-  if (RES_LOW < RES_MIN) out.push([RES_LOW, 1]);
   return out;
 }
-// from calibrate's pick, the best setting that passes tryRung: halving the rungs above the pick each try (about four)
-function climb(views, live, done) {
-  const pick = [Math.min(resScale, resCap()), post.uniforms.lite.value],
-    L = resLadder();
-  let lo = 0,
-    hi = L.findIndex(([r, lite]) => lite >= pick[1] && r <= pick[0] + 1e-3); // the first rung no better than the pick
-  if (hi < 0) hi = L.length;
-  const top = hi;
-  const next = () => {
-    if (lo >= hi) {
-      setRung(lo === top ? pick : L[lo]);
-      return done();
-    }
-    const mid = (lo + hi) >> 1;
-    tryRung(L[mid], views, live, ok => {
-      if (ok) hi = mid;
-      else lo = mid + 1;
-      next();
-    });
-  };
-  next();
+// settled: enough frames, and the pace of the last SETTLE_RUN agrees with the run before (or SETTLE_MAX frames)
+function settled(gaps) {
+  const n = gaps.length,
+    mean = (a, b) => gaps.slice(a, b).reduce((x, y) => x + y, 0) / (b - a);
+  if (n < SETTLE_MIN) return false;
+  if (n >= SETTLE_MAX) return true;
+  const now = mean(n - SETTLE_RUN, n),
+    before = mean(n - 2 * SETTLE_RUN, n - SETTLE_RUN);
+  return Math.abs(now - before) <= SETTLE_TOL * before;
 }
-// play frames at one setting, a view each animation frame, as the controller would judge them: after TRY_WARM frames,
-// TRY_FRAMES with at most TRY_LATE late (longer than LATE_AT of the screen's frames) pass; it fails as soon as more are late
-function tryRung(rung, views, live, ok) {
-  setRung(rung);
-  const lateAt = LATE_AT * clamp(RES.frame || 1000 / 60, 1000 / 60, 20.1);
-  let n = -TRY_WARM,
+// the floor's drawing settings, found while it loads; then done, from its opening view
+function tune(live, done) {
+  const views = calViewsAll(),
+    L = resLadder(),
+    t0 = performance.now(),
+    lateAt = LATE_AT * clamp(RES.frame || 1000 / 60, 1000 / 60, 20.1),
+    gaps = [];
+  let lo = 0,
+    hi = L.length - 1, // the best rung known to pass
+    mid = -1, // the rung being tried (-1: still settling; the first try is the best rung)
+    n = 0,
     late = 0,
-    last = 0;
-  const step = now => {
-    if (!live()) return;
-    if (n > 0 && now - last > lateAt) late++;
-    last = now;
-    if (late > TRY_LATE) return ok(false);
-    if (++n > TRY_FRAMES) return ok(true);
-    calLook(views[(n + TRY_WARM) % views.length]);
-    render();
-    requestAnimationFrame(step);
+    last = 0,
+    k = 0,
+    over = false;
+  const finish = () => {
+    if (over || !live()) return;
+    over = true;
+    setRung(L[hi]);
+    calLook(views[0]);
+    resFresh();
+    done();
   };
-  requestAnimationFrame(step);
+  const next = () => {
+    if (lo >= hi) return finish();
+    mid = mid < 0 ? 0 : (lo + hi) >> 1;
+    setRung(L[mid]);
+    n = late = 0;
+  };
+  const frame = now => {
+    if (over || !live()) return;
+    try {
+      const gap = last ? now - last : 0;
+      last = now;
+      if (performance.now() - t0 > TUNE_MAX) return finish();
+      if (mid < 0) {
+        if (gap) gaps.push(gap);
+        if (settled(gaps)) next();
+      } else {
+        if (++n > TRY_WARM && gap > lateAt) late++;
+        if (late > TRY_LATE || n >= TRY_WARM + TRY_FRAMES) {
+          if (late > TRY_LATE) lo = mid + 1;
+          else hi = mid;
+          next();
+        }
+      }
+      if (over) return;
+      calLook(views[k++ % views.length]);
+      render();
+    } catch {
+      return finish(); /* a fault while trying: play starts at the best setting known, the controller takes it from there */
+    }
+    requestAnimationFrame(frame);
+  };
+  setRung(L[0]);
+  setTimeout(finish, TUNE_MAX + 1000); // no frames at all (a hidden page): the floor still opens
+  requestAnimationFrame(frame);
 }
 // n views spread over the floor for calibrate: from open cells taken evenly through the map, Red Cap's eye height above the
 // ground, looking down the longest clear run of cells
