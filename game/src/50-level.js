@@ -74,8 +74,10 @@ function buildLevel(i) {
   if (G.pyr) hideBombs();
   if (F.roomPile && Math.random() < F.roomPile[4]) roomPile(F);
   const well = i > 0 && hero.hp >= WELL.hp; // doing too well: a leaner floor
-  if (F.hiddenHearts || F.hiddenPiles)
-    hideHearts(Math.floor((F.hiddenHearts || 0) * (well ? WELL.hearts : 1)), Math.floor((F.hiddenPiles || 0) * (well ? WELL.piles : 1)));
+  if (F.hiddenHearts || F.hiddenPiles) {
+    const hearts = Math.floor((F.hiddenHearts || 0) * (well ? WELL.hearts : 1));
+    hideHearts([...Array(hearts)].filter(() => heartPlaced(F)).length, Math.floor((F.hiddenPiles || 0) * (well ? WELL.piles : 1)));
+  }
   skyDecor(F, w, box);
   placeBystanders(rng, i === 2 ? 8 : 9);
   doodleDecals(rng, F.words);
@@ -248,8 +250,9 @@ function buildCells(F, w, box, rng) {
       else if (c === 'P')
         hero.pos.set(F.start ? F.start[0] : cx, 0, F.start ? F.start[1] : cz); // F.start: a spot off the cell's centre
       else if ('BGRUMZSYWq'.includes(c)) makeEnemy(c, cx, cz);
-      else if (c === 'h') spawnPickup(cx, cz);
-      else if (c === 'X') buildDoor(cx, cz);
+      else if (c === 'h') {
+        if (heartPlaced(F)) spawnPickup(cx, cz);
+      } else if (c === 'X') buildDoor(cx, cz);
       if (c !== '#' && kindAt(x, z) === 1) for (let k = nBefore; k < G.group.children.length; k++) G.group.children[k].position.y += LIFT;
     }
   if (cornice.length) G.group.add(still(new THREE.Mesh(mergeGeos(cornice), new THREE.MeshLambertMaterial({ color: 0x24100c, emissive: 0x1a0402 }))));

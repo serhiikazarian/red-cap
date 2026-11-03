@@ -5,6 +5,11 @@ const HEART_WALL = 1.2, // metres a heart keeps from a wall (a big one 1.6)
 const WELL = { hp: 4, drop: 0.5, hearts: 0.5, piles: 0.5 };
 let PILE = null; // the pile's shape and materials, made once
 
+// a heart lying in the level (a map 'h' or a hidden one) is there by the floor's placedHearts chance, on fresh dice (the layout
+// stays the same)
+function heartPlaced(F) {
+  return Math.random() < (F.placedHearts ?? 1);
+}
 // open floor: not a wall, prop, gate, or too near a wall or clutter
 function openSpot(x, z) {
   const [ix, iz] = cellOf(x, z);

@@ -75,3 +75,11 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Removed `flatShading` from three Lambert materials (cornices, the DMT crown, pebble piles): r128's Lambert ignores it and
   warned about it; the look is unchanged.
 - Title label `v1.11`.
+
+## 1.12 (3 Nov 2026)
+- Fewer hearts lying in the level: each one (a map `h` or a hidden one) is there by chance, fresh each time a floor starts
+  (`placedHearts` in `FLOORS`: 0.7 on floors one and two, 0.9 on floor three; `heartPlaced`). Measured over 200 builds:
+  floor one 2 → 1.33 on average, floor two 4 → 2.75, floor three 2 → 1.8. Same spots; the emergency hearts (`roomHeart`,
+  `lowHeart`), talkers' drops and bosses' big hearts unchanged.
+- Test baselines remade (the dice fall differently).
+- Title label `v1.12`.

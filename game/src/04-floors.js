@@ -3,7 +3,8 @@
 //   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
 //   talkers: B Usher  q Shade  Y Geezer  G Grin  R Priest  Z Bruno  U Grump  S Smoker  W Brainless the Second  M Jester
 // Other fields: the look (fog, bg, amb, hemi, lamp, floor and wall paintings, wallH), raised ground (raise, ramps), the drone,
-// deco (which decor set builds the floor), and tuning: drop odds per talker, hidden hearts and pebble piles, cages, sizes.
+// deco (which decor set builds the floor), and tuning: drop odds per talker, hidden hearts and pebble piles, placedHearts (the
+// chance each heart lying in the level, an 'h' or a hidden one, is there: fresh each time the floor starts), cages, sizes.
 const FLOORS = [
   {
     num: 'Floor one',
@@ -37,6 +38,7 @@ const FLOORS = [
     ],
     dropOdds: { B: 0.18, q: 0.05 },
     hiddenHearts: 1, // hidden in quiet corners (hideHearts)
+    placedHearts: 0.7,
     hiddenPiles: 2, // and piles of pebbles in the next quiet corners
     roomPile: [5, 1, 9, 2, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
     roomHeart: [6, 6], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
@@ -78,6 +80,7 @@ const FLOORS = [
     spreadHearts: true,
     dropOdds: { G: 0.2 },
     hiddenHearts: 3, // hidden in quiet corners (hideHearts)
+    placedHearts: 0.7,
     cages: [
       [3, 9, 'Z'],
       [4, 6, 'G'],
@@ -121,6 +124,7 @@ const FLOORS = [
     lamp: [0xfff2dc, 0.55, 12],
     dropOdds: { S: 0.58 },
     hiddenPiles: 2, // piles of pebbles hidden in quiet corners (hideHearts)
+    placedHearts: 0.9,
     lowHeart: [2, 2], // the Jester's chamber: a heart here too if Red Cap walks in with fewer than 3
     blockMoved: [[11, 11, 11, 12]],
     floor: 't_smudge',
