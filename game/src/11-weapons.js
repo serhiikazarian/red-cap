@@ -17,8 +17,8 @@ const MIX = { win: 1.2, max: 5, cd: 0.09, pow: 0.03, semi: 2 }; // semi: semiton
 const PEBBLE_RANGE = 24; // metres a pebble flies before it drops
 const mixCd = () => 1 - MIX.cd * (hero.mix || 0),
   mixPow = () => 1 + MIX.pow * (hero.mix || 0),
-  mixPitch = () => (hero.mix && performance.now() / 1000 - hero.mixAt < MIX.win ? Math.pow(2, (MIX.semi * hero.mix) / 12) : 1);
-const yoyoNextThird = () => hero.combo === 2 && performance.now() / 1000 - (hero.lastThrow || -9) < 1.1;
+  mixPitch = () => (hero.mix && playT - hero.mixAt < MIX.win ? Math.pow(2, (MIX.semi * hero.mix) / 12) : 1);
+const yoyoNextThird = () => hero.combo === 2 && playT - (hero.lastThrow || -9) < 1.1;
 const yoyoStop = y => (hitStop = Math.max(hitStop, y.power > 1 ? 0.09 : 0.055)); // a beat of stillness when it connects
 // reused points (no garbage a frame): the throwing hand, the yo-yo, the string's in-between tips, the middle of a string or band
 const tmpY = new THREE.Vector3(),
@@ -85,7 +85,7 @@ function yoyoReachFor(t, base) {
 }
 // a shot of kind 'y' or 's': the chain grows on a switch made in time, else starts again
 function mixStep(kind) {
-  const now = performance.now() / 1000;
+  const now = playT;
   hero.mix = hero.mixLast && hero.mixLast !== kind && now - hero.mixAt < MIX.win ? Math.min(MIX.max, (hero.mix || 0) + 1) : 0;
   hero.mixLast = kind;
   hero.mixAt = now;
@@ -109,7 +109,7 @@ function yoyo() {
     fz = dz / d;
   }
   G.yySide = -(G.yySide || 1);
-  const now = performance.now() / 1000;
+  const now = playT;
   hero.combo = third ? 3 : now - (hero.lastThrow || -9) < 1.1 ? ((hero.combo || 0) % 3) + 1 : 1;
   hero.lastThrow = now;
   const power = third ? 2 : 1,
@@ -387,11 +387,9 @@ function updPebbles(dt) {
         if (e.dead || e.dying || e.dormant || e.away || (b.target && b.target.ghost && e === b.target.priest)) continue; // a shot meant for a ghost flies past the Priest
         if (Math.hypot(e.pos.x - p.x, e.pos.z - p.z) < e.r + 0.2 && p.y - (e.gy || 0) > e.y0 - 0.2 && p.y - (e.gy || 0) < e.y1 + 0.2) {
           dead = true;
-          if (e.type === 'U') {
-            SFX.tink();
-            burst(p.clone(), [COL.smoke, COL.paper], 5, 3, 0.1);
-            bigWord('BOUNCE', HEX.paper, 1 / 1.7);
-            floatWord(pick(['TOO THICK', 'HA']), e.pos.clone().setY(5.2 + rand(0, 1.2)), HEX.paper, 1.1);
+          const T = TALKERS[e.type];
+          if (T.bounce) {
+            T.bounce(e, p);
             break;
           }
           const l = Math.hypot(b.v.x, b.v.z) || 1;

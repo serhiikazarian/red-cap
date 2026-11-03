@@ -162,7 +162,7 @@ function makeGrin(e, add) {
 // too close, it bites
 function updGrin(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
-  if (animTick) e.fly = 2.0 + Math.sin(performance.now() / 500 + e.seed) * 0.35;
+  if (animTick) e.fly = 2.0 + Math.sin(playT * 2 + e.seed) * 0.35;
   grinWiggle(e);
   e.y0 = e.fly - 0.8;
   e.y1 = e.fly + 0.8;
@@ -296,10 +296,10 @@ function cheshire(e) {
   mo.rotation.set(0, e.yaw || 0, 0);
   mo.material.color.setHex(0xffffff);
   G.group.add(mo);
-  (G.grins = G.grins || []).push({ m: mo, t: 0, p, s: sc.clone(), yaw: e.yaw || 0 });
+  G.grins.push({ m: mo, t: 0, p, s: sc.clone(), yaw: e.yaw || 0 });
 }
 function updGrins(dt) {
-  if (!G.grins || !G.grins.length) return;
+  if (!G.grins.length) return;
   for (let i = G.grins.length - 1; i >= 0; i--) {
     const g = G.grins[i],
       m = g.m;
@@ -333,6 +333,7 @@ TALKERS.G = {
   make: makeGrin,
   update: updGrin,
   dying: grinDying,
+  holo: () => ({ map: TEX.grin_fire, aspect: SHAPES.grin_fire.aspect }), // a niche's hologram of a Grin (a ball): its drawing
   rim: { col: 0xb46cff, a: 0.55 },
   torn: cheshire, // its grin stays behind
   tornWord: 'BUSTED',

@@ -37,7 +37,9 @@ const cam = { yaw: 0, pitch: 0.24, dist: 4.8, shake: 0, hurt: 0 };
 const keys = new Set();
 const stick = { x: 0, y: 0 };
 let animTick = false, // stop-motion: poses update at 12 frames a second, on frames where animTick is true
-  animAcc = 0;
+  animAcc = 0,
+  playT = 0; // seconds of play: it stops while paused and slows with hit-stop and the finale. Game rules run on it (timings,
+// what moves where talkers can be hit); the wall clock (performance.now) only drives cosmetic wobble and flicker
 
 // a timer in play time: fn runs once sec seconds of play have passed (real seconds, not slowed by slow motion, held while the
 // game is paused); a new floor drops the old floor's timers
@@ -132,10 +134,10 @@ function buildHeights(F) {
 }
 // ground the story stands on: nothing random (clutter, decor) is set down inside these discs
 function keepOut(x, z, r) {
-  (G.keep = G.keep || []).push({ x, z, r });
+  G.keep.push({ x, z, r });
 }
 function clearOf(x, z, r) {
-  for (const k of G.keep || []) if (Math.hypot(k.x - x, k.z - z) < k.r + r) return false;
+  for (const k of G.keep) if (Math.hypot(k.x - x, k.z - z) < k.r + r) return false;
   return true;
 }
 function storyGround(F) {

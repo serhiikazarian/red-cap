@@ -118,7 +118,7 @@ const JESTER_ST = {
   walk(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     const v = steer(e),
-      wv = Math.sin((performance.now() / 1000) * (2.2 + 3 * r) + e.seed) * r * 1.3; // a weave that widens as he tires of you
+      wv = Math.sin(playT * (2.2 + 3 * r) + e.seed) * r * 1.3; // a weave that widens as he tires of you
     const wx = v[0] - v[1] * wv,
       wz = v[1] + v[0] * wv,
       wl = Math.hypot(wx, wz) || 1;
@@ -574,6 +574,7 @@ function updSlabs(dt) {
 TALKERS.M = {
   make: makeJester,
   update: updJester,
+  totemProof: true,
   bar: e => (e.masked ? ['Masked — immune', false] : ['', false, 'UNMASKED']),
   struck: jesterBlow,
   stagger: 0.12,

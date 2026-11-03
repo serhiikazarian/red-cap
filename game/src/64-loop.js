@@ -31,6 +31,7 @@ function frame(now) {
     return;
   }
   if (state === 'play') {
+    playT += dt;
     playStep(dt);
     tickLater(Math.min(raw / 1000, 0.25));
   }
@@ -118,7 +119,7 @@ function bossInFight() {
 // sparks, floor two's embers, floor one's drips, the open door's glow
 function ambience(dt, tsec) {
   updBystanders(dt);
-  if (G.anim) for (const f of G.anim) f(dt, tsec);
+  for (const f of G.anim) f(dt, tsec);
   if (animTick)
     for (const d of G.deco) {
       d.m.rotation.y += d.spin / 12;

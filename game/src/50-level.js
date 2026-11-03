@@ -19,7 +19,7 @@ function clearLevel() {
       }
     };
     free(G.group);
-    for (const c of G.see || []) for (const it of c.items || []) if (it.seeMat) it.seeMat.dispose();
+    for (const c of G.see) for (const it of c.items || []) if (it.seeMat) it.seeMat.dispose();
   }
   hero.heat = 0;
   hero.spook = 0;
@@ -133,7 +133,19 @@ function newFloor(F, w) {
     hot: [],
     pathSet: new Set(),
     dist: new Float32Array(w * map.length),
-    stakes: []
+    trailD: new Int32Array(w * map.length), // the paper trail's distances (46-gates)
+    stakes: [],
+    anim: [], // the floor's own motion, each f(dt, seconds) once a frame (ambience, 64-loop)
+    grins: [], // grins left hanging where a Grin died
+    clutter: [], // round set dressing to keep clear of
+    cages: [],
+    piles: [], // pebble piles
+    see: [], // see-through things (56-see-through)
+    wallWords: [], // where floor two's wall words are painted
+    niches: [],
+    keep: [], // story ground set dressing keeps off
+    pyr: null, // floor two's pyramids by cell, when the floor has them
+    props: null // floor three's cover blocks by cell, when the floor has them
   };
   buildHeights(F);
   scene.add(G.group);
@@ -347,25 +359,6 @@ function skyDecor(F, w, box) {
     chamberFloor.rotation.x = -Math.PI / 2;
     chamberFloor.position.set((w * CELL) / 2, 0.015, 4.5 * CELL);
     G.group.add(still(chamberFloor));
-  }
-}
-// floor one's Ushers: the first one spots Red Cap from the far end of the row (and drops no heart); some are bigger (k: size,
-// which scales his body, health, reach, charge and the force of his blows)
-function tuneUshers(F) {
-  if (F.firstUsher) {
-    const u = G.enemies.find(e => e.type === 'B' && cellOf(e.pos.x, e.pos.z).join() === F.firstUsher.join());
-    if (u) {
-      u.sight = 22;
-      u.first = true;
-    }
-  }
-  for (const [x, z, k, hpSet] of F.usherSizes || []) {
-    const u = G.enemies.find(e => e.type === 'B' && cellOf(e.pos.x, e.pos.z).join() === x + ',' + z);
-    if (u) {
-      const hp = hpSet || Math.round(4.5 + (k - 1) * 5.5);
-      Object.assign(u, { k, hp, maxHp: hp, r: 0.7 * k, hgt: 3 * k, y1: 3 * k });
-      u.root.scale.setScalar(1.25 * k);
-    }
   }
 }
 // Red Cap steps onto the new floor: the camera turns to the floor's way, he gets a moment of grace and nothing carries over

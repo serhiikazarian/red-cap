@@ -39,7 +39,7 @@ function syncBoxes(list, gone) {
 // after the build: the blocks of the props and the floating wall blocks become instances
 function instanceProps(box) {
   const items = [];
-  for (const g of G.blockProps || []) {
+  for (const g of G.blockProps) {
     g.userData.boxes = [];
     for (const m of [...g.children]) {
       const p = m.geometry.parameters;
@@ -57,7 +57,7 @@ function instanceProps(box) {
     }
   if (!items.length) return;
   instanceBoxes(items, box);
-  for (const g of G.blockProps || []) syncBoxes(g.userData.boxes);
+  for (const g of G.blockProps) syncBoxes(g.userData.boxes);
   for (const d of G.deco) if (d.inst) syncBoxes([d.inst]);
 }
 // room on the floor here: clear of every standing talker and of the story's ground
@@ -137,7 +137,7 @@ function buildProp(F, cx, cz, rng) {
       g.add(m);
       y += s * 0.8;
     }
-    (G.blockProps = G.blockProps || []).push(g);
+    G.blockProps.push(g);
   }
   const iz = cellOf(cx, cz)[1];
   // a bear trap lies flat; an easel and the Grump's sound blocks never fade; the Jester chamber's stacks fade without a contour

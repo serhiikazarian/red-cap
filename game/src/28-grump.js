@@ -143,6 +143,14 @@ TALKERS.U = {
   hurt: e => e.st === 'pause' && (e.t = Math.min(e.t, 0.5)), // hit while he catches his breath and he shouts again sooner
   stagger: 0.12,
   loud: true,
+  totemProof: true,
+  // pebbles bounce off him
+  bounce: (e, p) => {
+    SFX.tink();
+    burst(p.clone(), [COL.smoke, COL.paper], 5, 3, 0.1);
+    bigWord('BOUNCE', HEX.paper, 1 / 1.7);
+    floatWord(pick(['TOO THICK', 'HA']), e.pos.clone().setY(5.2 + rand(0, 1.2)), HEX.paper, 1.1);
+  },
   drops: e => hero.hp < WELL.hp && dropHeart(e.pos.x, e.pos.z), // a heart, only when Red Cap is down to 3 ties or fewer
   // beaten: his rings stop and the fog gate to the Jester lifts
   gone: e => {

@@ -41,7 +41,7 @@ function updSmoker(e, dt, dist, ux, uz, mv) {
     smokerReturns(e);
   }
   faceCam(e, dt);
-  const now = performance.now() / 1000;
+  const now = playT;
   if (animTick) e.fly = (e.smoky ? 3.4 : 2.3) + Math.sin(now * 1.7 + e.seed) * 0.3;
   e.y0 = e.fly - (e.smoky ? 2.1 : 0.6);
   e.y1 = e.fly + (e.smoky ? 2.1 : 0.6);
@@ -163,9 +163,15 @@ function smokerCough(e, dt, dist, ux, uz) {
     if (dist < 8.5 && los(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
   }
 }
+// a totem's ring shakes a Smoker out of his smoke
+const smokerHushed = e => {
+  e.st = 'hover';
+  e.t = 2.5;
+};
 TALKERS.S = {
   make: makeSmoker,
   update: updSmoker,
+  hushed: smokerHushed,
   bar: e => [e.hidden ? 'Hidin’ in his smoke' : 'Every hit shakes out pebbles', !e.hidden],
   hurt: e => giveAmmo(Math.random() < 0.5 ? 2 : 3, e.pos), // every hit shakes pebbles out of him
   drops: e => {
@@ -177,6 +183,8 @@ TALKERS.S = {
 TALKERS.W = {
   make: makeSmoker,
   update: updSmoker,
+  hushed: smokerHushed,
+  totemDaze: 1.8,
   bar: e => [e.lives > 1 ? 'Will slip away ' + (e.lives - 1) + ' more time' + (e.lives > 2 ? 's' : '') : 'Last breath', e.lives <= 1],
   // not yet: he slips away in his smoke and comes back later
   escape: e => {

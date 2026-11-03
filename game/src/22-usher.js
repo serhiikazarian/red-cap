@@ -221,6 +221,25 @@ function usherTrail(e) {
   scene.add(sk);
   trail.push({ s: sk, life: 1.8, max: 1.8, base: 0.5 });
 }
+// floor one's Ushers: the first one spots Red Cap from the far end of the row (and drops no heart); some are bigger (k: size,
+// which scales his body, health, reach, charge and the force of his blows)
+function tuneUshers(F) {
+  if (F.firstUsher) {
+    const u = G.enemies.find(e => e.type === 'B' && cellOf(e.pos.x, e.pos.z).join() === F.firstUsher.join());
+    if (u) {
+      u.sight = 22;
+      u.first = true;
+    }
+  }
+  for (const [x, z, k, hpSet] of F.usherSizes || []) {
+    const u = G.enemies.find(e => e.type === 'B' && cellOf(e.pos.x, e.pos.z).join() === x + ',' + z);
+    if (u) {
+      const hp = hpSet || Math.round(4.5 + (k - 1) * 5.5);
+      Object.assign(u, { k, hp, maxHp: hp, r: 0.7 * k, hgt: 3 * k, y1: 3 * k });
+      u.root.scale.setScalar(1.25 * k);
+    }
+  }
+}
 TALKERS.B = {
   make: makeUsher,
   update: updUsher,
@@ -233,7 +252,7 @@ TALKERS.B = {
   // the biggest Usher will not stand being yo-yoed in the face: the 4th hit in a row and he charges
   struck: (e, n, weapon) => {
     if (weapon && (e.k || 1) >= 1.5 && e.st !== 'charge' && e.st !== 'aim') {
-      const now = performance.now() / 1000;
+      const now = playT;
       e.spam = now - (e.spamAt || -9) < 2.5 ? (e.spam || 0) + 1 : 1;
       e.spamAt = now;
       if (e.spam >= 4) {

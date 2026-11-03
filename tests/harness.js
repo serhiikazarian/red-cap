@@ -118,7 +118,7 @@ function install() {
     // the loop's running counters started when the page booted: zero them
     animAcc = 0;
     animTick = false;
-    flowT = beatT = slowT = hitStop = slabBoomT = poolNext = 0;
+    flowT = beatT = slowT = hitStop = slabBoomT = poolNext = playT = 0;
     adaptResolution = () => {}; // the drawing quality stays as install set it
     frame(H.T); // restart the loop inside the harness
     const built = floorBuilt;

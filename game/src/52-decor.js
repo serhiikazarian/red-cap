@@ -456,7 +456,7 @@ function decorWrath(rng) {
     const word = words[(rng() * words.length) | 0],
       y = 1.3 + rng() * 2.4,
       tilt = (rng() - 0.5) * 0.5;
-    (G.wallWords = G.wallWords || []).push([x, z]); // the niches keep off these faces
+    G.wallWords.push([x, z]); // the niches keep off these faces
     if (Math.hypot(x - SLOGAN_AT[0], z - SLOGAN_AT[1]) < 3.5) return; // the Priest's slogan has its wall to itself
     const m = new THREE.Mesh(
       new THREE.PlaneGeometry(2.5, 0.86),

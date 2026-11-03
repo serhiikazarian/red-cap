@@ -4,7 +4,8 @@
 // until he rings one (and again after TOTEM_NAG s).
 const TOTEM_NAG = 47,
   TOTEM_CD = 13, // s a big totem (and its nearest big mate) rests after a shout
-  TOTEM_MINI_CD = 3.24;
+  TOTEM_MINI_CD = 3.24,
+  TOTEM_DAZE = 2.2; // s a ring dazes a talker (its own totemDaze if it has one)
 const TOTEM_GEO = share(new THREE.CylinderGeometry(1, 1, 1.6, 48, 1, true)),
   TOTEM_MINI_GEO = share(new THREE.CylinderGeometry(1, 1, 1.1, 48, 1, true)); // their shout rings
 const totemGlow = new THREE.Color();
@@ -96,16 +97,14 @@ function updTotems(dt) {
       }
       // the ring dazes what it reaches (a big one's: only the flying heads); a Smoker is shaken out of his smoke
       for (const e of G.enemies) {
-        if (e.dead || e.dying || e.away || e.caged || e.waiting || e.type === 'M' || e.type === 'U' || w.struck.has(e)) continue;
+        if (e.dead || e.dying || e.away || e.caged || e.waiting || TALKERS[e.type].totemProof || w.struck.has(e)) continue;
         if (!t.mini && e.fly == null) continue;
         if (Math.abs(Math.hypot(e.pos.x - t.x, e.pos.z - t.z) - w.r) < e.r * 0.8 + 0.4) {
           w.struck.add(e);
-          e.dazedT = Math.max(e.dazedT || 0, e.type === 'W' ? 1.8 : 2.2);
+          const T = TALKERS[e.type];
+          e.dazedT = Math.max(e.dazedT || 0, T.totemDaze || TOTEM_DAZE);
           e.flash = 0.2;
-          if (e.type === 'S' || e.type === 'W') {
-            e.st = 'hover';
-            e.t = 2.5;
-          }
+          if (T.hushed) T.hushed(e);
           floatWord(pick(['SHH', 'HUSH', 'QUIET']), e.pos.clone().setY(hitHeight(e) + 1.4), HEX.bile, 0.8);
         }
       }
