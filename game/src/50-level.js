@@ -145,7 +145,8 @@ function newFloor(F, w) {
     niches: [],
     keep: [], // story ground set dressing keeps off
     pyr: null, // floor two's pyramids by cell, when the floor has them
-    props: null // floor three's cover blocks by cell, when the floor has them
+    props: null, // floor three's cover blocks by cell, when the floor has them
+    texs: [] // textures the floor makes that no mesh holds yet (the Grump's walls): warmUp uploads them
   };
   buildHeights(F);
   scene.add(G.group);

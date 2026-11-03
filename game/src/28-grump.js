@@ -5,7 +5,9 @@ const GRUMP_SHADE = { w: 1.5, full: 2, end: 3.2 }, // a block's shelter: half it
   GRUMP_REACH = 33, // how far a ring can hurt
   GRUMP_SWELL = new THREE.Vector3(1.1, 1.1, 1.3), // his size between two rings while he shouts (each ring puffs him up past it)
   WAVE_SH_N = 16, // blocks one ring can be cut by
-  WAVE_T = { value: 0 }; // the rings' clock (their tears move)
+  WAVE_T = { value: 0 }, // the rings' clock (their tears move)
+  WAVE_WALL_N = 256, // directions round the Grump in which the walls are measured (waveWalls)
+  WAVE_WALL_FAR = 48; // metres: as far as they are measured
 // how much a block still protects: whole while its top box stands; once that falls it thins steadily to nothing at 15 % health
 const COVER_SHED = [0.75, 0.45], // health at which the top box falls, then the middle one
   coverStrength = b => (b.lost ? clamp((b.hp - 0.15) / (COVER_SHED[0] - 0.15), 0, 1) : 1);
@@ -33,6 +35,33 @@ function makeGrump(e, add) {
   e.st = 'pause';
   e.t = 2.2;
   e.waves = [];
+  e.walls = waveWalls(e.pos.x, e.pos.z);
+  G.texs.push(e.walls);
+}
+// a strip of distances for the rings' shader, one a direction (red: metres of WAVE_WALL_FAR), wrapping round
+function wallStrip(px, n) {
+  const t = new THREE.DataTexture(px, n, 1, THREE.RGBAFormat);
+  t.wrapS = THREE.RepeatWrapping;
+  t.magFilter = t.minFilter = THREE.LinearFilter;
+  t.needsUpdate = true;
+  return t;
+}
+// no wall anywhere (the loading screen's stand-in ring); made on first use, after the boot's own drawing
+let WAVE_OPEN = null;
+const waveOpen = () => WAVE_OPEN || (WAVE_OPEN = wallStrip(new Uint8Array([255, 255, 255, 255]), 1));
+// how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (los):
+// WAVE_WALL_N directions round him, the angle of each as the shader reads it (atan of z over x)
+function waveWalls(x, z) {
+  const px = new Uint8Array(WAVE_WALL_N * 4);
+  for (let k = 0; k < WAVE_WALL_N; k++) {
+    const a = ((k + 0.5) / WAVE_WALL_N) * TAU - Math.PI,
+      ux = Math.cos(a),
+      uz = Math.sin(a);
+    let d = 0;
+    while (d < WAVE_WALL_FAR && !solid(...cellOf(x + ux * d, z + uz * d))) d += 0.1;
+    px.fill(Math.round((Math.min(d, WAVE_WALL_FAR) / WAVE_WALL_FAR) * 255), k * 4, k * 4 + 4);
+  }
+  return wallStrip(px, WAVE_WALL_N);
 }
 // He never moves: he catches his breath (pause), inflates (GRRR) and shouts four rings in a row.
 function updGrump(e, dt, dist, ux, uz, mv) {
@@ -303,9 +332,11 @@ function updDebris(dt) {
 }
 
 // The rings: a zigzag STOP TALKIN' SH#T band (waveTex) whose shader cuts a torn gap where it runs behind a block
-// (uSh: angle seen from the ring's middle, half-width, distance, strength), with a burning rim and cracks before it.
+// (uSh: angle seen from the ring's middle, half-width, distance, strength), with a burning rim and cracks before it, and
+// ends, torn, at the first wall in each direction (uWall, from waveWalls): a wall stops a ring for good.
 function waveCompile(sh) {
   sh.uniforms.uSh = this.userData.uSh;
+  sh.uniforms.uWall = this.userData.uWall;
   sh.uniforms.uWT = WAVE_T;
   sh.vertexShader =
     'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\n' +
@@ -314,7 +345,7 @@ function waveCompile(sh) {
       '#include <begin_vertex>\n  vWP = (modelMatrix * vec4(transformed, 1.0)).xz;\n  vWY = (modelMatrix * vec4(transformed, 1.0)).y;\n  vMid = vec2(modelMatrix[3][0], modelMatrix[3][2]);'
     );
   sh.fragmentShader =
-    'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\nuniform float uWT;\nuniform vec4 uSh[' +
+    'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\nuniform float uWT;\nuniform sampler2D uWall;\nuniform vec4 uSh[' +
     WAVE_SH_N +
     '];\n' +
     sh.fragmentShader.replace(
@@ -323,6 +354,8 @@ function waveCompile(sh) {
   {
     vec2 rel = vWP - vMid;
     float ang = atan(rel.y, rel.x), rad = length(rel), keep = 1.0, rim = 0.0, hot = 0.0;
+    float wall = texture2D(uWall, vec2(ang / 6.2831853 + 0.5, 0.5)).r * ${WAVE_WALL_FAR.toFixed(1)} + 0.2 * sin(vWY * 7.0 + uWT * 11.0) + 0.12 * sin(vWY * 17.0 - uWT * 9.0);
+    keep *= 1.0 - smoothstep(wall - 0.1, wall + 0.5, rad);
     for (int i = 0; i < ${WAVE_SH_N}; i++) {
       vec4 q = uSh[i];
       if (q.w <= 0.0) continue;
@@ -374,6 +407,7 @@ function waveShade(w) {
 function emitWave(e) {
   const mat = new THREE.MeshBasicMaterial({ map: waveTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false });
   mat.userData.uSh = { value: Array.from({ length: WAVE_SH_N }, () => new THREE.Vector4()) };
+  mat.userData.uWall = { value: e.walls };
   mat.onBeforeCompile = waveCompile;
   const m = new THREE.Mesh(SHOUT_GEO, mat);
   m.position.set(e.pos.x, 0.9, e.pos.z);
