@@ -1,13 +1,12 @@
 # Red Cap
 
-Serj's browser 3D comic-ink "paper" slasher made from their own paintings: three floors, three.js r128, built into one
+Browser 3D comic-ink "paper" slasher made from author's own paintings: three floors, three.js r128, built into one
 self-contained HTML (~6 MB, no network needed). Live: https://serhiikazarian.github.io/red-cap/ (GitHub Pages, from `main`).
 Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 
 ## Working with Serj
 - Serj does not code: plain language, they/them unless told otherwise. Reply with what changed, what was tested, what to check in play.
 - Implement **only what is asked**. If look, sound or play is ambiguous, ask one short question first (AskUserQuestion, with options).
-- The game is settled for a festival demo: nothing that changes how it plays, looks or sounds unless Serj asks.
 - When a task is done and every check passes, say so and **ask whether to ship**. Never push `main` without their yes
   (saving to the work branch, `tools/wip.sh`, is fine).
 
