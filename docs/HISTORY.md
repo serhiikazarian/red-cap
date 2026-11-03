@@ -218,3 +218,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Shorter first loading screen: load times start afresh (`redcap.load.v2`: 1.26's could hold a stuck load), a faster load
   is taken at once and a slower one averaged in, `SNIP_MARGIN` 1.1, `LOAD_MAX` 10 s, `SETTLE_MIN` 12 frames.
 - Title label `v1.28`.
+
+## 1.29 (3 Nov 2026)
+- Shorter loading screens: the sharpness search ends within `TUNE_MAX` 3 s (the controller goes on from there), settling
+  within `SETTLE_MAX` 60 frames; the scissors' run is never planned past `LOAD_MAX` 5 s; `LOAD_GUESS` 2 s for floors one and two.
+- Title label `v1.29`.
