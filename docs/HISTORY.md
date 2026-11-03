@@ -98,3 +98,11 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   (`pics-v4.6/`, `replay-v4.6*.json`, in the uploaded 7.2 folder) and 1.05's blank test pictures (copies of the same).
 - The old 7.2 log is read with `git show $(git rev-list --max-parents=0 HEAD):HISTORY.md` (no fixed commit id).
 - Title label `v1.14`.
+
+## 1.15 (3 Nov 2026), no change to the game
+- CI tags every version `vN.NN` and makes a GitHub release with that version's game file (`red-cap-vN.NN.html`, plays
+  offline): new job `versions` in `.github/workflows/pages.yml`, after the deploy. Cloud sessions cannot push tags (the git
+  proxy refuses), so GitHub does it. Versions before 1.13 get the tag only (they can no longer be built).
+- `CLAUDE.md`: how tags and releases come about, and how to go back to an older version (`git checkout vN.NN -- game`).
+  README and `docs/ARCHITECTURE.md`: older builds from 1.13 on.
+- Title label `v1.15`.

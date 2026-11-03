@@ -108,7 +108,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (`<js>` is one expression:
   wrap statements in `(async () => { ... })()`; what it returns is printed as JSON). To pin the camera, wrap
   `renderer.render` and set the camera when `c===camera`.
-- Menus against an older version: `tools/build-at.sh N.NN`, then `node tests/menus.js out/red-cap-N.NN.html out/a &&
+- Menus against an older version (1.13 or later): `tools/build-at.sh N.NN`, then `node tests/menus.js out/red-cap-N.NN.html out/a &&
   node tests/menus.js game/red-cap.html out/b && python3 tests/pics-cmp.py out/a out/b`.
 - Probe gotchas: headless game time runs 5–10× slow, and Red Cap is held at floor start, so move the thing to him instead.
   Clicking `#startBtn` enters a floor in steps: wait for `state === 'intro'`. A probe entering floors directly calls

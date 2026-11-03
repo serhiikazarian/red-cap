@@ -61,3 +61,33 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Every version (a commit whose subject is exactly N.NN) gets the tag vN.NN and a release with its built game attached
+  # (red-cap-vN.NN.html: one file that plays offline), so any version is one download away. Done here because Claude's cloud
+  # sessions cannot push tags. Versions before 1.13 get the tag only: their pictures are no longer in the history.
+  versions:
+    if: github.event_name == 'push'
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Tag and release every version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git log --reverse --format='%H %s' | grep -E '^[0-9a-f]{40} [0-9]+\.[0-9]{2}$' | while read -r sha v; do
+            if ! git rev-parse -q --verify "refs/tags/v$v" >/dev/null; then
+              git tag "v$v" "$sha"
+              git push origin "v$v"
+            fi
+            gh release view "v$v" >/dev/null 2>&1 && continue
+            tools/build-at.sh "$v" >/dev/null 2>&1 || continue
+            cp "out/red-cap-$v.html" "out/red-cap-v$v.html"
+            notes=$(awk -v h="## $v " 'index($0, h) == 1 {f = 1; next} /^## / {f = 0} f' docs/HISTORY.md)
+            gh release create "v$v" "out/red-cap-v$v.html" --title "$v" --notes "${notes:-Version $v}" --verify-tag
+          done

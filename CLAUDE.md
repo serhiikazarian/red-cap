@@ -41,15 +41,18 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - A change meant to alter play or looks will differ: after Serj approves it, `tools/same.sh new` remakes the baselines.
 - Bigger changes: `NODE_PATH=$(npm root -g) node tests/soak.js game/red-cap.html 8` → last line `errors []` (~8 min).
 - Writing a probe or taking a picture: read `docs/ARCHITECTURE.md` § Testing first.
-- CI (`.github/workflows/pages.yml`) runs the same quick checks on every push and pull request, and publishes `main`.
+- CI (`.github/workflows/pages.yml`) runs the same quick checks on every push and pull request, publishes `main`, and tags
+  and releases each version.
 
 ## Ship (only after Serj says yes)
 1. Version = current + 0.01, two digits after the point (1.06 → 1.07; 1.09 → 1.10; 1.99 → 2.00). Set the title label to match
    (`#version` in `game/index.html`: `v1.07`). Append `## N.NN (date)` to `docs/HISTORY.md`: short plain bullets, key names
    in backticks.
-2. One commit with the subject exactly `N.NN` on the finished state, `git push origin main`. Pages updates in ~3 min.
-   No tags (cloud sessions can't push them); never push a draft version commit you may replace later.
-3. Undo: `git revert <commit>`, push (a new version). Never rewrite `main`'s history.
+2. One commit with the subject exactly `N.NN` on the finished state, `git push origin main`. Pages updates in ~3 min; then CI
+   tags it `vN.NN` and makes a GitHub release with that version's game file (cloud sessions can't push tags themselves: the
+   git proxy refuses). Never push a draft version commit you may replace later.
+3. Undo: `git revert <commit>`, push (a new version). Back to an older version: `git fetch --tags`, then
+   `git checkout vN.NN -- game`, check, ship as a new version. Never rewrite `main`'s history (tags and releases point into it).
 
 ## Rules that bite
 - **Load rule: anything new is prepared during the loading screen, never mid-game.** A new material or shader variant goes into
