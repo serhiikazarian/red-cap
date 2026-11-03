@@ -2,7 +2,7 @@
 
 One entry per version, newest at the bottom: `## N.NN (date)`, short plain bullets, key names in backticks. Search it, don't
 read it whole. Versions before 1.05 (the old numbering, up to 7.2) are not in the tree:
-`git show 0508438:HISTORY.md | rg -n "name"`. That old log runs v19 … v50, 8.0 … 14.6 (= 3.0), 3.1 … 4.7 (the rewrite,
+`git show $(git rev-list --max-parents=0 HEAD):HISTORY.md | rg -n "name"`. That old log runs v19 … v50, 8.0 … 14.6 (= 3.0), 3.1 … 4.7 (the rewrite,
 renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to the current 1.xx numbers.
 
 ## 1.05 (3 Nov 2026)
@@ -90,3 +90,11 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   offline file (`/*DATA …*/`, `/*SHAPES …*/` markers); the build is the same as 1.12's byte for byte, except that
   `beard_painting` now sits in `ASSETS` with the rest.
 - Title label `v1.13`.
+
+## 1.14 (3 Nov 2026), no change to the game
+- At Serj's request, the history was rewritten once to drop the old `game/data/` (base64 text, ~3.6 MB) from every past
+  commit; every commit now has a new id. Versions before 1.13 can no longer be built (`tools/build-at.sh` says so); a bundle
+  of the history as it was is kept outside the repository. A second pass dropped the test files left from version 4.6
+  (`pics-v4.6/`, `replay-v4.6*.json`, in the uploaded 7.2 folder) and 1.05's blank test pictures (copies of the same).
+- The old 7.2 log is read with `git show $(git rev-list --max-parents=0 HEAD):HISTORY.md` (no fixed commit id).
+- Title label `v1.14`.

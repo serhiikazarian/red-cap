@@ -77,7 +77,7 @@ Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 ## History
 `docs/HISTORY.md` holds the versions from 1.05 on. Open it only when Serj asks when or why something changed, or a bug looks
 like a regression: search, then read the few lines around the hits. Older versions are not in the tree: search them with
-`git show 0508438:HISTORY.md | rg -n "pyramid"` (never read it whole).
+`git show $(git rev-list --max-parents=0 HEAD):HISTORY.md | rg -n "pyramid"` (never read it whole).
 
 ## Not verified by playing
 Real-GPU frame rate on low-end machines and the sharpness after calibration (`RES_LOW` included); floor three's busiest

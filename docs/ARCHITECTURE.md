@@ -1,6 +1,6 @@
 # Red Cap: how the code fits together
 
-Read the section you need when a task touches it. File names are in `game/src/`. Why a rule exists: search `docs/HISTORY.md`, or for older versions `git show 0508438:HISTORY.md | rg -n "name"`.
+Read the section you need when a task touches it. File names are in `game/src/`. Why a rule exists: search `docs/HISTORY.md`, or for older versions `git show $(git rev-list --max-parents=0 HEAD):HISTORY.md | rg -n "name"`.
 
 ## Geometry, memory, baking (03-textures, 55-bake, 50-level)
 - `paper(name, h, depth, lit, once)`: a painted cut-out from `SHAPES`. `once` for a one-off size (e.g. onlookers' random heights),
