@@ -248,3 +248,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   then, each change eased over `SNIP_EASE`; the stepped halvings near the end (`SNIP_SLOW`) are gone, and slowing near the
   end is kept only for when no estimate is left.
 - Title label `v1.33`.
+
+## 1.34 (4 Nov 2026)
+- Scissors no longer jump back to the start: a run that ended while the page was held up (a heavy frame) is left at its end
+  until the floor is ready, as a speed change on an ended animation started it over; speed changes go through
+  `updatePlaybackRate`, which keeps the place they are drawn at (setting the time again pulled them back while the page was
+  busy).
+- Title label `v1.34`.

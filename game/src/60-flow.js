@@ -152,9 +152,9 @@ function enterFloor(i, later) {
 // never over LOAD_MAX. Every SNIP_TICK ms they steer, never faster than their own speed nor slower than SNIP_RATE_MIN of it:
 // while tune() expects to go on (expect), towards the pace that brings them to the end just then; before it says, or once
 // that time has passed with the floor still loading, from SNIP_SLOW_AT of the line left, slower the less is left. As it
-// finishes they go back to their own speed. Each change eases in over SNIP_EASE ms, so the pace drifts rather than steps, and keeps
-// their place exactly (the browser's own rate change can lose it after a long slow stretch). Their arrival is checked
-// against the animation's own clock (or the wall clock, when there is no animation), so a floor always opens.
+// finishes they go back to their own speed. Each change eases in over SNIP_EASE ms, so the pace drifts rather than steps,
+// through updatePlaybackRate, which keeps the place they are drawn at (setting currentTime again would pull them back to
+// where the page last saw them, behind the screen while it is busy). Their arrival is checked against the animation's own clock (or the wall clock, when there is no animation), so a floor always opens.
 const LOAD_KEY = 'redcap.load.v2',
   LOAD_GUESS = [2000, 2000, 3000], // ms per floor: its run before any load has been timed here
   LOAD_MAX = 5000, // ms: a longer load (a hidden page) is not remembered, and no run is longer
@@ -191,14 +191,9 @@ function snipPlan(i) {
 function snipRun(run, live, arrive) {
   const a = $('#cutting .snip').getAnimations()[0],
     t0 = performance.now();
-  const rate = r => {
-    const t = a.currentTime;
-    a.playbackRate = r;
-    a.currentTime = t;
-  };
   if (a) {
     a.currentTime = 0;
-    rate(1);
+    a.playbackRate = 1;
   }
   let loaded = false,
     endAt = 0, // when the load expects to end (performance.now()), 0: not said yet
@@ -217,10 +212,11 @@ function snipRun(run, live, arrive) {
         clearInterval(iv);
         return arrive();
       }
-      if (a && a.playState !== 'idle') {
+      if (a && a.playState === 'running') {
+        // at the end (the page was held up past their run) they wait there: a rate change would start them over
         const r = a.playbackRate,
           to = r + (want(left) - r) * Math.min(1, (now - lastT) / SNIP_EASE);
-        if (Math.abs(to - r) > 0.005) rate(to);
+        if (Math.abs(to - r) > 0.01) a.updatePlaybackRate(to);
       }
       lastT = now;
     },
