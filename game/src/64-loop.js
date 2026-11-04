@@ -25,8 +25,9 @@ function frame(now) {
   if (animTick) animAcc %= 1 / 12;
   pollPad(Math.min(raw / 1000, 0.05));
   if (state === 'dead' && deadStill) return; // the death screen holds the last picture: nothing behind it moves
-  if (!G || state === 'title' || state === 'build') {
-    // the title has its slideshow; the world waits, and a floor being cut under the ink is not drawn
+  if (!G || !worldOn || state === 'title' || state === 'build') {
+    // the title has its slideshow; the world waits (and is not drawn while the ink covers the title), and a floor being cut
+    // under the ink is not drawn
     if (warnEdgeOn || WARN.some(w => w.on)) updWarn(); // a warning left up when the floor ended goes
     return;
   }
