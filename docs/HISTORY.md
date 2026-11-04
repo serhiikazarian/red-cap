@@ -234,3 +234,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Floor three: a ring meeting a wall tears as at a sound block (cracks ahead, a burning rim, shards, then a jagged fade);
   the wall distances are averaged over neighbouring directions (`WAVE_WALL_SOFT`), so the edge no longer follows the grid.
 - Title label `v1.31`.
+
+## 1.32 (4 Nov 2026)
+- Resuming from the pause menu with Esc or a controller no longer leaves the cursor showing for the rest of the run: a
+  refused mouse capture is asked again on the next key or click in play (the sticky `dragLook` is gone).
+- Title label `v1.32`.

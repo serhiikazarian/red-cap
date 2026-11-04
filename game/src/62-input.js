@@ -1,19 +1,17 @@
 // Input: the mouse (locked to the canvas during play: it turns the camera; left button yo-yo, right slingshot), the keyboard
 // (WASD to move, Q / E to turn, J or F yo-yo, L or R slingshot, Space or K dodge, Esc or P pause, M mute; typing GOD skips
 // a floor), touch controls, a game controller, and the screens' buttons.
-let locked = false,
-  dragLook = false;
+// The browser may refuse the capture (Esc and a controller button don't count as the player's action, and Chrome waits about
+// a second after Esc let the mouse go): then the next key or click in play asks again.
+let locked = false;
 const mouse = { x: 0, y: 0, in: false };
 function lockPointer() {
-  if (touchUI) return;
+  if (touchUI || !canvas.requestPointerLock) return;
   try {
-    const r = canvas.requestPointerLock && canvas.requestPointerLock();
-    if (r && r.catch)
-      r.catch(() => {
-        dragLook = true;
-      });
+    const r = canvas.requestPointerLock();
+    if (r && r.catch) r.catch(() => {});
   } catch {
-    dragLook = true;
+    /* refused: the next key or click in play asks again */
   }
 }
 function unlock() {
@@ -23,9 +21,7 @@ document.addEventListener('pointerlockchange', () => {
   const was = locked;
   locked = document.pointerLockElement === canvas;
   if (was && !locked && state === 'play') pause(true);
-});
-document.addEventListener('pointerlockerror', () => {
-  dragLook = true;
+  else if (locked && state !== 'play') unlock(); /* a late capture after the game left play */
 });
 addEventListener('mousemove', e => {
   if (e.movementX || e.movementY) padClear(); // the mouse is back: buttons look as usual
@@ -47,7 +43,7 @@ canvas.addEventListener('mousedown', e => {
   }
   if (state !== 'play') return;
   auInit();
-  if (!locked && !dragLook) lockPointer();
+  if (!locked) lockPointer();
   e.button === 2 ? sling() : yoyo();
 });
 document.addEventListener('mouseleave', () => {
@@ -91,6 +87,7 @@ addEventListener('keydown', e => {
     if (e.code === 'KeyL' || e.code === 'KeyR') sling();
     if (e.code === 'Space' || e.code === 'KeyK') dodge();
     if (e.code === 'Escape' || e.code === 'KeyP') pause(true);
+    else if (!locked) lockPointer();
   } else if (state === 'pause' && e.code === 'KeyP') pause(false);
   if (e.code === 'KeyM') setMute(!AU.muted);
 });
