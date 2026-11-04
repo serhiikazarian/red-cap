@@ -239,3 +239,12 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Resuming from the pause menu with Esc or a controller no longer leaves the cursor showing for the rest of the run: a
   refused mouse capture is asked again on the next key or click in play (the sticky `dragLook` is gone).
 - Title label `v1.32`.
+
+## 1.33 (4 Nov 2026)
+- The first loading screen no longer freezes before the scissors show: the world isn't drawn while the ink covers the
+  title (`worldOn`), so floor one's first, heaviest frame is drawn once, under the scissors (about 1.5 s sooner overall in
+  the test browser).
+- Scissors: `tune()` tells how long it expects still to take (`tuneLeft`), and they steer towards the pace that ends just
+  then, each change eased over `SNIP_EASE`; the stepped halvings near the end (`SNIP_SLOW`) are gone, and slowing near the
+  end is kept only for when no estimate is left.
+- Title label `v1.33`.
