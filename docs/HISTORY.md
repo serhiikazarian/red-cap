@@ -229,3 +229,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   had it (`waveWalls`: the distance in `WAVE_WALL_N` directions, measured once at build, read by the rings' shader as `uWall`).
 - `G.texs`: textures a floor makes that no mesh holds yet; `warmUp` uploads them.
 - Title label `v1.30`.
+
+## 1.31 (4 Nov 2026)
+- Floor three: a ring meeting a wall tears as at a sound block (cracks ahead, a burning rim, shards, then a jagged fade);
+  the wall distances are averaged over neighbouring directions (`WAVE_WALL_SOFT`), so the edge no longer follows the grid.
+- Title label `v1.31`.
