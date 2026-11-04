@@ -7,7 +7,8 @@ const GRUMP_SHADE = { w: 1.5, full: 2, end: 3.2 }, // a block's shelter: half it
   WAVE_SH_N = 16, // blocks one ring can be cut by
   WAVE_T = { value: 0 }, // the rings' clock (their tears move)
   WAVE_WALL_N = 256, // directions round the Grump in which the walls are measured (waveWalls)
-  WAVE_WALL_FAR = 48; // metres: as far as they are measured
+  WAVE_WALL_FAR = 48, // metres: as far as they are measured
+  WAVE_WALL_SOFT = 4; // the distances are averaged over this many directions each side (a wall's square corners, rounded)
 // how much a block still protects: whole while its top box stands; once that falls it thins steadily to nothing at 15 % health
 const COVER_SHED = [0.75, 0.45], // health at which the top box falls, then the middle one
   coverStrength = b => (b.lost ? clamp((b.hp - 0.15) / (COVER_SHED[0] - 0.15), 0, 1) : 1);
@@ -50,16 +51,27 @@ function wallStrip(px, n) {
 let WAVE_OPEN = null;
 const waveOpen = () => WAVE_OPEN || (WAVE_OPEN = wallStrip(new Uint8Array([255, 255, 255, 255]), 1));
 // how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (los):
-// WAVE_WALL_N directions round him, the angle of each as the shader reads it (atan of z over x)
+// WAVE_WALL_N directions round him, the angle of each as the shader reads it (atan of z over x), softened across neighbours
 function waveWalls(x, z) {
-  const px = new Uint8Array(WAVE_WALL_N * 4);
+  const d = [],
+    px = new Uint8Array(WAVE_WALL_N * 4);
   for (let k = 0; k < WAVE_WALL_N; k++) {
     const a = ((k + 0.5) / WAVE_WALL_N) * TAU - Math.PI,
       ux = Math.cos(a),
       uz = Math.sin(a);
-    let d = 0;
-    while (d < WAVE_WALL_FAR && !solid(...cellOf(x + ux * d, z + uz * d))) d += 0.1;
-    px.fill(Math.round((Math.min(d, WAVE_WALL_FAR) / WAVE_WALL_FAR) * 255), k * 4, k * 4 + 4);
+    let r = 0;
+    while (r < WAVE_WALL_FAR && !solid(...cellOf(x + ux * r, z + uz * r))) r += 0.1;
+    d.push(Math.min(r, WAVE_WALL_FAR));
+  }
+  for (let k = 0; k < WAVE_WALL_N; k++) {
+    let sum = 0,
+      wsum = 0;
+    for (let j = -WAVE_WALL_SOFT; j <= WAVE_WALL_SOFT; j++) {
+      const w = 1 - Math.abs(j) / (WAVE_WALL_SOFT + 1);
+      sum += w * d[(k + j + WAVE_WALL_N) % WAVE_WALL_N];
+      wsum += w;
+    }
+    px.fill(Math.round((sum / wsum / WAVE_WALL_FAR) * 255), k * 4, k * 4 + 4);
   }
   return wallStrip(px, WAVE_WALL_N);
 }
@@ -354,8 +366,20 @@ function waveCompile(sh) {
   {
     vec2 rel = vWP - vMid;
     float ang = atan(rel.y, rel.x), rad = length(rel), keep = 1.0, rim = 0.0, hot = 0.0;
-    float wall = texture2D(uWall, vec2(ang / 6.2831853 + 0.5, 0.5)).r * ${WAVE_WALL_FAR.toFixed(1)} + 0.2 * sin(vWY * 7.0 + uWT * 11.0) + 0.12 * sin(vWY * 17.0 - uWT * 9.0);
-    keep *= 1.0 - smoothstep(wall - 0.1, wall + 0.5, rad);
+    {
+      /* a wall tears the ring as a block does: cracks running ahead, a burning rim, shards, then nothing */
+      float wj = 0.3 * sin(vWY * 7.0 + uWT * 11.0 + ang * 9.0) + 0.18 * sin(vWY * 19.0 - uWT * 17.0 + ang * 23.0) + 0.12 * sin(ang * 61.0 - uWT * 6.0);
+      float wEdge = texture2D(uWall, vec2(ang / 6.2831853 + 0.5, 0.5)).r * ${WAVE_WALL_FAR.toFixed(1)} - 0.7 + wj;
+      float wGone = smoothstep(wEdge, wEdge + 0.9, rad);
+      float wShard = smoothstep(0.55, 0.95, sin(rad * 13.0 - uWT * 15.0 + ang * 60.0) * sin(vWY * 9.0 + uWT * 8.0)) * (1.0 - smoothstep(wEdge + 0.2, wEdge + 1.4, rad)) * 0.55;
+      float wPre = smoothstep(wEdge - 2.5, wEdge, rad) * (1.0 - wGone);
+      float wQuake = 0.5 + 0.5 * sin(ang * 70.0 - uWT * 22.0 + vWY * 6.0);
+      float wCrack = wPre * wPre * smoothstep(0.25, 0.85, wQuake * (0.6 + 0.4 * sin(uWT * 13.0 + rad * 4.0)));
+      keep *= (1.0 - wGone * (1.0 - wShard)) * (1.0 - wCrack * 0.8);
+      float wBand = exp(-pow((rad - wEdge - 0.2) / 0.3, 2.0)) * (1.0 - smoothstep(${(WAVE_WALL_FAR - 2).toFixed(1)}, ${(WAVE_WALL_FAR - 1).toFixed(1)}, wEdge));
+      rim = max(rim, wBand * (0.55 + 0.45 * sin(vWY * 23.0 + uWT * 31.0 + rad * 5.0)));
+      hot = max(hot, wBand * smoothstep(0.6, 1.0, sin(uWT * 9.0 + vWY * 4.0 + ang * 5.0)));
+    }
     for (int i = 0; i < ${WAVE_SH_N}; i++) {
       vec4 q = uSh[i];
       if (q.w <= 0.0) continue;
