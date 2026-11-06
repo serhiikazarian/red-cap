@@ -360,3 +360,4 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `HIT_PEBBLES`, `hitPebbles` in 41-bystanders.
 - Hints rewritten by Serj: the Jester's "Immune when masked. Ring a totem.", the hidden boss's jaw "The jaw starts hoppin’.",
   the Geezer's "Avoid Geezer’s gaze."
+- "The Grump" is now just "Grump": his health bar, the gallery card and the end screen's list.

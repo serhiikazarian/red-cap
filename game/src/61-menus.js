@@ -66,7 +66,7 @@ const CATALOGUE = [
   ['bruno', 'Bruno', 'Floor two', 'Burns alive and calls you stupid. Madone!'],
   ['smoker', 'Smoker', 'Floor three', 'Hides in his own smoke. Psst.'],
   ['smoker', 'Brainless the Second', 'Floor three', 'Bigger, smokier, never stops coughin’.'],
-  ['grump', 'The Grump', 'Floor three', 'Eight metres of STOP TALKIN’ SH#T.'],
+  ['grump', 'Grump', 'Floor three', 'Eight metres of STOP TALKIN’ SH#T.'],
   ['ld_whole', 'Livin’ / Dyin’', 'Floor three, hidden', 'Comes apart: hair, eyes, a laughin’ jaw, a skull.', 'ld'],
   ['jester', 'The Jester', 'Floor three', 'Wears the mask for everyone. Laughs last, until you.'],
   ['npc_hat', 'The Hat', 'Onlooker', 'Hums. Slips you pebbles for the big ones.', 'spared'],
