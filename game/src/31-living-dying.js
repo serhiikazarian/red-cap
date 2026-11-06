@@ -100,7 +100,13 @@ function livingDyingWhole(e, dt, dist, ux, uz, mv, now) {
 // that reels him in until a dodge tears it) or swoops at him and ends up tangled
 function livingDyingHair(e, dt, dist, ux, uz, mv, now) {
   livingDyingHairSway(e, dt, now);
-  if (e.st === 'idle' || e.st === 'circle') {
+  const step = HAIR_STATES[e.st === 'idle' ? 'circle' : e.st];
+  if (step) step(e, dist, ux, uz, mv, now);
+}
+// each move has a wind-up (a shiver) and then the move itself; e.t counts down each
+const HAIR_STATES = {
+  // round Red Cap, keeping 5 to 8 m off, until it picks a move
+  circle(e, dist, ux, uz, mv) {
     e.st = 'circle';
     const side = Math.sin(e.seed) > 0 ? 1 : -1,
       want = dist > 8 ? 0.7 : dist < 5 ? -0.5 : 0;
@@ -109,56 +115,58 @@ function livingDyingHair(e, dt, dist, ux, uz, mv, now) {
     mv.sp = 4.4;
     e.fly = lerp(e.fly, 2.6, 0.05);
     if (e.t <= 0) livingDyingHairPick(e, dist, ux, uz);
-  } else if (e.st === 'lashWind') {
+  },
+  lashWind(e) {
     if (animTick) shake(e.tilt, 0.07);
-    if (e.t <= 0) {
-      e.st = 'lash';
-      e.t = 0.45;
-      e.lashHit = false;
-      SFX.dodge();
-      playNoise({ dur: 0.4, f: 1500, f2: 400, q: 0.8, gain: 0.25 });
-    }
-  } else if (e.st === 'lash') livingDyingHairLash(e, dist, ux, uz);
-  else if (e.st === 'snareWind') {
+    if (e.t > 0) return;
+    e.st = 'lash';
+    e.t = 0.45;
+    e.lashHit = false;
+    SFX.dodge();
+    playNoise({ dur: 0.4, f: 1500, f2: 400, q: 0.8, gain: 0.25 });
+  },
+  lash(e, dist, ux, uz) {
+    livingDyingHairLash(e, dist, ux, uz);
+  },
+  snareWind(e) {
     if (animTick) shake(e.tilt, 0.05);
-    if (e.t <= 0) {
-      e.st = 'snare';
-      e.t = 0.35;
-      livingDyingHairSnare(e);
-    }
-  } else if (e.st === 'snare') {
-    if (e.t <= 0) {
-      e.st = 'circle';
-      e.t = hero.snared > 0 ? rand(0.9, 1.2) : rand(2, 3); // reeled in, he gets the lash
-    }
-  } else if (e.st === 'swoopWind') {
+    if (e.t > 0) return;
+    e.st = 'snare';
+    e.t = 0.35;
+    livingDyingHairSnare(e);
+  },
+  snare(e) {
+    if (e.t > 0) return;
+    e.st = 'circle';
+    e.t = hero.snared > 0 ? rand(0.9, 1.2) : rand(2, 3); // reeled in, he gets the lash
+  },
+  swoopWind(e) {
     if (animTick) shake(e.tilt, 0.08);
     e.fly = lerp(e.fly, 4, 0.08);
-    if (e.t <= 0) {
-      e.st = 'swoop';
-      e.t = 0.8;
-    }
-  } else if (e.st === 'swoop') {
+    if (e.t > 0) return;
+    e.st = 'swoop';
+    e.t = 0.8;
+  },
+  swoop(e, dist, ux, uz, mv) {
     mv.x = e.sx;
     mv.z = e.sz;
     mv.sp = 15;
     e.fly = lerp(e.fly, 1.2, 0.2);
     if (dist < e.r + hero.r) hurtHero(1, e.pos);
-    if (e.t <= 0) {
-      e.st = 'tangled';
-      e.t = 1.6;
-      e.daze = 1.6;
-      floatWord('TANGLED', e.pos.clone().setY(3), HEX.bile, 0.9);
-    }
-  } else if (e.st === 'tangled') {
+    if (e.t > 0) return;
+    e.st = 'tangled';
+    e.t = 1.6;
+    e.daze = 1.6;
+    floatWord('TANGLED', e.pos.clone().setY(3), HEX.bile, 0.9);
+  },
+  tangled(e, dist, ux, uz, mv, now) {
     if (animTick) e.tilt.rotation.z = Math.sin(now * 12) * 0.15;
-    if (e.t <= 0) {
-      e.st = 'circle';
-      e.t = rand(2.2, 3.2);
-      e.tilt.rotation.z = 0;
-    }
+    if (e.t > 0) return;
+    e.st = 'circle';
+    e.t = rand(2.2, 3.2);
+    e.tilt.rotation.z = 0;
   }
-}
+};
 // every strand sways; they reach out for the lash, pull in and bristle as it winds up; the wig spins
 function livingDyingHairSway(e, dt, now) {
   const H = e.hair;
@@ -261,7 +269,17 @@ function livingDyingEye(e, dt, dist, ux, uz, mv, now) {
 // the jaw hops after Red Cap laughing, chomps up close, and from afar charges (KILL); into a wall it is dazed
 function livingDyingJaw(e, dt, dist, ux, uz, mv, now) {
   e.fly = 0.95 + Math.abs(Math.sin(now * 5)) * 0.55;
-  if (e.st === 'idle' || e.st === 'hop') {
+  const step = JAW_STATES[e.st === 'idle' ? 'hop' : e.st];
+  if (step) step(e, dt, dist, ux, uz, mv, now);
+  // the mouth: laughing (and now and then a HA) while it hops or reels, wide open for the charge
+  if (e.st === 'hop' || e.st === 'dazed') {
+    e.jaw.set(Math.abs(Math.sin(now * 14)) * 0.55);
+    if (Math.random() < dt * 0.8) floatWord(pick(['HA', 'HA HA', 'HAHAHA']), e.pos.clone().setY(e.fly + 1.6), HEX.bile, 0.8);
+  } else if (e.st === 'chargeWind' || e.st === 'charge') e.jaw.set(0.9 + Math.sin(now * 30) * 0.1);
+}
+const JAW_CHARGE = 13; // m/s
+const JAW_STATES = {
+  hop(e, dt, dist, ux, uz, mv) {
     e.st = 'hop';
     [mv.x, mv.z] = steer(e);
     mv.sp = 3.2;
@@ -275,31 +293,32 @@ function livingDyingJaw(e, dt, dist, ux, uz, mv, now) {
       SFX.growl();
       floatWord('KILL', e.pos.clone().setY(2.8), HEX.tie, 1.2);
     }
-  } else if (e.st === 'chompWind') {
+  },
+  chompWind(e, dt, dist) {
     e.jaw.set(Math.min(1, (0.5 - e.t) / 0.3));
-    if (e.t <= 0) {
-      e.jaw.set(0);
-      SFX.hit();
-      if (dist < 2.9) hurtHero(2, e.pos);
-      e.st = 'hop';
-      e.t = rand(1.5, 2.5);
-    }
-  } else if (e.st === 'chargeWind') {
+    if (e.t > 0) return;
+    e.jaw.set(0);
+    SFX.hit();
+    if (dist < 2.9) hurtHero(2, e.pos);
+    e.st = 'hop';
+    e.t = rand(1.5, 2.5);
+  },
+  chargeWind(e, dt, dist, ux, uz) {
     if (animTick) shake(e.tilt, 0.1);
-    if (e.t <= 0) {
-      e.st = 'charge';
-      e.t = 0.85;
-      e.cx = ux;
-      e.cz = uz;
-    }
-  } else if (e.st === 'charge') {
-    const sp2 = 13,
-      before = e.pos.clone();
-    e.pos.x += e.cx * sp2 * dt;
-    e.pos.z += e.cz * sp2 * dt;
+    if (e.t > 0) return;
+    e.st = 'charge';
+    e.t = 0.85;
+    e.cx = ux;
+    e.cz = uz;
+  },
+  // straight on along the line it set off on; barely moving means a wall: dazed
+  charge(e, dt, dist) {
+    const before = e.pos.clone();
+    e.pos.x += e.cx * JAW_CHARGE * dt;
+    e.pos.z += e.cz * JAW_CHARGE * dt;
     collide(e.pos, e.r);
     if (dist < e.r + hero.r + 0.2) hurtHero(2, e.pos);
-    if (e.pos.distanceTo(before) < sp2 * dt * 0.25) {
+    if (e.pos.distanceTo(before) < JAW_CHARGE * dt * 0.25) {
       e.st = 'dazed';
       e.t = 2.2;
       e.daze = 2.2;
@@ -310,19 +329,15 @@ function livingDyingJaw(e, dt, dist, ux, uz, mv, now) {
       e.st = 'hop';
       e.t = rand(2.5, 3.5);
     }
-  } else if (e.st === 'dazed') {
+  },
+  dazed(e, dt, dist, ux, uz, mv, now) {
     if (animTick) e.tilt.rotation.z = Math.sin(now * 14) * 0.15;
-    if (e.t <= 0) {
-      e.st = 'hop';
-      e.t = 3;
-      e.tilt.rotation.z = 0;
-    }
+    if (e.t > 0) return;
+    e.st = 'hop';
+    e.t = 3;
+    e.tilt.rotation.z = 0;
   }
-  if (e.st === 'hop' || e.st === 'dazed') {
-    e.jaw.set(Math.abs(Math.sin(now * 14)) * 0.55);
-    if (Math.random() < dt * 0.8) floatWord(pick(['HA', 'HA HA', 'HAHAHA']), e.pos.clone().setY(e.fly + 1.6), HEX.bile, 0.8);
-  } else if (e.st === 'chargeWind' || e.st === 'charge') e.jaw.set(0.9 + Math.sin(now * 30) * 0.1);
-}
+};
 
 // the skull follows slowly and shouts KILL in a fan of words, every third time a ring of red orbs (LIVIN' OR DYIN')
 function livingDyingSkull(e, dt, dist, ux, uz, mv, now) {
