@@ -266,5 +266,16 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `updReticle`), `pyramid` (`pyrBuild`, `pyrShape`, `pyrInkRim`, `pyrCut`), `dreamBlocks` (`paperBirds`, `blockCritters`,
   `pastelMotes`), `ldHair` (`ldHairSway`, `ldHairPick`, `ldHairLash`, `ldHairSnare`), `decorNarcissism` (`narcPortraits`,
   `narcMirrors`, `narcNewsprint`, `narcGlasses`, `narcPages`).
-- First shipped to the `prerelease` branch, not `main`.
+- The other 24 functions of 68 lines or more split the same way, no change in play or looks: `addWebs` (`cornerWebs`,
+  `faceWebs`, `stripWebs`, `webMesh`), `webTex` (`webCorner`, `webStrip`), `buildCells` (`buildCell`, `wallMaterials`,
+  `blockWall`, `tallWall`, `standing`), `dreamMouth` (one step per decoration), `clutter` (one builder per kind), `guidePath`
+  (`guideLamp`), `updWarn` (`warnMarkers`, `warnPlace`, `warnGlow`), `fogWall` (`fogMat`, `fogPuffs`, `fogTick`),
+  `updPaperTrail` (`trailStart`, `trailGeo`, `trailLay`), `seePrep` (`seePyrShape`, `seeColumn`, `seeSpheres`), `seeTick`
+  (`seeFocus`, `seeWant`, `seeLine`, `seeApply`), `touchControls`, `pollPad` (`padPlay`, `padMenu`), `ambience`, `updGrin`,
+  `grinBall`, `pyrScream` (`screamBus`, `screamVoices`), `buildPyramid`, `buildProp`, `buildHero` (`heroFigure`,
+  `buildYoyo`), `updBruno`, `buildCages` (`brunoStake`, `ironCage`), `addPaintings`, `enterFloor` (`floorSupplies`,
+  `floorCut`). The unread cobweb counter `G.strips` is gone. Nothing in `game/src` is 68 lines or longer now.
+- CI: pushes to `prerelease` build and check the game and keep it as a download on the run's page (30 days); only `main`
+  publishes, tags and releases (a manual run on another branch could publish before).
+- First shipped to the `prerelease` branch, not `main` (twice: the second 1.35 adds the 24 splits).
 - Title label `v1.35`.
