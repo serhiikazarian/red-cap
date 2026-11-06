@@ -402,3 +402,11 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   (smaller heading, cards and padding) so whole rows fit; they used to run cards over the footer and arrows (3 cut off at
   740 x 360). Heights use `dvh` (the browser's bars left out); the card grid scrolls only if a row still cannot fit.
 - Title label `v1.42`.
+
+## 1.43 (6 Nov 2026)
+- The Geezer: no WINDED / Attack him! call-out (the small WINDED over his head stays). As his first stare begins, GAZING /
+  Take cover! in the same big lettering; again only after two stares in a row have caught Red Cap (`geezerWarn`,
+  `GEEZER_WARN_AGAIN`).
+- The Jester: UNMASKED / Attack him! the first time his mask lifts, then again only if Red Cap has gone more than 35 s without
+  a blow that hurts him (`JESTER_REMIND`; hitting the mask does not count).
+- Bruno's insults: a short rough bark as he spits each volley (`SFX.bark`).

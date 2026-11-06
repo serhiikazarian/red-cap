@@ -88,7 +88,7 @@ function bossBar(e) {
     bossFill = fp;
     HUD.bossFill.style.width = fp + '%';
   }
-  // the status under the bar: [text, lit, word]. lit highlights the line; word ("now's your chance": EXPOSED, WINDED…)
+  // the status under the bar: [text, lit, word]. lit highlights the line; word ("now's your chance": EXPOSED, UNMASKED…)
   // flashes big mid-screen once as that state begins, and the line stays empty while it lasts
   const T = TALKERS[e.type],
     [text, lit, word = null] = (T && T.bar && T.bar(e)) || ['', false];

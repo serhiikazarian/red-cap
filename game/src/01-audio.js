@@ -167,6 +167,12 @@ const SFX = {
     playTone({ f: 80, f2: 30, dur: 0.6, gain: 0.6 });
     playNoise({ dur: 0.5, f: 900, f2: 120, type: 'lowpass', gain: 0.5 });
   },
+  bark() {
+    // Bruno's insults: a short rough snap, like a curse spat out
+    playTone({ f: 210, f2: 95, dur: 0.16, type: 'sawtooth', gain: 0.24, filt: [1400, 380] });
+    playNoise({ dur: 0.09, f: 1600, f2: 700, q: 1.4, gain: 0.22 });
+    playTone({ f: 75, f2: 50, dur: 0.12, gain: 0.3 });
+  },
   growl() {
     playTone({ f: 70, f2: 55, dur: 0.8, type: 'sawtooth', gain: 0.2, filt: [400, 200] });
   },
