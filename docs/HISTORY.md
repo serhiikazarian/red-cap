@@ -255,3 +255,16 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `updatePlaybackRate`, which keeps the place they are drawn at (setting the time again pulled them back while the page was
   busy).
 - Title label `v1.34`.
+
+## 1.35 (6 Nov 2026)
+- The yo-yo's hit-stop counts down in unslowed time: inside slow motion (a bomb, the Jester stunned or torn) it lasted five
+  times too long. The Jester replay's baseline is remade for it.
+- The real-time screen flashes and hints (`setTimeout`) carry a note on why they don't use `later()`: it stops on death and
+  doesn't run on the title.
+- The six longest functions split into named steps, no change in play or looks: `updEnemy` (`updCaged`, `updDazed`,
+  `keepClear`), `updCamera` (`camPivotAt`, `pushOffWall` for both wall pushes, `camReach`, `camEase`, `heroFade`,
+  `updReticle`), `pyramid` (`pyrBuild`, `pyrShape`, `pyrInkRim`, `pyrCut`), `dreamBlocks` (`paperBirds`, `blockCritters`,
+  `pastelMotes`), `ldHair` (`ldHairSway`, `ldHairPick`, `ldHairLash`, `ldHairSnare`), `decorNarcissism` (`narcPortraits`,
+  `narcMirrors`, `narcNewsprint`, `narcGlasses`, `narcPages`).
+- First shipped to the `prerelease` branch, not `main`.
+- Title label `v1.35`.
