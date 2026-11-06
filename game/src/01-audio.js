@@ -344,8 +344,8 @@ function droneStop() {
 }
 // the title music: a low pad, a music-box melody (0 = rest) with an echo, and a bass thump every bar
 const TITLE_MUSIC = { bus: null, nodes: [], timer: 0, next: 0, step: 0 },
-  TMUS_BEAT = 0.75,
-  TMUS_BOX = [293.66, 349.23, 415.3, 440, 554.37, 440, 415.3, 349.23, 293.66, 311.13, 415.3, 369.99, 293.66, 0, 277.18, 0];
+  TITLE_BEAT = 0.75,
+  TITLE_MELODY = [293.66, 349.23, 415.3, 440, 554.37, 440, 415.3, 349.23, 293.66, 311.13, 415.3, 369.99, 293.66, 0, 277.18, 0];
 function titleMusicStart() {
   if (!AUDIO.ctx || TITLE_MUSIC.bus) return;
   const ctx = AUDIO.ctx,
@@ -354,10 +354,18 @@ function titleMusicStart() {
   bus.gain.setValueAtTime(0, t);
   bus.gain.linearRampToValueAtTime(0.55, t + 2.5);
   bus.connect(AUDIO.master);
+  const dl = titleEcho(ctx, bus),
+    nodes = titlePad(ctx, bus);
+  Object.assign(TITLE_MUSIC, { bus, nodes, dl, next: t + 0.3, step: 0 });
+  TITLE_MUSIC.timer = setInterval(titleMusicTick, 120);
+  titleMusicTick();
+}
+// the melody's echo: a dotted-eighth delay feeding back through a low-pass; returns its input
+function titleEcho(ctx, bus) {
   const dl = ctx.createDelay(1),
     fb = ctx.createGain(),
     dlp = ctx.createBiquadFilter();
-  dl.delayTime.value = TMUS_BEAT * 0.75;
+  dl.delayTime.value = TITLE_BEAT * 0.75;
   fb.gain.value = 0.38;
   dlp.type = 'lowpass';
   dlp.frequency.value = 1800;
@@ -365,6 +373,10 @@ function titleMusicStart() {
   dlp.connect(fb);
   fb.connect(dl);
   dlp.connect(bus);
+  return dl;
+}
+// the pad: three detuned saws through a resonant low-pass that a slow LFO sweeps; returns the sources to stop later
+function titlePad(ctx, bus) {
   const lp = ctx.createBiquadFilter();
   lp.type = 'lowpass';
   lp.frequency.value = 160;
@@ -378,6 +390,7 @@ function titleMusicStart() {
   lg.connect(lp.frequency);
   lfo.start();
   const nodes = [lfo];
+  // [frequency (Hz), detune (cents)]
   [
     [36.71, -7],
     [36.71, 6],
@@ -394,9 +407,7 @@ function titleMusicStart() {
     o.start();
     nodes.push(o);
   });
-  Object.assign(TITLE_MUSIC, { bus, nodes, dl, next: t + 0.3, step: 0 });
-  TITLE_MUSIC.timer = setInterval(titleMusicTick, 120);
-  titleMusicTick();
+  return nodes;
 }
 function titleMusicNote(f, at, dur, gain, type) {
   const ctx = AUDIO.ctx,
@@ -420,9 +431,9 @@ function titleMusicTick() {
   const now0 = AUDIO.ctx.currentTime;
   if (TITLE_MUSIC.next < now0) TITLE_MUSIC.next = now0 + 0.05; // after a sleeping tab: no burst of missed notes
   while (TITLE_MUSIC.next < now0 + 0.5) {
-    const s = TITLE_MUSIC.step % TMUS_BOX.length,
+    const s = TITLE_MUSIC.step % TITLE_MELODY.length,
       at = TITLE_MUSIC.next,
-      f = TMUS_BOX[s];
+      f = TITLE_MELODY[s];
     if (f) {
       titleMusicNote(f, at, 2.2, 0.09, 'sine');
       titleMusicNote(f * 2.01, at, 0.9, 0.025, 'triangle');
@@ -432,7 +443,7 @@ function titleMusicTick() {
       titleMusicNote(41.2, at + 0.32, 0.45, 0.22, 'sine');
     }
     TITLE_MUSIC.step++;
-    TITLE_MUSIC.next += TMUS_BEAT * (s === TMUS_BOX.length - 1 ? 2 : 1);
+    TITLE_MUSIC.next += TITLE_BEAT * (s === TITLE_MELODY.length - 1 ? 2 : 1);
   }
 }
 function titleMusicStop() {

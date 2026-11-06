@@ -354,27 +354,45 @@ function updateDebris(dt) {
 // The rings: a zigzag STOP TALKIN' SH#T band (waveTex) whose shader cuts a torn gap where it runs behind a block
 // (uSh: angle seen from the ring's middle, half-width, distance, strength), with a burning rim and cracks before it, and
 // ends, torn, at the first wall in each direction (uWall, from waveWalls): a wall stops a ring for good.
+// the GLSL the ring's material gets (waveCompile): the vertex shader passes on each point's place on the ground (vWP), its
+// height (vWY) and the ring's centre (vMid); the fragment shader tears the ring where walls and blocks stand in its way
+const WAVE_VARYINGS = 'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\n';
 function waveCompile(sh) {
   sh.uniforms.uSh = this.userData.uSh;
   sh.uniforms.uWall = this.userData.uWall;
   sh.uniforms.uWT = WAVE_T;
   sh.vertexShader =
-    'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\n' +
+    WAVE_VARYINGS +
     sh.vertexShader.replace(
       '#include <begin_vertex>',
       '#include <begin_vertex>\n  vWP = (modelMatrix * vec4(transformed, 1.0)).xz;\n  vWY = (modelMatrix * vec4(transformed, 1.0)).y;\n  vMid = vec2(modelMatrix[3][0], modelMatrix[3][2]);'
     );
   sh.fragmentShader =
-    'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\nuniform float uWT;\nuniform sampler2D uWall;\nuniform vec4 uSh[' +
+    WAVE_VARYINGS +
+    'uniform float uWT;\nuniform sampler2D uWall;\nuniform vec4 uSh[' +
     WAVE_SH_N +
     '];\n' +
-    sh.fragmentShader.replace(
-      '#include <map_fragment>',
-      `#include <map_fragment>
-  {
+    sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n' + waveTearGLSL());
+}
+// keep (how much of the ring is left), rim (its burning torn edge) and hot (that edge's yellow), from the wall and the blocks
+function waveTearGLSL() {
+  return (
+    `  {
     vec2 rel = vWP - vMid;
     float ang = atan(rel.y, rel.x), rad = length(rel), keep = 1.0, rim = 0.0, hot = 0.0;
-    {
+` +
+    waveWallGLSL() +
+    waveBlocksGLSL() +
+    `    diffuseColor.a *= keep;
+    vec3 tear = mix(vec3(0.85, 0.13, 0.16), vec3(0.94, 0.81, 0.18), hot);
+    diffuseColor.rgb = mix(diffuseColor.rgb, tear, rim);
+    diffuseColor.a = max(diffuseColor.a, rim * 0.92 * opacity);
+  }`
+  );
+}
+// the walls (uWall: how far the ring runs before a wall, by angle)
+function waveWallGLSL() {
+  return `    {
       /* a wall tears the ring as a block does: cracks running ahead, a burning rim, shards, then nothing */
       float wj = 0.3 * sin(vWY * 7.0 + uWT * 11.0 + ang * 9.0) + 0.18 * sin(vWY * 19.0 - uWT * 17.0 + ang * 23.0) + 0.12 * sin(ang * 61.0 - uWT * 6.0);
       float wEdge = texture2D(uWall, vec2(ang / 6.2831853 + 0.5, 0.5)).r * ${WAVE_WALL_FAR.toFixed(1)} - 0.7 + wj;
@@ -388,7 +406,11 @@ function waveCompile(sh) {
       rim = max(rim, wBand * (0.55 + 0.45 * sin(vWY * 23.0 + uWT * 31.0 + rad * 5.0)));
       hot = max(hot, wBand * smoothstep(0.6, 1.0, sin(uWT * 9.0 + vWY * 4.0 + ang * 5.0)));
     }
-    for (int i = 0; i < ${WAVE_SH_N}; i++) {
+`;
+}
+// each block in its way (uSh: angle, half-width, distance and strength) cuts a gap that cracks, burns at the edge and sheds shards
+function waveBlocksGLSL() {
+  return `    for (int i = 0; i < ${WAVE_SH_N}; i++) {
       vec4 q = uSh[i];
       if (q.w <= 0.0) continue;
       float da = abs(mod(ang - q.x + 3.14159265, 6.2831853) - 3.14159265);
@@ -410,12 +432,7 @@ function waveCompile(sh) {
       rim = max(rim, band * crackle);
       hot = max(hot, band * smoothstep(0.6, 1.0, sin(uWT * 9.0 + vWY * 4.0 + fi)));
     }
-    diffuseColor.a *= keep;
-    vec3 tear = mix(vec3(0.85, 0.13, 0.16), vec3(0.94, 0.81, 0.18), hot);
-    diffuseColor.rgb = mix(diffuseColor.rgb, tear, rim);
-    diffuseColor.a = max(diffuseColor.a, rim * 0.92 * opacity);
-  }`
-    );
+`;
 }
 // the gaps for one ring, from where it started: every block standing in its way (at most WAVE_SH_N), as strong as the block still is
 function waveShade(w) {

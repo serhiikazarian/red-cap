@@ -266,14 +266,24 @@ const PUFF_MESHES = [...Array(PUFF_DRAWS)].map(() => {
 const puffOrder = PUFF_MESHES.map(() => []),
   puffCuts = [],
   puffPS = new THREE.Matrix4();
+// the puffs go into PUFF_DRAWS instanced draws so they sort among the other see-through things as the renderer would sort them
 function puffSync() {
-  // the depth the renderer sorts by (the projected z of an object's origin), and where the other see-through things sat last frame
+  puffDepths();
+  puffGroups();
+  for (let k = 0; k < PUFF_DRAWS; k++)
+    puffDraw(
+      PUFF_MESHES[k],
+      puffOrder[k].sort((a, b) => b.d - a.d)
+    );
+}
+// each visible puff's depth (p.d: the projected z of its origin, as the renderer sorts) and how many other see-through things
+// lie in front of it (p.k), from where they sat last frame
+function puffDepths() {
   camera.updateMatrixWorld();
   puffPS.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
   puffCuts.length = 0;
   if (puffs.length) for (const it of renderer.renderLists.get(scene, 0).transparent) if (!it.object.userData.puff) puffCuts.push(it.z);
   puffCuts.sort((a, b) => a - b);
-  for (const l of puffOrder) l.length = 0;
   for (const p of puffs) {
     if (!p.s.visible) continue;
     p.d = seeB.copy(p.s.position).applyMatrix4(puffPS).z;
@@ -284,9 +294,12 @@ function puffSync() {
       if (puffCuts[mid] < p.d) lo = mid + 1;
       else hi = mid;
     }
-    p.k = lo; // how many other see-through things lie in front of it
+    p.k = lo;
   }
-  // one draw per group of puffs between two such things, nearest group first; past PUFF_DRAWS the farthest groups share the last draw
+}
+// one draw per group of puffs between two such things, nearest group first; past PUFF_DRAWS the farthest groups share the last draw
+function puffGroups() {
+  for (const l of puffOrder) l.length = 0;
   let k = -1,
     last = -1;
   for (const p of puffs.filter(p => p.s.visible).sort((a, b) => a.k - b.k || b.d - a.d)) {
@@ -294,30 +307,30 @@ function puffSync() {
     last = p.k;
     puffOrder[k].push(p);
   }
-  for (let k = 0; k < PUFF_DRAWS; k++) {
-    const list = puffOrder[k].sort((a, b) => b.d - a.d),
-      m = PUFF_MESHES[k],
-      g = m.geometry,
-      n = Math.min(list.length, PUFF_CAP),
-      ap = g.attributes.aPos.array,
-      as = g.attributes.aSro.array;
-    m.visible = n > 0;
-    if (!n) continue;
-    m.position.set(0, 0, 0);
-    for (let i = 0; i < n; i++) m.position.add(list[i].s.position);
-    m.position.divideScalar(n); // the draw sorts by its puffs' middle, which lies between the same two things they do
-    for (let i = 0; i < n; i++) {
-      const s = list[i].s;
-      ap[i * 3] = s.position.x - m.position.x;
-      ap[i * 3 + 1] = s.position.y - m.position.y;
-      ap[i * 3 + 2] = s.position.z - m.position.z;
-      as[i * 3] = s.scale.x;
-      as[i * 3 + 1] = s.material.rotation;
-      as[i * 3 + 2] = s.material.opacity;
-    }
-    g.instanceCount = n;
-    g.attributes.aPos.needsUpdate = g.attributes.aSro.needsUpdate = true;
+}
+// a draw's instances (at most PUFF_CAP, farthest first), placed round their middle: the draw sorts by that, which lies between
+// the same two things they do
+function puffDraw(m, list) {
+  const g = m.geometry,
+    n = Math.min(list.length, PUFF_CAP),
+    ap = g.attributes.aPos.array,
+    as = g.attributes.aSro.array;
+  m.visible = n > 0;
+  if (!n) return;
+  m.position.set(0, 0, 0);
+  for (let i = 0; i < n; i++) m.position.add(list[i].s.position);
+  m.position.divideScalar(n);
+  for (let i = 0; i < n; i++) {
+    const s = list[i].s;
+    ap[i * 3] = s.position.x - m.position.x;
+    ap[i * 3 + 1] = s.position.y - m.position.y;
+    ap[i * 3 + 2] = s.position.z - m.position.z;
+    as[i * 3] = s.scale.x;
+    as[i * 3 + 1] = s.material.rotation;
+    as[i * 3 + 2] = s.material.opacity;
   }
+  g.instanceCount = n;
+  g.attributes.aPos.needsUpdate = g.attributes.aSro.needsUpdate = true;
 }
 // a puff of smoke; past PUFF_MAX (PUFF_LOW on a struggling machine: RES.thin, or resScale below RES_MIN) the oldest puffs still
 // at full life fade out quickly (their life runs six times as fast), as many as it takes to come back under the cap
