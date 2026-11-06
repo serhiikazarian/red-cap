@@ -207,8 +207,8 @@ function buildCell(B, x, z) {
   const mv = B.movedFrom[x + ',' + z];
   if (mv) buildProp(F, mv[0] * CELL + CELL / 2, mv[1] * CELL + CELL / 2, rng);
   if (c === '#') {
-    if (F.deco === 'blocks') blockWall(B, x, z, cx, cz);
-    else tallWall(B, x, z, cx, cz);
+    if (F.deco === 'blocks') blockWall(B, x, z);
+    else tallWall(B, x, z);
   } else if (c === 'g') {
     const h = 4.2,
       m = new THREE.Mesh(box, new THREE.MeshLambertMaterial({ map: TEX.t_coal, color: 0x888888 }));
@@ -231,7 +231,9 @@ function buildCell(B, x, z) {
   if (c !== '#' && kindAt(x, z) === 1) for (let k = nBefore; k < G.group.children.length; k++) G.group.children[k].position.y += LIFT;
 }
 // floor three's wall: 2-3 painted blocks stacked, the upper ones a little off and turned
-function blockWall({ w, box, rng, mats }, x, z, cx, cz) {
+function blockWall({ w, box, rng, mats }, x, z) {
+  const cx = x * CELL + CELL / 2,
+    cz = z * CELL + CELL / 2;
   let y = 0;
   const n = 2 + ((rng() * 2) | 0);
   for (let k = 0; k < n; k++) {
@@ -247,7 +249,9 @@ function blockWall({ w, box, rng, mats }, x, z, cx, cz) {
   }
 }
 // one tall box (taller next to raised ground); floor two's gets a cornice on each open side; now and then a block floats above
-function tallWall({ F, w, box, rng, mats, cornice, webFaces }, x, z, cx, cz) {
+function tallWall({ F, w, box, rng, mats, cornice, webFaces }, x, z) {
+  const cx = x * CELL + CELL / 2,
+    cz = z * CELL + CELL / 2;
   const h = F.wallH[0] + rng() * (F.wallH[1] - F.wallH[0]) + (nearRaised(x, z) ? LIFT : 0),
     m = new THREE.Mesh(box, mats[(rng() * mats.length) | 0]);
   m.scale.set(CELL, h, CELL);
