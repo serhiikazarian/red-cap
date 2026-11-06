@@ -43,6 +43,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   alpha-cleared pixels, and `inkCard` gives him his own smooth outline. Grain and vignette live in the post shader.
 - Soft alpha: soft-alpha things keep the target's alpha (`CustomBlending`, `blendSrcAlpha` Zero, `blendDstAlpha` One), so the
   ink lines round them are not cut. The ink pass skips where the render target's alpha < 1.
+- The ink pass reads depth through `uniform highp sampler2D tDep`: WebGL2 samplers default to lowp, which many phone GPUs
+  honour, rounding depth into steps the outlines draw as lines sliding with the camera. A new depth read is highp too.
 - Sorting: `renderer.setTransparentSort` draws far to near, but a figure of parts in a set order (a Grin: `userData.sortRank`,
   `sortZ` from `sortUnits()` each frame) sorts as one thing. Words keep `renderOrder` 10 (always on top).
 - Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). Under the ink during loading, `tune()`

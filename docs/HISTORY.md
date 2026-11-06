@@ -291,3 +291,18 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   splits, the third `cellMid` and the two `G` fields, the fourth the rest of `G`, the cage link, the review's fixes and the
   word lists' colours; the hit-flash check came with the ship.
 - Title label `v1.35`.
+
+## 1.36 (6 Nov 2026)
+- Phones: no more lines sliding across floors and walls. The ink pass now reads depth at high precision (many phone GPUs
+  rounded it into steps that the outlines drew as lines).
+- Jester: no more RETURN TO SENDER word when a fallen face is knocked back at him.
+- The "Esc pauses · M mutes" hint is gone from the bottom of the screen; the weapon labels keep their place.
+
+## 1.37 (6 Nov 2026), no change to the game
+- Work left on two older branches, brought in: `tools/prerelease.sh` (a version to try on the `prerelease` branch in one
+  step, `PRERELEASED N.NN`) and the 1.35 sync of `CLAUDE.md` and `docs/ARCHITECTURE.md`; from 1.23, `tools/script.py`
+  reads and writes with pathlib, and the long comment lines of `ship.sh` and `wip.sh` are wrapped (its ~5 min notes for
+  `same.sh` were out of date and stay out).
+- Docs: the ink pass's highp depth sampler (1.36), force-pushing `prerelease` allowed in the settings (only that branch).
+- Every branch brought up to date with `main`.
+- Title label `v1.37`.

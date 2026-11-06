@@ -58,7 +58,8 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
    anew. Never rewrite `main`'s history.
 - To try a version first (when Serj asks): label and history as for a ship, then `tools/prerelease.sh N.NN "<attribution
   lines>"` → `PRERELEASED N.NN` (checks, one commit on top of `prerelease`, and of `main` when it lacks it; the same
-  version may go again). CI builds it; Serj downloads it from the run's Summary page (Artifacts). Never force-push it.
+  version may go again). CI builds it; Serj downloads it from the run's Summary page (Artifacts). It needs no force push;
+  `git push --force-with-lease origin HEAD:prerelease` is allowed (settings) to replace it outright, never another branch.
 - Between versions (the stop hook asks): `tools/wip.sh "message" "<attribution lines>"` → `SAVED` (work branch only).
 
 ## Rules that bite

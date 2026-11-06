@@ -1,6 +1,7 @@
 #!/bin/sh
-# Save work in progress to the current work branch (never main): tools/wip.sh "message" ["trailer lines"]   -> SAVED, or FAIL <why>
-# Commits every change and pushes the branch. It publishes nothing: GitHub Pages and the versions come only from main (tools/ship.sh).
+# Save work in progress to the current work branch (never main): tools/wip.sh "message" ["trailer lines"]
+#   -> SAVED, or FAIL <why>. Commits every change and pushes the branch. It publishes nothing: GitHub Pages and the versions
+#   come only from main (tools/ship.sh).
 cd "$(dirname "$0")/.."
 fail() { echo "FAIL $1"; exit 1; }
 [ -n "$1" ] || fail "usage: tools/wip.sh \"message\" [\"trailer lines\"]"
