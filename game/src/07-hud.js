@@ -113,14 +113,7 @@ function warnCue(cue) {
 }
 // up to three markers over the talkers about to strike; off screen they pin to the edge and point at him
 function updWarn() {
-  if (!WARN.length)
-    for (let k = 0; k < WARN_N; k++) {
-      const d = document.createElement('div');
-      d.className = 'warn';
-      d.innerHTML = '<i></i><b>!</b>';
-      document.body.appendChild(d);
-      WARN.push({ d, arr: d.firstChild, on: false });
-    }
+  if (!WARN.length) warnMarkers();
   const W = innerWidth,
     H = innerHeight,
     now = performance.now() / 1000;
@@ -136,30 +129,9 @@ function updWarn() {
       if (w.cue !== e.warnCue) warnCue(w.cue);
       e.warnCue = w.cue;
       if (n >= WARN_N) continue;
-      const m = WARN[n++];
-      // in the camera's own space first: behind it, he is pinned to the bottom edge, on his side
-      warnV.set(e.pos.x, e.pos.y + hitHeight(e) + (e.hgt || 3) * 0.55, e.pos.z).applyMatrix4(camera.matrixWorldInverse);
-      const behind = warnV.z > -0.3;
-      let x, y;
-      if (behind) {
-        const l = Math.hypot(warnV.x, Math.abs(warnV.z) + 0.5) || 1;
-        x = (warnV.x / l) * 4;
-        y = ((Math.abs(warnV.z) + 0.5) / l) * 4;
-      } else {
-        warnV.applyMatrix4(camera.projectionMatrix);
-        x = warnV.x;
-        y = -warnV.y;
-      }
-      const mx = 1 - 64 / (W / 2),
-        my = 1 - 64 / (H / 2),
-        out = behind || Math.abs(x) > mx || Math.abs(y) > my;
-      if (out) {
-        // pinned to the edge, pointing at him
-        const s = Math.min(mx / Math.max(Math.abs(x), 1e-3), my / Math.max(Math.abs(y), 1e-3));
-        x *= s;
-        y *= s;
-      }
-      const px = ((x + 1) / 2) * W,
+      const m = WARN[n++],
+        { x, y, out } = warnPlace(e, W, H),
+        px = ((x + 1) / 2) * W,
         py = ((y + 1) / 2) * H,
         pulse = 1 + (0.12 + 0.2 * w.k) * Math.abs(Math.sin(now * (8 + 14 * w.k)));
       m.d.style.setProperty('--wc', w.c);
@@ -178,20 +150,58 @@ function updWarn() {
       WARN[k].on = false;
     }
   const el = $('#warnEdge');
-  if (edge) {
-    // the side of the screen he is on glows in his colour, brighter as the blow comes
-    const ex = edge.x - W / 2,
-      ey = edge.y - H / 2,
-      s = Math.max(Math.abs(ex) / (W / 2), Math.abs(ey) / (H / 2), 1e-3),
-      gx = W / 2 + ex / s,
-      gy = H / 2 + ey / s;
-    el.style.background = `radial-gradient(circle at ${gx.toFixed(0)}px ${gy.toFixed(0)}px, ${edge.c} 0, ${edge.c}66 ${Math.round(Math.min(W, H) * 0.25)}px, transparent ${Math.round(Math.min(W, H) * 0.6)}px)`;
-    el.style.opacity = ((0.5 + 0.4 * edge.k) * (0.75 + 0.25 * Math.sin(now * 16))).toFixed(3);
-    warnEdgeOn = true;
-  } else if (warnEdgeOn) {
+  if (edge) warnGlow(el, edge, W, H, now);
+  else if (warnEdgeOn) {
     el.style.opacity = 0;
     warnEdgeOn = false;
   }
+}
+// the markers, made on first use
+function warnMarkers() {
+  for (let k = 0; k < WARN_N; k++) {
+    const d = document.createElement('div');
+    d.className = 'warn';
+    d.innerHTML = '<i></i><b>!</b>';
+    document.body.appendChild(d);
+    WARN.push({ d, arr: d.firstChild, on: false });
+  }
+}
+// where a talker's marker goes, in screen units (-1..1); out: off screen (or behind), so pinned to the edge, pointing at him
+function warnPlace(e, W, H) {
+  // in the camera's own space first: behind it, he is pinned to the bottom edge, on his side
+  warnV.set(e.pos.x, e.pos.y + hitHeight(e) + (e.hgt || 3) * 0.55, e.pos.z).applyMatrix4(camera.matrixWorldInverse);
+  const behind = warnV.z > -0.3;
+  let x, y;
+  if (behind) {
+    const l = Math.hypot(warnV.x, Math.abs(warnV.z) + 0.5) || 1;
+    x = (warnV.x / l) * 4;
+    y = ((Math.abs(warnV.z) + 0.5) / l) * 4;
+  } else {
+    warnV.applyMatrix4(camera.projectionMatrix);
+    x = warnV.x;
+    y = -warnV.y;
+  }
+  const mx = 1 - 64 / (W / 2),
+    my = 1 - 64 / (H / 2),
+    out = behind || Math.abs(x) > mx || Math.abs(y) > my;
+  if (out) {
+    // pinned to the edge, pointing at him
+    const s = Math.min(mx / Math.max(Math.abs(x), 1e-3), my / Math.max(Math.abs(y), 1e-3));
+    x *= s;
+    y *= s;
+  }
+  return { x, y, out };
+}
+// the side of the screen he is on glows in his colour, brighter as the blow comes
+function warnGlow(el, edge, W, H, now) {
+  const ex = edge.x - W / 2,
+    ey = edge.y - H / 2,
+    s = Math.max(Math.abs(ex) / (W / 2), Math.abs(ey) / (H / 2), 1e-3),
+    gx = W / 2 + ex / s,
+    gy = H / 2 + ey / s;
+  el.style.background = `radial-gradient(circle at ${gx.toFixed(0)}px ${gy.toFixed(0)}px, ${edge.c} 0, ${edge.c}66 ${Math.round(Math.min(W, H) * 0.25)}px, transparent ${Math.round(Math.min(W, H) * 0.6)}px)`;
+  el.style.opacity = ((0.5 + 0.4 * edge.k) * (0.75 + 0.25 * Math.sin(now * 16))).toFixed(3);
+  warnEdgeOn = true;
 }
 // Red Cap's health: a row of ties
 function drawTies() {

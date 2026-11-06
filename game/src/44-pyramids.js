@@ -204,8 +204,19 @@ function buildPyramid(x, z, cx, cz, rng) {
   });
   G.group.add(seeThru(still(t), false, 'pyramid'));
   q.see = G.see[t.userData.seeId - 1];
-  // what the slingshot's aim locks on (aimInfo), like a talker: the reticle and a pebble go for its orb
-  q.tgt = {
+  q.tgt = pyrTarget(q, cx, cz);
+  const orb = new THREE.Mesh(PYR.orbGeo, PYR.mat); // not baked: it turns (pyrTick)
+  orb.position.set(cx, PYR.orbY, cz);
+  orb.rotation.set(PYR_ORB_TILT, x * 1.7 + z * 2.3, 0);
+  G.group.add(orb);
+  q.orb = orb;
+  q.rim = pyrRimFor(t);
+  // the tie it holds: pyrTick keeps it on the face towards the camera
+  [q.tie, q.pool] = pyrTieAndPool(cx, cz);
+}
+// what the slingshot's aim locks on (aimInfo), like a talker: the reticle and a pebble go for its orb
+function pyrTarget(q, cx, cz) {
+  return {
     pyr: q,
     pos: new THREE.Vector3(cx, 0, cz),
     r: PYR.foot,
@@ -219,22 +230,22 @@ function buildPyramid(x, z, cx, cz, rng) {
     dying: false,
     hidden: false
   };
-  const orb = new THREE.Mesh(PYR.orbGeo, PYR.mat); // not baked: it turns (pyrTick)
-  orb.position.set(cx, PYR.orbY, cz);
-  orb.rotation.set(PYR_ORB_TILT, x * 1.7 + z * 2.3, 0);
-  G.group.add(orb);
-  q.orb = orb;
+}
+// the ink rim for pyramid t: not in the scene, its pyramid draws it (pyrRim)
+function pyrRimFor(t) {
   if (!G.rimUp) {
     // three.js sends a shape to the graphics card only for things in the scene: an invisible stand-in does it for the rims
     G.rimUp = new THREE.Mesh(PYR.rimGeo, HIDE_MAT);
     G.rimUp.frustumCulled = false;
     G.group.add(G.rimUp);
   }
-  const rim = new THREE.Mesh(PYR.rimGeo, PYR.rimMat); // not in the scene: its pyramid draws it (pyrRim)
+  const rim = new THREE.Mesh(PYR.rimGeo, PYR.rimMat);
   rim.position.copy(t.position);
   rim.rotation.copy(t.rotation);
-  q.rim = rim;
-  // the tie it holds: pyrTick keeps it on the face towards the camera
+  return rim;
+}
+// the tie half seen inside, and the pool of red light round its foot
+function pyrTieAndPool(cx, cz) {
   const tie = paper('tie', 0.5, 0.06),
     tm = tie.userData.mat,
     pool = new THREE.Mesh(PYR.poolG, PYR.poolM);
@@ -255,8 +266,7 @@ function buildPyramid(x, z, cx, cz, rng) {
   pool.position.set(cx, 0.03, cz);
   pool.scale.setScalar(PYR_H * 2);
   G.group.add(tie, pool);
-  q.tie = tie;
-  q.pool = pool;
+  return [tie, pool];
 }
 // the pyramids' glow breathes, all together: their core and scratches (emissive) and the pools on the floor
 function pyrGlow() {
@@ -276,6 +286,11 @@ function pyrScream(n) {
     f0 = two ? 128 : 98,
     vol = (two ? 0.3 : 0.24) * auK(AU.at);
   if (vol < 0.002) return;
+  screamVoices(c, t, two, dur, f0, screamBus(c, t, two, dur, vol));
+  sNoise({ dur: dur * 0.9, f: 1400, f2: 500, q: 1.4, gain: two ? 0.09 : 0.07, a: 0.08 }); // the breath under it
+}
+// the scream's way out: its envelope, distortion, a closing low-pass and a stone vault's echo; returns its input
+function screamBus(c, t, two, dur, vol) {
   const g = c.createGain(),
     sh = c.createWaveShaper(),
     lp = c.createBiquadFilter(),
@@ -300,6 +315,11 @@ function pyrScream(n) {
   fb.connect(dl);
   dl.connect(wet);
   wet.connect(AU.master);
+  return g;
+}
+// the voices, out of tune, with a vibrato, each through three vowel formants closing from "aah" to "ooh"; the second scream
+// adds a shriek
+function screamVoices(c, t, two, dur, f0, g) {
   const voices = [
     [1, 0.5],
     [1.013, 0.45],
@@ -343,7 +363,6 @@ function pyrScream(n) {
   }
   vib.start(t);
   vib.stop(t + dur + 0.05);
-  sNoise({ dur: dur * 0.9, f: 1400, f2: 500, q: 1.4, gain: two ? 0.09 : 0.07, a: 0.08 }); // the breath under it
 }
 // a yo-yo, a pebble or a talker's shot at p (radius rad) against the pyramids: true if it struck one. A volley (the drops of one
 // spray) is one blow to each pyramid it reaches

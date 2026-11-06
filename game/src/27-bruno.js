@@ -87,25 +87,8 @@ function updBruno(e, dt, dist, ux, uz, mv) {
       e.st = 'walk';
       e.t = 1.5;
     }
-  } else if (e.st === 'walk') {
-    if (dist > 3.4) {
-      [mv.x, mv.z] = steer(e);
-      mv.sp = 1.5;
-    }
-    if (dist < BRUNO_FLARE && e.flareCd <= 0 && e.stagger <= 0) {
-      e.st = 'flareWind';
-      e.t = 0.95;
-      e.flareCd = 4.5;
-      SFX.growl();
-      floatWord('MADONE!', e.pos.clone().setY(3.8), HEX.hot, 1.3, true);
-      sNoise({ dur: 0.7, f: 900, f2: 400, q: 3, gain: 0.2 });
-    } else if (seen && e.t <= 0 && e.stagger <= 0) {
-      e.st = 'wind';
-      e.t = 0.55;
-      floatWord(pick(['MADONE!', 'STUPID!', 'MADONE!', 'YOU FOOL']), e.pos.clone().setY(3.7), HEX.hot, 1.1);
-      SFX.growl();
-    }
-  } else if (e.st === 'flareWind') {
+  } else if (e.st === 'walk') brunoWalk(e, dist, seen, mv);
+  else if (e.st === 'flareWind') {
     // the fire gathers, then bursts out
     if (animTick) {
       shake(e.tilt, 0.07);
@@ -113,20 +96,7 @@ function updBruno(e, dt, dist, ux, uz, mv) {
       e.heat.scale.setScalar(BRUNO_AURA + k * (BRUNO_FLARE - BRUNO_AURA) * (Math.floor(e.t * 14) % 2 ? 1 : 0.85));
       e.glow.scale.set(6.5 + k * 4, 4.5 + k * 3, 1);
     }
-    if (e.t <= 0) {
-      e.st = 'flare';
-      e.t = 0.55;
-      e.aura = BRUNO_FLARE;
-      SFX.boom();
-      cam.shake = Math.max(cam.shake, 0.35);
-      for (let k = 0; k < 56; k++) {
-        const a = rand(0, TAU);
-        burst(fxAt(e.pos, Math.cos(a) * rand(1, BRUNO_FLARE), 0.3, Math.sin(a) * rand(1, BRUNO_FLARE)), [COL.hot, COL.bile, COL.tie], 1, 3, 0.3, {
-          g: -6,
-          life: 0.8
-        });
-      }
-    }
+    if (e.t <= 0) brunoBurst(e);
   } else if (e.st === 'flare') {
     e.heat.scale.setScalar(BRUNO_FLARE);
     if (e.t <= 0) {
@@ -138,19 +108,56 @@ function updBruno(e, dt, dist, ux, uz, mv) {
     }
   } else if (e.st === 'wind') {
     if (animTick) shake(e.tilt, 0.06);
-    if (e.t <= 0) {
-      e.st = 'walk';
-      e.t = rand(2.2, 3.2);
-      e.tilt.position.set(0, 0, 0);
-      const mouth = e.mouth.clone().applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
-      for (const off of [-0.28, 0, 0.28]) {
-        const a = Math.atan2(ux, uz) + off;
-        insultShot(mouth, new THREE.Vector3(Math.sin(a), 0, Math.cos(a))).parry = true; // Red Cap can strike it down (hitWord)
-      }
-    }
+    if (e.t <= 0) brunoInsults(e, ux, uz);
   }
   e.flareCd -= dt;
   if (dist < e.aura && los(e.pos, hero.pos)) hurtHero(2, e.pos);
+}
+// walking after Red Cap (no closer than 3.4 m); close and cooled down, the flare's wind-up; seen, an insult's
+function brunoWalk(e, dist, seen, mv) {
+  if (dist > 3.4) {
+    [mv.x, mv.z] = steer(e);
+    mv.sp = 1.5;
+  }
+  if (dist < BRUNO_FLARE && e.flareCd <= 0 && e.stagger <= 0) {
+    e.st = 'flareWind';
+    e.t = 0.95;
+    e.flareCd = 4.5;
+    SFX.growl();
+    floatWord('MADONE!', e.pos.clone().setY(3.8), HEX.hot, 1.3, true);
+    sNoise({ dur: 0.7, f: 900, f2: 400, q: 3, gain: 0.2 });
+  } else if (seen && e.t <= 0 && e.stagger <= 0) {
+    e.st = 'wind';
+    e.t = 0.55;
+    floatWord(pick(['MADONE!', 'STUPID!', 'MADONE!', 'YOU FOOL']), e.pos.clone().setY(3.7), HEX.hot, 1.1);
+    SFX.growl();
+  }
+}
+// the flare: his fire bursts out to BRUNO_FLARE
+function brunoBurst(e) {
+  e.st = 'flare';
+  e.t = 0.55;
+  e.aura = BRUNO_FLARE;
+  SFX.boom();
+  cam.shake = Math.max(cam.shake, 0.35);
+  for (let k = 0; k < 56; k++) {
+    const a = rand(0, TAU);
+    burst(fxAt(e.pos, Math.cos(a) * rand(1, BRUNO_FLARE), 0.3, Math.sin(a) * rand(1, BRUNO_FLARE)), [COL.hot, COL.bile, COL.tie], 1, 3, 0.3, {
+      g: -6,
+      life: 0.8
+    });
+  }
+}
+// three insults fanned out at Red Cap from his mouth
+function brunoInsults(e, ux, uz) {
+  e.st = 'walk';
+  e.t = rand(2.2, 3.2);
+  e.tilt.position.set(0, 0, 0);
+  const mouth = e.mouth.clone().applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
+  for (const off of [-0.28, 0, 0.28]) {
+    const a = Math.atan2(ux, uz) + off;
+    insultShot(mouth, new THREE.Vector3(Math.sin(a), 0, Math.cos(a))).parry = true; // Red Cap can strike it down (hitWord)
+  }
 }
 // his fire: a flickering glow, the heat disc, tongues of flame round him and the scorch circle at the edge of his heat, none
 // of it beyond a wall; embers over the burning ground; his heat zone follows him (heroHeat)

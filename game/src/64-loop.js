@@ -129,70 +129,80 @@ function ambience(dt, tsec) {
       if (d.bob) d.m.position.y = d.y + Math.sin(tsec * 0.6 + d.bob) * 0.4;
       if (d.inst) syncBoxes([d.inst]);
     }
-  if (G.spirits)
-    for (const sp of G.spirits) {
-      sp.m.position.set(
-        sp.ox + Math.cos(tsec * sp.sp + sp.ph) * 1.4,
-        sp.oy + Math.sin(tsec * 2 + sp.ph) * 0.3,
-        sp.oz + Math.sin(tsec * sp.sp + sp.ph) * 1.4
-      );
-      if (animTick) {
-        sp.m.rotation.y = Math.atan2(camera.position.x - sp.m.position.x, camera.position.z - sp.m.position.z);
-        sp.m.rotation.z = Math.sin(tsec * 3 + sp.ph) * 0.15;
-      }
-    }
-  if (G.papers) {
-    for (const p of G.papers.p) {
-      p.pos.y -= 0.7 * dt;
-      p.pos.x += Math.sin(tsec * 1.3 + p.ph) * 0.5 * dt;
-      p.rx += dt * p.spin;
-      p.rz += dt * 0.8;
-      if (p.pos.y < 0.05) p.pos.set(hero.pos.x + rand(-12, 12), rand(6, 9), hero.pos.z + rand(-12, 12));
-      dummy.position.copy(p.pos);
-      dummy.rotation.set(p.rx, 0, p.rz);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      p.im.setMatrixAt(p.k, dummy.matrix);
-    }
-    G.papers.ims.forEach(im => {
-      im.instanceMatrix.needsUpdate = true;
-    });
-  }
-  if (G.fires)
-    for (const f of G.fires) {
-      if (animTick) f.glow.scale.set(1.8 + Math.random() * 0.6, 2.2 + Math.random() * 0.8, 1);
-      if (Math.random() < dt * 9)
-        burst(
-          new THREE.Vector3(f.x + rand(-0.25, 0.25), f.glow.position.y - 0.45, f.z + rand(-0.25, 0.25)),
-          [COL.hot, COL.bile, COL.tie],
-          1,
-          1.2,
-          0.2,
-          { g: -5, life: 0.6 }
-        );
-    }
+  if (G.spirits) driftSpirits(tsec);
+  if (G.papers) fallingPapers(dt, tsec);
+  if (G.fires) fireSparks(dt);
   if (G.F.deco === 'mouth' && state === 'play' && Math.random() < dt * 14)
     burst(new THREE.Vector3(hero.pos.x + rand(-10, 10), 0.3, hero.pos.z + rand(-10, 10)), [COL.hot, COL.bile], 1, 0.4, 0.09, { g: -1.2, life: 2.5 });
-  if (G.drips) {
-    const D = G.drips;
-    D.d.forEach((d, k) => {
-      d.y -= d.v * dt;
-      if (d.y < 0) {
-        d.y = rand(9, 13);
-        d.x = hero.pos.x + rand(-14, 14);
-        d.z = hero.pos.z + rand(-14, 14);
-      }
-      dummy.position.set(d.x, d.y, d.z);
-      dummy.rotation.set(0, 0, 0);
-      dummy.scale.setScalar(1);
-      dummy.updateMatrix();
-      D.im.setMatrixAt(k, dummy.matrix);
-    });
-    D.im.instanceMatrix.needsUpdate = true;
-  }
+  if (G.drips) driftDrips(dt);
   if (G.portal && G.portal.open) {
     G.portal.hole.material.color.setHSL(0, 0.8, 0.35 + Math.sin(tsec * 6) * 0.1);
     if (Math.random() < 0.3)
       burst(new THREE.Vector3(G.portal.x + rand(-0.8, 0.8), 0.2, G.portal.z), [COL.tie, COL.ink], 1, 1, 0.15, { g: -3, life: 1 });
   }
+}
+// floor one's floating faces circle their spots, turned to the camera
+function driftSpirits(tsec) {
+  for (const sp of G.spirits) {
+    sp.m.position.set(
+      sp.ox + Math.cos(tsec * sp.sp + sp.ph) * 1.4,
+      sp.oy + Math.sin(tsec * 2 + sp.ph) * 0.3,
+      sp.oz + Math.sin(tsec * sp.sp + sp.ph) * 1.4
+    );
+    if (animTick) {
+      sp.m.rotation.y = Math.atan2(camera.position.x - sp.m.position.x, camera.position.z - sp.m.position.z);
+      sp.m.rotation.z = Math.sin(tsec * 3 + sp.ph) * 0.15;
+    }
+  }
+}
+// floor one's newspapers flutter down and start again high up near Red Cap
+function fallingPapers(dt, tsec) {
+  for (const p of G.papers.p) {
+    p.pos.y -= 0.7 * dt;
+    p.pos.x += Math.sin(tsec * 1.3 + p.ph) * 0.5 * dt;
+    p.rx += dt * p.spin;
+    p.rz += dt * 0.8;
+    if (p.pos.y < 0.05) p.pos.set(hero.pos.x + rand(-12, 12), rand(6, 9), hero.pos.z + rand(-12, 12));
+    dummy.position.copy(p.pos);
+    dummy.rotation.set(p.rx, 0, p.rz);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    p.im.setMatrixAt(p.k, dummy.matrix);
+  }
+  G.papers.ims.forEach(im => {
+    im.instanceMatrix.needsUpdate = true;
+  });
+}
+// a brazier's flame flickers and throws sparks
+function fireSparks(dt) {
+  for (const f of G.fires) {
+    if (animTick) f.glow.scale.set(1.8 + Math.random() * 0.6, 2.2 + Math.random() * 0.8, 1);
+    if (Math.random() < dt * 9)
+      burst(
+        new THREE.Vector3(f.x + rand(-0.25, 0.25), f.glow.position.y - 0.45, f.z + rand(-0.25, 0.25)),
+        [COL.hot, COL.bile, COL.tie],
+        1,
+        1.2,
+        0.2,
+        { g: -5, life: 0.6 }
+      );
+  }
+}
+// floor one's drips fall and start again high up near Red Cap
+function driftDrips(dt) {
+  const D = G.drips;
+  D.d.forEach((d, k) => {
+    d.y -= d.v * dt;
+    if (d.y < 0) {
+      d.y = rand(9, 13);
+      d.x = hero.pos.x + rand(-14, 14);
+      d.z = hero.pos.z + rand(-14, 14);
+    }
+    dummy.position.set(d.x, d.y, d.z);
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    D.im.setMatrixAt(k, dummy.matrix);
+  });
+  D.im.instanceMatrix.needsUpdate = true;
 }
