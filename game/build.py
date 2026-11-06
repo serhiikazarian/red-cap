@@ -22,7 +22,7 @@ def include(pattern):
         text = f.read_text(encoding='utf-8')
         if f.suffix == '.css':
             text = re.sub(r'url\((assets/[^)]+)\)', lambda m: 'url(' + data_uri(d / m.group(1)) + ')', text)
-        out.append(text)
+        out.append(text if text.endswith('\n') else text + '\n')  # a file without a last line break must not run into the next
     return ''.join(out).removesuffix('\n')
 
 
