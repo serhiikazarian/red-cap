@@ -391,3 +391,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Docs synced: `CLAUDE.md` (sight helpers; floors say what they have), `docs/ARCHITECTURE.md` (the floor fields, the two
   sight checks, a talker's height, the boss bar behind walls, the opening line, the build's line breaks, not-verified list).
 - Title label `v1.41`.
+
+## 1.42 (6 Nov 2026), no change to the game
+- `CLAUDE.md`: Serj's own edit restored (he/him; "Be interactive and report your progress."), which shipping 1.41 had
+  overwritten with the work branch's older copy.
+- Title label `v1.42`.

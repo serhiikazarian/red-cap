@@ -5,10 +5,10 @@ Live: https://serhiikazarian.github.io/red-cap/ (Pages, from `main`). Version: `
 Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (read only the section you need).
 
 ## Working with Serj
-- Serj does not code: plain language, they/them. Report what changed, what was tested, what to check in play.
+- Serj does not code: plain language, he/him. Report what changed, what was tested, what to check in play. Be interactive and report your progress.
 - Only what is asked. Ambiguous look, sound, play or workflow: one AskUserQuestion with options first.
 - Before anything slow, one line on what runs and how long.
-- Checks pass: say so, ask whether to ship. Never push `main` without their yes.
+- Checks pass: say so, ask whether to ship. Never push `main` without his yes.
 - Docs wait for the end of the chat; meanwhile only code, the `#version` label and a `## N.NN (date)` entry in
   `docs/HISTORY.md` (one bullet per change). At the end sync `CLAUDE.md` and `docs/ARCHITECTURE.md` once.
 
@@ -36,7 +36,7 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   changed; `tools/ship.sh N.NN "<attribution lines>"` → `SHIPPED`. Never merge, squash or force-push by hand. Undo:
   `git revert`, ship anew.
 - Try first: `tools/prerelease.sh N.NN "<attribution lines>"` → `PRERELEASED` (may repeat); Serj downloads from the CI
-  run's Summary → Artifacts: give them the run link. Between versions: `tools/wip.sh "msg" "<attribution lines>"`.
+  run's Summary → Artifacts: give him the run link. Between versions: `tools/wip.sh "msg" "<attribution lines>"`.
 
 ## Rules that bite
 - **Load rule:** anything new is prepared on the loading screen, never mid-game: a new material/shader variant gets a
