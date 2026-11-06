@@ -166,7 +166,7 @@ function aimInfo(pyr) {
     if (d > far || d < AIM.near) return false;
     const off = Math.acos(clamp((dx * fx + dz * fz) / d, -1, 1)),
       score = off + d * AIM.perMetre + bias;
-    if (off < AIM.cone && score < bestScore && lineOfSight(hero.pos, to)) {
+    if (off < AIM.cone && score < bestScore && clearOfWalls(hero.pos, to)) {
       bestScore = score;
       best = who;
     }
@@ -235,7 +235,7 @@ function dodge() {
 function heroSafety() {
   const [ix, iz] = cellOf(hero.pos.x, hero.pos.z),
     out = ix < 0 || iz < 0 || ix >= G.w || iz >= G.h || !isFinite(hero.pos.x) || !isFinite(hero.pos.z);
-  const jumped = hero.safe && hero.pos.distanceTo(hero.safe) > 1 && !lineOfSight(hero.safe, hero.pos); // passed through a wall in one step
+  const jumped = hero.safe && hero.pos.distanceTo(hero.safe) > 1 && !clearOfWalls(hero.safe, hero.pos); // passed through a wall in one step
   if (out || solid(ix, iz) || jumped) {
     if (hero.safe) {
       hero.pos.copy(hero.safe);
@@ -420,7 +420,7 @@ function heroPose(moving, rx, rz) {
 // standing in the heat of a brazier or a candle stake: a short grace, HOT, then it burns
 function heroHeat(dt) {
   let nearFire = 0;
-  for (const f of G.hot) if (heroDist(f.x, f.z) < f.r && (!f.see || lineOfSight(f, hero.pos))) nearFire = Math.max(nearFire, f.k || 1);
+  for (const f of G.hot) if (heroDist(f.x, f.z) < f.r && (!f.see || clearOfWalls(f, hero.pos))) nearFire = Math.max(nearFire, f.k || 1);
   if (nearFire) {
     hero.heat = (hero.heat || 0) + dt * nearFire;
     if (hero.heat > 0.45 && !hero.heatWarned) {

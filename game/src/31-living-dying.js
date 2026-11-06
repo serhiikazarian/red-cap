@@ -233,7 +233,7 @@ function livingDyingEye(e, dt, dist, ux, uz, mv, now) {
   mv.z = uz * want + ux * side * 0.9;
   mv.sp = 3.4;
   e.fly = 2.4 + Math.sin(now * 2 + e.seed) * 0.4;
-  if (e.t <= 0 && !hero.inSmoke && lineOfSight(e.pos, hero.pos)) {
+  if (e.t <= 0 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos)) {
     e.st = 'fire';
     e.t = 2.4;
     e.burst = 3;
@@ -245,7 +245,7 @@ function livingDyingEye(e, dt, dist, ux, uz, mv, now) {
     if (e.burst > 0 && e.bt <= 0) {
       e.burst--;
       e.bt = 0.22;
-      const from = e.pos.clone().setY(e.fly),
+      const from = e.pos.clone().setY((e.gy || 0) + e.fly),
         to = hero.pos.clone().setY(hero.pos.y + 1.2);
       redOrb(from, to.sub(from).normalize());
     }
@@ -262,7 +262,7 @@ function livingDyingJaw(e, dt, dist, ux, uz, mv, now) {
   // the mouth: laughing (and now and then a HA) while it hops or reels, wide open for the charge
   if (e.st === 'hop' || e.st === 'dazed') {
     e.jaw.set(Math.abs(Math.sin(now * 14)) * 0.55);
-    if (Math.random() < dt * 0.8) floatWord(pick(['HA', 'HA HA', 'HAHAHA']), e.pos.clone().setY(e.fly + 1.6), HEX.bile, 0.8);
+    if (Math.random() < dt * 0.8) floatWord(pick(['HA', 'HA HA', 'HAHAHA']), e.pos.clone().setY((e.gy || 0) + e.fly + 1.6), HEX.bile, 0.8);
   } else if (e.st === 'chargeWind' || e.st === 'charge') e.jaw.set(0.9 + Math.sin(now * 30) * 0.1);
 }
 const JAW_CHARGE = 13; // m/s
@@ -368,7 +368,7 @@ TALKERS.L = {
   struck: (e, n) => {
     if (e.waiting || e.part === 'whole') {
       SFX.tink();
-      floatWord('NOT YET', e.pos.clone().setY((e.fly || 2) + 1.5), HEX.paper, 0.8);
+      floatWord('NOT YET', e.pos.clone().setY((e.gy || 0) + (e.fly || 2) + 1.5), HEX.paper, 0.8);
       return null;
     }
     return e.daze > 0 ? n * 2 : n;
@@ -551,7 +551,7 @@ function snareTick() {
     );
     G.group.add(hero.snareLine);
   }
-  const a1 = tmpS1.copy(s0.pos).setY(s0.fly || 2),
+  const a1 = tmpS1.copy(s0.pos).setY((s0.gy || 0) + (s0.fly || 2)),
     a2 = tmpS2.copy(hero.pos).setY(hero.pos.y + 0.35),
     L = a1.distanceTo(a2);
   hero.snareLine.position.copy(a1).add(a2).multiplyScalar(0.5);

@@ -79,7 +79,7 @@ function updateBruno(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   const now = performance.now() / 1000;
   brunoFire(e, dt, now);
-  const seen = dist < 18 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const seen = dist < 18 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos);
   if (e.st === 'idle') {
     if (seen || dist < 10) {
       e.st = 'walk';
@@ -109,7 +109,7 @@ function updateBruno(e, dt, dist, ux, uz, mv) {
     if (e.t <= 0) brunoInsults(e, ux, uz);
   }
   e.flareCd -= dt;
-  if (dist < e.aura && lineOfSight(e.pos, hero.pos)) hurtHero(2, e.pos);
+  if (dist < e.aura && clearOfWalls(e.pos, hero.pos)) hurtHero(2, e.pos);
 }
 // walking after Red Cap (no closer than 3.4 m); close and cooled down, the flare's wind-up; seen, an insult's
 function brunoWalk(e, dist, seen, mv) {
@@ -176,7 +176,7 @@ function brunoFire(e, dt, now) {
 // is the ground at (x, z) open and in his sight (no wall between)? Leaves the point in tmpW
 function brunoReaches(e, x, z) {
   tmpW.set(x, 0, z);
-  return !solid(...cellOf(x, z)) && lineOfSight(e.pos, tmpW);
+  return !solid(...cellOf(x, z)) && clearOfWalls(e.pos, tmpW);
 }
 // at the stop-motion tick: the glow, heat disc and scorch flicker; each tongue sways round him (none beyond a wall)
 function brunoFlicker(e, now) {
@@ -203,7 +203,7 @@ function brunoEmbers(e, dt) {
   const a = rand(0, TAU),
     r = Math.sqrt(Math.random()) * BRUNO_SCORCH;
   tmpW.set(e.pos.x + Math.cos(a) * r, 0, e.pos.z + Math.sin(a) * r);
-  if (lineOfSight(e.pos, tmpW))
+  if (clearOfWalls(e.pos, tmpW))
     burst(tmpW.clone().setY(e.pos.y + rand(0.1, 0.6)), [COL.hot, COL.bile, COL.tie, 0xfff2a0], 1, 1.6, 0.24, { g: -5, life: 0.9 });
 }
 // the burning circle at the edge of his heat (made the first time): it pulses, and a segment beyond a wall is not drawn

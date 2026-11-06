@@ -119,7 +119,7 @@ function updateCages(dt) {
   for (const c of G.cages) {
     if (c.broken) continue;
     const d = heroDist(c.x, c.z);
-    if (d < 5.5 && lineOfSight(hero.pos, new THREE.Vector3(c.x, 0, c.z))) {
+    if (d < 5.5 && clearOfWalls(hero.pos, new THREE.Vector3(c.x, 0, c.z))) {
       c.rattle += dt;
       c.g.position.x = c.x + rand(-0.08, 0.08);
       c.g.position.z = c.z + rand(-0.08, 0.08);

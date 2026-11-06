@@ -71,12 +71,14 @@ function solid(ix, iz) {
   return c === '#' || (c === 'g' && G.gateClosed);
 }
 // how far a pillar or prop in a cell reaches from the cell's centre (0: nothing to bump into)
+const BUMP_R = { T: 0.5, o: 0.6 }; // metres: a pillar, a prop (a floor with pyramids or flatProps has its own)
 function propRadius(c) {
-  return c === 'T' ? (G && G.F.deco === 'mouth' ? PYR_R : 0.5) : c === 'o' ? (G && G.F.deco === 'mouth' ? 0 : 0.6) : 0;
+  return c === 'T' ? (G && G.F.pyramids ? PYR_R : BUMP_R.T) : c === 'o' ? (G && G.F.flatProps ? 0 : BUMP_R.o) : 0;
 }
-// line of sight that also counts pillars and props as cover (props = false: pillars only, the props too small to hide behind)
-function losCover(a, b, pad = 0.3, props = true) {
-  if (!lineOfSight(a, b)) return false;
+// "can he see you?", two answers: clearOfWalls (walls and a closed gate only) or clearOfCover (also pillars and props, or
+// pillars only with props = false: the props too small to hide behind). Pick the one the rule means.
+function clearOfCover(a, b, pad = 0.3, props = true) {
+  if (!clearOfWalls(a, b)) return false;
   const dx = b.x - a.x,
     dz = b.z - a.z,
     d = Math.hypot(dx, dz),
@@ -304,8 +306,8 @@ function pushOffStake(p, st, rr) {
   p.x += (dx / d) * out;
   p.z += (dz / d) * out;
 }
-// a clear straight line between two points (walls only)
-function lineOfSight(a, b) {
+// a clear straight line between two points: walls and a closed gate stop it, nothing else (see clearOfCover)
+function clearOfWalls(a, b) {
   const dx = b.x - a.x,
     dz = b.z - a.z,
     d = Math.hypot(dx, dz),
@@ -400,7 +402,7 @@ function steer(e, target = hero.pos) {
   return avoidProps(e, sx, sz);
 }
 function steerRaw(e, target) {
-  if (Math.abs(heightAt(target.x, target.z) - heightAt(e.pos.x, e.pos.z)) < 0.5 && losCover(e.pos, target, e.r + 0.1)) {
+  if (Math.abs(heightAt(target.x, target.z) - heightAt(e.pos.x, e.pos.z)) < 0.5 && clearOfCover(e.pos, target, e.r + 0.1)) {
     const dx = target.x - e.pos.x,
       dz = target.z - e.pos.z,
       d = Math.hypot(dx, dz) || 1;

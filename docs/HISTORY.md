@@ -374,3 +374,14 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Health bars: the Geezer's stare warning line is gone (WINDED stays), Bruno's reads "Flarin’" (was "Flarin’ — back
   off"), the Smoker's has no line (was "Hidin’ in his smoke" / "Every hit shakes out pebbles").
 - Title label `v1.41`.
+- Tidy, no change to play (replays SAME): floors say what they have instead of shared code asking which floor it is
+  (`plainFloaters`, `pyramids`, `flatProps`, `embers` in 04-floors; `BUMP_R` in 05-world); the two sight checks say which
+  they are: `clearOfWalls` (was `lineOfSight`), `clearOfCover` (was `losCover`).
+- A Grin on raised ground spits its fireball from where it is drawn (was from 1.5 m lower, as if on the floor below):
+  `grinSpit`.
+- On raised ground, these come from where the talker is drawn too (were 1.5 m low): a Grin's HAAA, a Shade's BOO!, a
+  Smoker's PSST and *COUGH*, the hidden boss's red orbs, laughs, NOT YET and its snaring strand (floor three is flat: no
+  change there today).
+- A boss's health bar shows only while no wall stands between him and Red Cap: it fades out behind one (after 0.3 s, so a
+  corner can't make it blink) and fades back in when he is in sight (`bossInFight`, `#boss.on` in style.css). Seen with
+  the Priest and Bruno.

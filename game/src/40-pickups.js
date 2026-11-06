@@ -34,7 +34,7 @@ function heartRoom(x, z, big) {
       const a = (k / n) * TAU,
         px = x + Math.cos(a) * r,
         pz = z + Math.sin(a) * r;
-      if (ok(px, pz) && lineOfSight(from, { x: px, z: pz })) return [px, pz];
+      if (ok(px, pz) && clearOfWalls(from, { x: px, z: pz })) return [px, pz];
     }
   return [x, z];
 }

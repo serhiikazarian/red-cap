@@ -56,7 +56,7 @@ function updateSmoker(e, dt, dist, ux, uz, mv) {
     tp.applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
     smokePuff(tp, (e.st === 'smoke' ? rand(1.4, 2.2) : 0.45) * ks * (e.smoky ? 1.5 : 1), (e.st === 'smoke' ? 3 : 1.6) * ks, 0.5);
   }
-  const seen = dist < 20 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const seen = dist < 20 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos);
   const step = SMOKER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, seen);
   e.alpha = lerp(e.alpha, e.hidden ? 0.08 : 1, ease(6, dt));
@@ -90,7 +90,7 @@ const SMOKER_STATES = {
       const k2 = e.smoky || 1;
       for (let k = 0; k < 7 * k2; k++)
         smokePuff(fxAt(e.pos, rand(-1.6, 1.6) * k2, e.fly + rand(-1.2, 0.8), rand(-1.6, 1.6) * k2), rand(2.4, 3.6) * k2, 4.5, 0.12);
-      floatWord('*COUGH*', e.pos.clone().setY(e.fly + 1.2), HEX.smoke, 0.8);
+      floatWord('*COUGH*', e.pos.clone().setY((e.gy || 0) + e.fly + 1.2), HEX.smoke, 0.8);
       playNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
     }
   },
@@ -105,7 +105,7 @@ const SMOKER_STATES = {
       e.st = 'reveal';
       e.t = 0.4;
       e.hidden = false;
-      floatWord('PSST', e.pos.clone().setY(e.fly + 1.1), HEX.paper, 0.7);
+      floatWord('PSST', e.pos.clone().setY((e.gy || 0) + e.fly + 1.1), HEX.paper, 0.7);
     }
   },
   reveal(e, dt, dist, ux, uz, mv, seen) {
@@ -135,7 +135,7 @@ function smokerReturns(e) {
       x = hero.pos.x + Math.cos(a) * r,
       z = hero.pos.z + Math.sin(a) * r,
       [ix, iz] = cellOf(x, z);
-    if (!solid(ix, iz) && lineOfSight(new THREE.Vector3(x, 0, z), hero.pos)) {
+    if (!solid(ix, iz) && clearOfWalls(new THREE.Vector3(x, 0, z), hero.pos)) {
       e.pos.set(x, 0, z);
       break;
     }
@@ -158,9 +158,9 @@ function smokerCough(e, dt, dist, ux, uz) {
     e.coughT = rand(2.2, 3.4);
     playNoise({ dur: 0.35, f: 380, f2: 160, q: 1.5, gain: 0.28 });
     later(0.26, () => playNoise({ dur: 0.3, f: 340, f2: 150, q: 1.5, gain: 0.22 }));
-    floatWord('*COUGH*', e.pos.clone().setY(e.fly + 2.6), HEX.smoke, 1);
+    floatWord('*COUGH*', e.pos.clone().setY((e.gy || 0) + e.fly + 2.6), HEX.smoke, 1);
     for (let k = 0; k < 6; k++) smokePuff(fxAt(e.pos, ux * k * 1.2, e.fly - 0.4, uz * k * 1.2), rand(1.8, 2.8), 2.5, 0.2);
-    if (dist < 8.5 && lineOfSight(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
+    if (dist < 8.5 && clearOfWalls(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
   }
 }
 // a totem's ring shakes a Smoker out of his smoke

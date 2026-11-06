@@ -125,7 +125,7 @@ function checkClear() {
 const trailCell = (x, z) => !solid(x, z) && !propRadius(cellAt(x, z)) && !pyrAt(x, z) && cellAt(x, z) !== 'g';
 // clear straight line for the trail between two points: no wall or prop, and no ledge (the ground's height changes gently all along)
 function trailClear(a, b) {
-  if (!losCover(a, b, 0.45)) return false;
+  if (!clearOfCover(a, b, 0.45)) return false;
   const d = Math.hypot(b.x - a.x, b.z - a.z),
     n = Math.ceil(d / 0.4);
   let y = heightAt(a.x, a.z);

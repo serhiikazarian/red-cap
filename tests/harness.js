@@ -103,7 +103,7 @@ function install() {
         const x = e.pos.x + Math.cos((a / 16) * 6.283) * r,
           z = e.pos.z + Math.sin((a / 16) * 6.283) * r,
           [ix, iz] = cellOf(x, z);
-        if (!solid(ix, iz) && lineOfSight(new THREE.Vector3(x, 1, z), e.pos)) return [x, z];
+        if (!solid(ix, iz) && clearOfWalls(new THREE.Vector3(x, 1, z), e.pos)) return [x, z];
       }
     return null;
   };
