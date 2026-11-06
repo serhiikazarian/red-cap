@@ -347,7 +347,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - After a wall the camera waits 0.28 s of clear way before pulling back out (`CAM_EASE.hold`, was 0.2).
 - Floor one: the drifting faces, glasses and boxes no longer push the camera in and out as they float across its arm; they
   only fade (`camThruFloaters` in 04-floors, `seeInside`'s `skipDyn`).
-- The Geezer's stare goes past the easels (too small to hide behind): only walls and pillars hide Red Cap from it, when he
-  picks a stare or a blink and when the stare lands (`geezerSees`, `losCover`'s `props`).
+- The Geezer's stare goes past the easels (too small to hide behind): only walls and pillars hide Red Cap from it
+  (`geezerSees`, `losCover`'s `props`). Behind an easel he still blinks round it now and then, just to spook.
 - The crosshair locked on the Grump is white, not yellow (pebbles bounce off him); still red when the yo-yo reaches him
   (`proof` class on the reticle, from his `bounce` hook).
+- Title label `v1.40`.

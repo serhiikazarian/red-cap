@@ -1,6 +1,6 @@
 // The Geezer (Y): floor one's boss. Stares people mad, mostly himself, in mirrors.
 
-// his stare: walls and pillars hide Red Cap from it; an easel is too small to
+// his stare: walls and pillars hide Red Cap from it; an easel is too small to (though he still blinks round one, to spook)
 const geezerSees = e => losCover(e.pos, hero.pos, 0.3, false);
 
 // a big floating head, with two eye glows over the painted eyes
@@ -81,8 +81,8 @@ const GEEZER_STATES = {
         e.side = Math.random() < 0.5 ? 1 : -1;
         floatWord('HMMPH', e.pos.clone().setY(5.2), HEX.paper, 1);
         SFX.growl();
-      } else if (!geezerSees(e) ? Math.random() < 0.5 : p2 && Math.random() < 0.45) {
-        // hidden from him (or now and then in his second half): he blinks to where he can see you
+      } else if (!losCover(e.pos, hero.pos) ? Math.random() < 0.5 : p2 && Math.random() < 0.45) {
+        // hidden from him, an easel too, just to spook (or now and then in his second half): he blinks to where he can see you
         e.st = 'blink';
         e.t = 0.45;
         playNoise({ dur: 0.4, f: 3000, f2: 300, q: 2, gain: 0.2 });
