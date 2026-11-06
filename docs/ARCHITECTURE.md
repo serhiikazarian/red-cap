@@ -36,7 +36,10 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   point, `cellMid(i)` the middle of cell i in metres.
 - Random set dressing must pass `clearOf(x, z, r)`; story things claim ground with `keepOut(x, z, r)`; `storyGround()` lays
   down the map's story cells and talkers.
-- Map legend and per-floor settings live in `FLOORS` (04-floors); the optional fields `start` and `pitch` set the opening view.
+- Map legend and per-floor settings live in `FLOORS` (04-floors); the optional fields `start` and `pitch` set the opening view,
+  `camThruFloaters` (floor one: drifting things never push the camera in) and `strayShots` (floor two: see Talkers).
+- `lineOfSight` counts walls only; `losCover` also pillars and props, or pillars only with `props = false` (the Geezer's stare:
+  `geezerSees`; his blink still treats an easel as cover, to spook).
 
 ## Drawing and the ink pass (02-render, 03-textures)
 - Red Cap's cards use `markInk` blending (clears render-target alpha) and `featherEdge`; the post pass skips ink near
@@ -64,7 +67,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 ## See-through (56-see-through: its header comment has the full rules)
 - Anything that can stand between the camera and the fight is registered while the floor is built: `seeThru(o, dyn, how)`.
   `'hard'` (onlookers, floor one's easels) only keeps the camera off, never fades; `'plain'` fades evenly without a contour;
-  the default fades with a contour. A new big prop or floater must be registered, or the camera can sit inside it.
+  the default fades with a contour. A new big prop or floater must be registered, or the camera can sit inside it (except on
+  a floor with `camThruFloaters`: `camReach` passes `seeInside` its `skipDyn`, so moving things only fade).
   Serj's decision: onlookers and easels stay out of any further see-through tweaks.
 - `seePrep` gives each a shape (column, spheres per part, box); a group can give its own spheres in `userData.seeSph`.
   `bakeStatics` bakes each see-through thing on its own so it can fade alone. `seeWarm` builds the faded shaders at load.
@@ -93,6 +97,12 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Other state machines follow the same table form, one step per state, returning true when a thing is done:
   `MINE_STATES` (bear traps), `GRUMP_STATES`, `SLAB_STATES` (the Jester's falling masks), `JAW_STATES` and `HAIR_STATES`
   (the hidden boss). Red Cap's yo-yo chain: `yoyoChained()` (the next throw within `YOYO_CHAIN`, press to press).
+- Reeling (`leaveReeling`, `REEL`, `reelLeft` in 20-talkers): down to a sliver and dazed, for Red Cap to finish; a trap does it
+  to a boss, a stray shot to anyone. Stray shots (21-shots `shotHitsTalker`, floors with `strayShots`): fire and blood that hit
+  a small talker do `STRAY_DMG`, never to the thrower (`shot.by`), a boss or the caged, never the last blow; insults fly past.
+  `touchesTalker(e, p, pad)` is the shared hit shape (pebbles too).
+- The crosshair's lock: yellow, red when the yo-yo reaches (`reach`), white on a pyramid (`pyr`) or on a talker pebbles bounce
+  off (`proof`, from its `bounce` hook: the Grump).
 - Shout rings (the Grump's `emitWave`, the totems' `totemRingMat`) are open cylinders wrapped in `waveTex`; their back
   faces are drawn plain yellow (`RING_INSIDE_GLSL`) so the words never read mirrored. The Grump's adds the tear where blocks
   and walls stand (`waveCompile`: `waveWallGLSL`, `waveBlocksGLSL`); both have `warmSet` stand-ins.
@@ -111,7 +121,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Menu buttons and the exit door enter a floor in steps: `state` `'leave'` (the ink veil, 0.36 s) → `'build'` (the paper scrap
   while the floor is built: planned 1.4 s for floor one, 0.7 s for two, 3 s for three) → `'intro'`. Plain `startGame()` /
   `enterFloor(i)` still build at once.
-- Loading does real work: `warmUp` pre-draws `WORDS_SEED` + `WORDS_FLOOR[floor]` + words used this session and every `TEX`;
+- Loading does real work: `warmUp` pre-draws `WORDS_SEED` + `WORDS_FLOOR[floor]` + words used this session and every `TEX`
+  (a word with `\n` breaks there; `spacedWord` puts thin spaces between letters: the Jester's NOT FUNNY);
   `warmSet` compiles every material/shader variant from stand-ins; then `calibrate()`.
 - The death screen stops drawing the world (`deadStill`). HUD elements are cached in `HUD`; write to the DOM only on change.
   Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms)`.
@@ -161,6 +172,7 @@ strokes are typed out there), `style.css`, `assets/` (`img/*.webp` → ASSETS, `
 
 ## Not verified by playing
 On a real GPU: the loading's chosen sharpness, the scissors' pace, low-end frame rate, floor three's busiest moments (smoke,
-fog wall), the 1.38 camera speeds. By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the exhale. By
+fog wall), the 1.38 camera speeds and the 1.40 wall wait (0.28 s). By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the exhale. By
 feel: the yo-yo's hit-stop in slow motion, the 0.85 s chain, see-through fades in motion, Grump ring cracks, hologram gaze
-timing, Bruno's circle, talkers breaking pyramids. Touch on a real phone; controller on hardware.
+timing, Bruno's circle, talkers breaking pyramids, floor one's floaters passing through the camera, floor two's stray
+shots (how often Grins reel), Spike's pebble odds. Touch on a real phone; controller on hardware.

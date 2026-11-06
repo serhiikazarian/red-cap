@@ -1,6 +1,22 @@
 // Onlookers: the Hat (hums), Spike (giggles), Long Hair (exhales smoke and opinions). They stand against walls, turn to watch
 // Red Cap, step aside, and some slip him pebbles. Long Hair's smoke hides him from shooters. Hit one and they turn their back
 // for good (and shake out pebbles, or a heart if he has been on his last tie a while).
+// pebbles shaken out when hit: [how many, chance] (chances add to 1); an onlooker not listed always shakes out HIT_PEBBLES_ELSE
+const HIT_PEBBLES = {
+    npc_spike: [
+      [2, 0.2],
+      [1, 0.7],
+      [0, 0.1]
+    ]
+  },
+  HIT_PEBBLES_ELSE = 2;
+function hitPebbles(kind) {
+  const odds = HIT_PEBBLES[kind];
+  if (!odds) return HIT_PEBBLES_ELSE;
+  let r = Math.random();
+  for (const [n, p] of odds) if ((r -= p) < 0) return n;
+  return 0;
+}
 
 // one onlooker against a wall (each a slightly different height); whether it will give pebbles is rolled once
 function makeBystander(kind, x, z, wallYaw) {
@@ -151,7 +167,7 @@ function hitNpc(p, rad) {
     playTone({ f: 330, f2: 130, dur: 0.35, type: 'sawtooth', gain: 0.07, filt: [900, 300] });
     npcVoice(n, 0.5);
     burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [COL.paper, COL.smoke, COL.ink], 8, 3, 0.14);
-    giveAmmo(2, n.pos);
+    giveAmmo(hitPebbles(n.kind), n.pos);
     if (!G.npcHint) {
       G.npcHint = true;
       toast('They will remember that.');

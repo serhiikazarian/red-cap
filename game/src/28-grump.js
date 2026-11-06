@@ -20,7 +20,7 @@ const SHOUT_GEO = share(new THREE.CylinderGeometry(1, 1, 1.6, 56, 1, true)); // 
 // eight metres of STOP TALKIN' SH#T: one big paper figure
 function makeGrump(e, add) {
   Object.assign(e, {
-    name: 'The Grump',
+    name: 'Grump',
     hp: 11,
     maxHp: 11,
     r: 2.7,

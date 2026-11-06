@@ -226,9 +226,10 @@ function seeIn(p, s, pad) {
     ? p.y > s.y0 - pad && p.y < s.y1 + pad && Math.hypot(p.x - s.x, p.z - s.z) < s.r + pad
     : p.distanceToSquared(s.c) < (s.r + pad) * (s.r + pad);
 }
-function seeInside(p, pad) {
+// skipDyn: leave out the moving things
+function seeInside(p, pad, skipDyn) {
   for (const c of G.see) {
-    if (c.off || c.gone || !c.near) continue;
+    if (c.off || c.gone || !c.near || (skipDyn && c.dyn)) continue;
     for (const s of c.w) if (seeIn(p, s, pad)) return true;
   }
   return false;

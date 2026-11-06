@@ -29,6 +29,7 @@ const FLOORS = [
     wallH: [3.2, 5.5],
     words: COL.paper,
     deco: 'corridor',
+    camThruFloaters: true, // the drifting faces, glasses and boxes never push the camera in (they only fade)
     yaw: Math.PI,
     drone: { notes: [46.25, 69.3], wave: 'sawtooth', cut: 260, lfo: 0.07, gain: 0.1 },
     firstUsher: [9, 6],
@@ -91,6 +92,7 @@ const FLOORS = [
     wallH: [3.4, 6],
     words: COL.bile,
     deco: 'mouth',
+    strayShots: true, // the talkers' shots hurt the small talkers they hit by accident (21-shots)
     yaw: -2.85, // the start: Red Cap by the first pyramid, looking down the raised room past its two traps (the first Grin, close on
     // his left, stays out of view even on a 21:9 screen)
     pitch: 0.6,

@@ -414,7 +414,7 @@ function livingDyingNext() {
   const lines = {
     hair: 'The hair comes loose first.',
     eyeL: 'The eyes tear free. Two of them.',
-    jaw: 'The jaw drops off and starts hoppin’. Make it hit a wall.',
+    jaw: 'The jaw starts hoppin’.',
     skull: 'Only the skull is left.'
   };
   toast(lines[names[0]]);

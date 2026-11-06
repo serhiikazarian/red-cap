@@ -342,3 +342,27 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Docs synced to this build: `CLAUDE.md` condensed (half the size; the file map and the not-verified list moved to
   `docs/ARCHITECTURE.md`), which now also covers the state tables, the shout rings' inside and the ending's clean screen.
 - Title label `v1.39`.
+
+## 1.40 (6 Nov 2026)
+- After a wall the camera waits 0.28 s of clear way before pulling back out (`CAM_EASE.hold`, was 0.2).
+- Floor one: the drifting faces, glasses and boxes no longer push the camera in and out as they float across its arm; they
+  only fade (`camThruFloaters` in 04-floors, `seeInside`'s `skipDyn`).
+- The Geezer's stare goes past the easels (too small to hide behind): only walls and pillars hide Red Cap from it
+  (`geezerSees`, `losCover`'s `props`). Behind an easel he still blinks round it now and then, just to spook.
+- The crosshair locked on the Grump is white, not yellow (pebbles bounce off him); still red when the yo-yo reaches him
+  (`proof` class on the reticle, from his `bounce` hook).
+- Floor two: the talkers' shots (a Grin's fireball, the Priest's blood; not Bruno's insults) hurt a small talker they hit by
+  accident, a pebble's blow (0.75); never the one who threw it, never a boss or the caged, and never the last blow: one
+  that would tear it leaves it REELIN’ for Red Cap to finish (`strayShots` in 04-floors, `shotHitsTalker`, `STRAY_DMG`).
+  Reeling shared with the traps (`leaveReeling`, `REEL` in 20-talkers); the pebble's hit test shared (`touchesTalker`).
+- Spike, hit, shakes out 2 pebbles 20% of the time, 1 70%, none 10% (was always 2; the Hat and Long Hair still give 2):
+  `HIT_PEBBLES`, `hitPebbles` in 41-bystanders.
+- Hints rewritten by Serj: the Jester's "Immune when masked. Ring a totem.", the hidden boss's jaw "The jaw starts hoppin’.",
+  the Geezer's "Avoid Geezer’s gaze."
+- "The Grump" is now just "Grump": his health bar, the gallery card and the end screen's list.
+- The Jester: no BACK ON when his mask goes back on; his second half starts with NOT / FUNNY (on two lines, letters spaced
+  out: `spacedWord`; was ENOUGH). A floating word may set its own line break with `\n` (`wordTex`).
+- Replays and pictures remade (the camera's wall wait changed floor three's, the stray shots the Priest fight's).
+- Docs synced: `CLAUDE.md` (floor two's stray shots), `docs/ARCHITECTURE.md` (floor fields `camThruFloaters` and `strayShots`,
+  `losCover`'s `props`, reeling and stray shots, the crosshair's colours, `\n` in a word, the not-verified list).
+- Title label `v1.40`.
