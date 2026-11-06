@@ -417,3 +417,4 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   and Space only toggled the music again. A click or tap on it now hands the focus back to Start (moved to it with the arrow
   keys, Enter still toggles it). Behind it a second fault: the focus that follows the mouse took the button back when its
   icon swapped under the pointer; it now moves only when the mouse reaches another button (`hoverBtn`, 61-menus).
+- Title label `v1.44`.

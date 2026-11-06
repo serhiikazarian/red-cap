@@ -128,6 +128,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   (`sprayFollow`). The Jester's laugh and the Grump are never distance-faded.
 
 ## Loading and flow (60-flow, 61-menus, 64-loop)
+- Menu focus: arrows / Tab / WASD move it, Enter / Space press the focused button; it follows the mouse only onto another
+  button (`hoverBtn`). A click on the title's music button hands it back to Start.
 - Phones (`touchUI`, pointer coarse) play on their side: upright, `#turn` covers everything and play pauses. Short windows
   (under 520 px tall) get compact paged sheets (catalogue, win); `catLayout` fits whole rows of cards per page.
 - Menu buttons and the exit door enter a floor in steps: `state` `'leave'` (the ink veil, 0.36 s) → `'build'` (the paper scrap
