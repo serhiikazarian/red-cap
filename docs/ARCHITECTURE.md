@@ -90,6 +90,12 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - `e.mats` are brought back to no tint (or the hit flash's red) every frame, written only where the colour differs
   (`HIT_RED`, `NO_TINT`): another writer's colour (the Jester's blink) is undone the next frame, so coloured parts use
   textures or vertex colours. A caged talker's cage is `e.cage`.
+- Other state machines follow the same table form, one step per state, returning true when a thing is done:
+  `MINE_STATES` (bear traps), `GRUMP_STATES`, `SLAB_STATES` (the Jester's falling masks), `JAW_STATES` and `HAIR_STATES`
+  (the hidden boss). Red Cap's yo-yo chain: `yoyoChained()` (the next throw within `YOYO_CHAIN`, press to press).
+- Shout rings (the Grump's `emitWave`, the totems' `totemRingMat`) are open cylinders wrapped in `waveTex`; their back
+  faces are drawn plain yellow (`RING_INSIDE_GLSL`) so the words never read mirrored. The Grump's adds the tear where blocks
+  and walls stand (`waveCompile`: `waveWallGLSL`, `waveBlocksGLSL`); both have `warmSet` stand-ins.
 
 ## Sound (01-audio)
 - Synth: `playTone`, `playNoise`, `SFX.*`. Recorded clips: `playClip(name)` → `{ s, g }` (null before decoding; `AUDIO.buf` is filled
@@ -111,6 +117,9 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms)`.
   The boss bar (`bossBar`) shows a talker's `bar(e)`: `[text, lit, word]`, where `word` (EXPOSED, UNMASKED, WINDED) flashes
   as a big word with "Attack him!" once as the opening begins, and the small line under the name stays empty meanwhile.
+- Talkers left: `updateLeft` (on each talker gone) calls 1 TALKER LEFT (`lastCall`) when the count drops to one. A Smoker
+  away in his smoke still counts (unseen); a hidden boss counts only once woken. From the Jester's final blow (`G.finalFx`)
+  there is no call, and taking his mask clears the screen's words (`quietScreen`): the ending plays on a clean picture.
 
 ## Testing (tests/)
 - Playwright + swiftshader (`tests/browser.js`), viewport 880×500. First render of new shaders is slow (tens of seconds).

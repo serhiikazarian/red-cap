@@ -339,4 +339,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   counted (most often Brainless the Second away in his smoke, unseen but counted; or the hidden boss, if woken):
   `updateLeft` checks `G.finalFx`. Taking his mask clears whatever words and hint are showing (`quietScreen`, 07-hud).
 - Tidy: the hair's lash state points straight at `livingDyingHairLash` (it only passed the call on).
+- Docs synced to this build: `CLAUDE.md` condensed (half the size; the file map and the not-verified list moved to
+  `docs/ARCHITECTURE.md`), which now also covers the state tables, the shout rings' inside and the ending's clean screen.
 - Title label `v1.39`.
