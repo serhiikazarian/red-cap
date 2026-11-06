@@ -64,7 +64,7 @@ function geezerWarn(e) {
   e.gazeCaught = false;
   if (e.gazes > 1 && e.caughtRow < GEEZER_WARN_AGAIN) return;
   e.caughtRow = 0;
-  bigWord('GAZING', HEX.bile, 1, 'Take cover!');
+  bigWord('GAZING', 'var(--alarm)', 1, 'Take cover!', 'var(--bile)'); /* the other way round from Attack him!: red, then yellow */
 }
 // his states, one step each (updateGeezer runs the one he is in)
 const GEEZER_STATES = {

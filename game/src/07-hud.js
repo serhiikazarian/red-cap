@@ -26,12 +26,13 @@ function quietScreen() {
   $('#toast').style.opacity = 0;
 }
 // a big word in the middle of the screen (HOT, MISSED, FRENZY ...), with an optional smaller line under it
-function bigWord(text, color, size = 1, under = '') {
+function bigWord(text, color, size = 1, under = '', underColor = '') {
   const el = $('#bigWord');
   el.style.fontSize = size === 1 ? '' : `clamp(${(2.4 * size).toFixed(3)}rem, ${(8 * size).toFixed(3)}vw, ${(5.4 * size).toFixed(3)}rem)`;
   const [word, line] = el.firstChild.children;
   word.textContent = text;
   line.textContent = under;
+  line.style.color = underColor; /* '': the urgent red from style.css */
   el.style.color = color;
   el.classList.remove('on');
   void el.offsetWidth; // restart the animation

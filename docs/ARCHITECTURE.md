@@ -105,6 +105,10 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   `touchesTalker(e, p, pad)` is the shared hit shape (pebbles too).
 - A talker's height: `e.pos.y` / `e.gy` is its ground (raised floor included, unknown until its first move: use `e.gy || 0`),
   `e.fly` how high a flier is drawn above it; shots, words and strands it gives off start at `(e.gy || 0) + e.fly`.
+- Big call-outs (`bigWord(text, colour, size, under, underColor)`, 07-hud): a boss's `bar` hook may name a word that flashes
+  with Attack him! as a state begins (the Priest's EXPOSED; the Jester's UNMASKED only when `e.callOut`, latched as the mask
+  lifts: first time, then after `JESTER_REMIND` s without a blow that hurts). The Geezer calls GAZING / Take cover! himself
+  (`geezerWarn`: first stare, then after `GEEZER_WARN_AGAIN` stares in a row that caught Red Cap).
 - The boss bar (`bossInFight` in 64-loop, `bossBar` in 07-hud): the nearest boss met, within 26 m and with no wall between
   (`clearOfWalls`); out of sight it fades out after 0.3 s (`#boss.on` in style.css), back in at once.
 - The crosshair's lock: yellow, red when the yo-yo reaches (`reach`), white on a pyramid (`pyr`) or on a talker pebbles bounce

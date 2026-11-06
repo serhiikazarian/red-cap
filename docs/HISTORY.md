@@ -405,8 +405,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 
 ## 1.43 (6 Nov 2026)
 - The Geezer: no WINDED / Attack him! call-out (the small WINDED over his head stays). As his first stare begins, GAZING /
-  Take cover! in the same big lettering; again only after two stares in a row have caught Red Cap (`geezerWarn`,
+  Take cover! in the same big lettering, colours swapped (GAZING red, Take cover! yellow: `bigWord`'s `underColor`); again only after two stares in a row have caught Red Cap (`geezerWarn`,
   `GEEZER_WARN_AGAIN`).
 - The Jester: UNMASKED / Attack him! the first time his mask lifts, then again only if Red Cap has gone more than 35 s without
   a blow that hurts him (`JESTER_REMIND`; hitting the mask does not count).
 - Bruno's insults: a short rough bark as he spits each volley (`SFX.bark`).
+- Title label `v1.43`.
