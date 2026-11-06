@@ -61,8 +61,7 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #boss .bar { height: 12px; background: rgba(13,11,10,.75); border: 2px solid var(--paper); margin-top: 4px; transform: rotate(-.6deg); }
 #boss .fill { height: 100%; background: var(--cap); width: 100%; transition: width .2s; }
 #toast { justify-self: center; align-self: end; font-family: var(--display); font-size: clamp(1.45rem, 4.6vw, 2.5rem); line-height: 1.25; text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink); opacity: 0; transition: opacity .4s; transform: translateY(-2vh); text-align: center; max-width: min(82vw, 900px); }
-.hud-bottom { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
-#hint { font-size: .78rem; letter-spacing: .06em; opacity: .75; text-shadow: 1px 1px 0 var(--ink); }
+.hud-bottom { display: flex; justify-content: flex-end; align-items: end; gap: 16px; }
 #weapons { display: flex; gap: 10px; font-family: var(--display); font-size: .95rem; text-shadow: 2px 2px 0 var(--ink); }
 #weapons span { padding: 2px 8px; border: 2px solid var(--paper); transform: rotate(-1deg); }
 #weapons span.cd { opacity: .4; }
@@ -196,4 +195,4 @@ button:focus, button:focus-visible { outline: none; }
 #bYoyo { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(118px + env(safe-area-inset-bottom, 0px)); background: var(--cap); }
 #bSling { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); background: #6b5a2a; }
 #bDodge { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); background: #3a332c; }
-@media (max-width: 560px) { .title-row { grid-template-columns: 1fr auto; } .title-row img { --h: 96px; } #hint { display: none; } }
+@media (max-width: 560px) { .title-row { grid-template-columns: 1fr auto; } .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }

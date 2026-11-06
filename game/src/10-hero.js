@@ -1,8 +1,15 @@
 // Red Cap: his paper body, getting hurt, aiming, the dodge, and moving him every frame (updHero).
 // His weapons are in 11-weapons.js. The state object `hero` is declared with the world state (05-world.js).
 let yoyoMesh, stringMesh;
-// legs, body and head cut from his painting, each a paper card with a soft ink outline; and the yo-yo
+// Red Cap and his yo-yo
 function buildHero() {
+  const root = heroFigure();
+  groundShadow(root, 0.6, 0.35, 0.4);
+  buildYoyo();
+  return root;
+}
+// legs, body and head cut from his painting, each a paper card with a soft ink outline (hero.root, hero.parts)
+function heroFigure() {
   const S = SHAPES,
     top = S.hero_head.box[1],
     foot = Math.max(S.hero_leg_l.box[3], S.hero_leg_r.box[3]);
@@ -52,8 +59,10 @@ function buildHero() {
     inks,
     mats: [body.m, head.m, ...legs.map(l => l.children[0])].map(m => m.userData.mat)
   };
-  groundShadow(root, 0.6, 0.35, 0.4);
-  // the yo-yo: two red discs, a yellow axle ring, and a string
+  return root;
+}
+// the yo-yo: two red discs, a yellow axle ring, and a string (yoyoMesh, stringMesh)
+function buildYoyo() {
   yoyoMesh = new THREE.Group();
   const disc = new THREE.CylinderGeometry(0.32, 0.32, 0.1, 20);
   const red = new THREE.MeshBasicMaterial({ color: COL.tie }),
@@ -75,7 +84,6 @@ function buildHero() {
   yoyoMesh.visible = false;
   stringMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 4), new THREE.MeshBasicMaterial({ color: COL.ink }));
   stringMesh.visible = false;
-  return root;
 }
 // stunned: the Geezer's stare (FRENZY, the page swirls by psy) or, light, a cough of smoke
 function stunHero(t, light, psy) {
@@ -125,7 +133,7 @@ function hurtHero0(dmg, from, pierce) {
   cam.hurt = 0.34;
   SFX.hurt();
   $('#hurt').style.opacity = 1;
-  setTimeout(() => ($('#hurt').style.opacity = 0), 160);
+  setTimeout(() => ($('#hurt').style.opacity = 0), 160); // screen time, not later(): later() stops on death and would leave it red
   burst(hero.pos.clone().setY(hero.pos.y + 1.2), [COL.cap, 0x7a1d14, 0x3a6fb5], 10, 4, 0.14);
   drawTies();
   if (hero.hp <= 0) die();

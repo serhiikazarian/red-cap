@@ -102,7 +102,7 @@ function jawBuddy(dt, now) {
   b.rotation.y = cam.yaw;
   if (hero.jawBuddyJ) hero.jawBuddyJ.set(Math.abs(Math.sin(now * 12)) * 0.7);
   const J = jester();
-  G.jawT = (G.jawT ?? 6) - dt;
+  G.jawT -= dt;
   if (J && G.jawT <= 0 && J.masked && (J.st === 'walk' || J.st === 'idle') && J.pos.distanceTo(hero.pos) < 15) {
     G.jawT = 8;
     floatWord(pick(['NICE MASK', 'CLOWN', 'HA HA HA', 'SHOW YOUR FACE']), b.position.clone().setY(3.2), HEX.bile, 0.9);

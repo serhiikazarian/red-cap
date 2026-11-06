@@ -84,7 +84,7 @@ function bombBlast(x, z) {
   slowT = Math.max(slowT, 0.25);
   const fl = $('#flash');
   fl.classList.add('on');
-  setTimeout(() => fl.classList.remove('on'), 110);
+  setTimeout(() => fl.classList.remove('on'), 110); // screen time, not later(): a lethal blast stops later()
   SFX.boom();
   for (let i = 0; i < 3; i++) burst(p.clone().setY(p.y + i * 0.6), [0xfff0a0, COL.bile, COL.hot, COL.tie, 0x1a1618], 45, 13, 0.36, { g: 9 });
   for (let i = 0; i < 12; i++) smokePuff(p.clone().add(new THREE.Vector3(rand(-2.2, 2.2), rand(0, 2), rand(-2.2, 2.2))), rand(2, 3.4), 1.6, 1.2);

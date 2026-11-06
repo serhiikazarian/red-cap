@@ -255,3 +255,45 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `updatePlaybackRate`, which keeps the place they are drawn at (setting the time again pulled them back while the page was
   busy).
 - Title label `v1.34`.
+
+## 1.35 (6 Nov 2026)
+- The yo-yo's hit-stop counts down in unslowed time: inside slow motion (a bomb, the Jester stunned or torn) it lasted five
+  times too long. The Jester replay's baseline is remade for it.
+- The real-time screen flashes and hints (`setTimeout`) carry a note on why they don't use `later()`: it stops on death and
+  doesn't run on the title.
+- The six longest functions split into named steps, no change in play or looks: `updEnemy` (`updCaged`, `updDazed`,
+  `keepClear`), `updCamera` (`camPivotAt`, `pushOffWall` for both wall pushes, `camReach`, `camEase`, `heroFade`,
+  `updReticle`), `pyramid` (`pyrBuild`, `pyrShape`, `pyrInkRim`, `pyrCut`), `dreamBlocks` (`paperBirds`, `blockCritters`,
+  `pastelMotes`), `ldHair` (`ldHairSway`, `ldHairPick`, `ldHairLash`, `ldHairSnare`), `decorNarcissism` (`narcPortraits`,
+  `narcMirrors`, `narcNewsprint`, `narcGlasses`, `narcPages`).
+- The other 24 functions of 68 lines or more split the same way, no change in play or looks: `addWebs` (`cornerWebs`,
+  `faceWebs`, `stripWebs`, `webMesh`), `webTex` (`webCorner`, `webStrip`), `buildCells` (`buildCell`, `wallMaterials`,
+  `blockWall`, `tallWall`, `standing`), `dreamMouth` (one step per decoration), `clutter` (one builder per kind), `guidePath`
+  (`guideLamp`), `updWarn` (`warnMarkers`, `warnPlace`, `warnGlow`), `fogWall` (`fogMat`, `fogPuffs`, `fogTick`),
+  `updPaperTrail` (`trailStart`, `trailGeo`, `trailLay`), `seePrep` (`seePyrShape`, `seeColumn`, `seeSpheres`), `seeTick`
+  (`seeFocus`, `seeWant`, `seeLine`, `seeApply`), `touchControls`, `pollPad` (`padPlay`, `padMenu`), `ambience`, `updGrin`,
+  `grinBall`, `pyrScream` (`screamBus`, `screamVoices`), `buildPyramid`, `buildProp`, `buildHero` (`heroFigure`,
+  `buildYoyo`), `updBruno`, `buildCages` (`brunoStake`, `ironCage`), `addPaintings`, `enterFloor` (`floorSupplies`,
+  `floorCut`). The unread cobweb counter `G.strips` is gone. Nothing in `game/src` is 68 lines or longer now.
+- `cellMid(i)` (05-world, next to `cellOf`): the middle of a cell in metres, in place of `i * CELL + CELL / 2` and
+  `(i + 0.5) * CELL` written out 71 times (the same numbers for whole cells); `blockWall` and `tallWall` work it out themselves from the cell.
+- Every field of `G` is declared in `newFloor` now (33 were first set elsewhere: `G.doorT`, `G.npcHearts`, the hints, the
+  final blow's, the secret's, …), starting as they behaved unset; the `|| 0`, `?? 6` and `|| 1` fallbacks are gone.
+- `updEnemy`: a caged talker reaches its cage directly (`e.cage`, set by `buildCages`) instead of searching `G.cages` every
+  frame; the stances that keep their own sway are one set made once (`OWN_SWAY`), not a list built per talker per frame.
+  The hit-flash colour is still checked every frame (the Jester's blink relies on it being undone), but each material is
+  written only when its colour is not already the one wanted (`HIT_RED`, `NO_TINT`).
+- The floating-word lists (`WORDS_FLOOR`, 03-textures) name core colours (`${HEX.paper}` …) instead of typing them out
+  (69 places); the lists come out the same, character for character.
+- CI: pushes to `prerelease` build and check the game and keep it as a download on the run's page (30 days); only `main`
+  publishes, tags and releases (a manual run on another branch could publish before).
+- Tried on the `prerelease` branch first, then shipped to `main`. On `prerelease` four times: the second 1.35 added the 24
+  splits, the third `cellMid` and the two `G` fields, the fourth the rest of `G`, the cage link, the review's fixes and the
+  word lists' colours; the hit-flash check came with the ship.
+- Title label `v1.35`.
+
+## 1.36 (6 Nov 2026)
+- Phones: no more lines sliding across floors and walls. The ink pass now reads depth at high precision (many phone GPUs
+  rounded it into steps that the outlines drew as lines).
+- Jester: no more RETURN TO SENDER word when a fallen face is knocked back at him.
+- The "Esc pauses · M mutes" hint is gone from the bottom of the screen; the weapon labels keep their place.

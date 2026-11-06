@@ -48,131 +48,139 @@ function pyrParts(pos, split) {
   }
   return parts;
 }
-// a pyramid's mesh; the first call builds the shared shape (the model scaled to PYR_H, the capstone swapped for the orb), its
-// material, its parts, the pool, and the rim (the same triangles with smoothed normals, pushed out in screen space)
+// a pyramid's mesh; the first call builds the shared shape (pyrBuild)
 function pyramid() {
-  if (!PYR) {
-    const S = PYR_SRC,
-      keep = [];
-    for (let t = 0; t < S.idx.length; t += 3)
-      if (!(Math.min(...[0, 1, 2].map(j => S.pos[S.idx[t + j] * 3 + 1])) > PYR_CAP_Y)) keep.push(S.idx[t], S.idx[t + 1], S.idx[t + 2]);
-    const orb = new THREE.SphereGeometry(PYR_ORB[0], 24, 16).toNonIndexed(),
-      n = keep.length + orb.attributes.position.count,
-      pos = new Float32Array(n * 3),
-      uv = new Float32Array(n * 2),
-      col = new Float32Array(n * 3);
-    let lo = Infinity,
-      hi = -Infinity;
-    for (let i = 1; i < S.pos.length; i += 3) {
-      lo = Math.min(lo, S.pos[i]);
-      hi = Math.max(hi, S.pos[i]);
-    }
-    const k = PYR_H / (hi - lo); // its foot on the ground, PYR_H tall
-    keep.forEach((v, i) => {
-      pos.set([S.pos[v * 3] * k, (S.pos[v * 3 + 1] - lo) * k, S.pos[v * 3 + 2] * k], i * 3);
-      uv.set([S.uv[v * 2], S.uv[v * 2 + 1]], i * 2);
-      col.set(
-        S.pal.slice(S.col[v] * 3, S.col[v] * 3 + 3).map(c => lerp(c, 1, PYR_LIFT)),
-        i * 3
-      );
-    });
-    const OP = orb.attributes.position,
-      OU = orb.attributes.uv,
-      oc = PYR_ORB_COL.map(c => lerp(c, 1, PYR_ORB[2]));
-    for (let j = 0, i = keep.length; j < OP.count; j++, i++) {
-      pos.set([OP.getX(j) * k, (OP.getY(j) + PYR_ORB[1] - lo) * k, OP.getZ(j) * k], i * 3);
-      uv.set([0.54 + 0.42 * OU.getX(j), 0.54 + 0.42 * OU.getY(j)], i * 2); // the painting's top quarter, wrapped round it
-      col.set(oc, i * 3);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    g.computeVertexNormals(); // flat: every triangle has its own corners
-    for (let j = 0, i = keep.length; j < OP.count; j++, i++) {
-      const v = new THREE.Vector3(OP.getX(j), OP.getY(j), OP.getZ(j)).normalize(); // but the orb is smooth
-      g.attributes.normal.setXYZ(i, v.x, v.y, v.z);
-    }
-    orb.dispose();
-    PYR = {
-      geo: share(g),
-      // the painted texture, the model's colours (lifted) and glow: lit paper, like everything here
-      mat: share(
-        new THREE.MeshLambertMaterial({
-          map: TEX.pyr_base,
-          emissiveMap: TEX.pyr_glow,
-          vertexColors: true,
-          color: new THREE.Color(PYR_BRIGHT, PYR_BRIGHT, PYR_BRIGHT),
-          emissive: new THREE.Color(...PYR_GLOW),
-          side: THREE.DoubleSide
-        })
-      ),
-      parts: pyrParts(
-        S.pos.map((v, i) => (i % 3 === 1 ? v - lo : v) * k),
-        (PYR_SPLIT - lo) * k
-      ) // with the capstone, not the orb
-    };
-    PYR.foot = PYR.parts[0].b0 + PYR_PAD; // the square Red Cap and the talkers are kept out of: half its side
-    PYR.turn = Math.atan2(PYR.parts[0].sn, PYR.parts[0].cs); // the body's own turn in the model
-    PYR.core = PYR.parts[1].y0 + 0.04 * PYR_H; // the glowing core's height, between the body and the orb
-    // a pool of red light on the floor (additive, no depth written: light, not things)
-    const glow = { map: glowRed, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false };
-    PYR.poolM = share(new THREE.MeshBasicMaterial({ ...glow, opacity: 0.45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
-    PYR.poolG = share(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2));
-    // its ink rim: the same triangles with each corner's normal averaged over the faces that meet there (no gaps open at the edges)
-    {
-      const rg = g.clone(),
-        P = rg.attributes.position,
-        N = rg.attributes.normal,
-        sum = new Map(),
-        key = i => P.getX(i).toFixed(3) + ',' + P.getY(i).toFixed(3) + ',' + P.getZ(i).toFixed(3);
-      for (let i = 0; i < P.count; i++) {
-        const k = key(i),
-          v = sum.get(k) || new THREE.Vector3();
-        sum.set(k, v.add(new THREE.Vector3(N.getX(i), N.getY(i), N.getZ(i))));
-      }
-      for (let i = 0; i < P.count; i++) {
-        const v = sum.get(key(i)).clone().normalize();
-        N.setXYZ(i, v.x, v.y, v.z);
-      }
-      rg.deleteAttribute('uv');
-      rg.deleteAttribute('color');
-      PYR.rimGeo = share(rg);
-      PYR.rimMat = share(
-        new THREE.ShaderMaterial({
-          uniforms: { res: { value: new THREE.Vector2(1, 1) }, w: { value: PYR_RIM }, ink: { value: new THREE.Color(COL.ink) } },
-          vertexShader: `uniform vec2 res; uniform float w;
-            void main(){
-              vec4 c = projectionMatrix * modelViewMatrix * vec4(position, 1.);
-              vec2 n = (projectionMatrix * modelViewMatrix * vec4(normal, 0.)).xy * res;
-              c.xy += normalize(n + vec2(1e-6)) / res * 2. * w * c.w;
-              gl_Position = c;
-            }`,
-          fragmentShader: `uniform vec3 ink; void main(){ gl_FragColor = vec4(ink, 1.); }`,
-          side: THREE.BackSide
-        })
-      );
-    }
-    // the orb is its own mesh (it turns); the body is the rest; the rim keeps both
-    const cut = (a, b, dy) => {
-      const q = new THREE.BufferGeometry();
-      for (const [name, sz] of [
-        ['position', 3],
-        ['normal', 3],
-        ['uv', 2],
-        ['color', 3]
-      ]) {
-        const arr = g.attributes[name].array.slice(a * sz, b * sz);
-        if (dy && name === 'position') for (let i = 1; i < arr.length; i += 3) arr[i] -= dy;
-        q.setAttribute(name, new THREE.BufferAttribute(arr, sz));
-      }
-      return share(q);
-    };
-    PYR.orbY = (PYR_ORB[1] - lo) * k;
-    PYR.orbGeo = cut(keep.length, n, PYR.orbY);
-    PYR.geo = cut(0, keep.length);
-  }
+  if (!PYR) pyrBuild();
   return new THREE.Mesh(PYR.geo, PYR.mat);
+}
+// the shared pyramid: the shape, its material, its parts, the pool, the rim, and the body and orb as separate meshes
+function pyrBuild() {
+  const { g, body, n, lo, k } = pyrShape();
+  PYR = {
+    // the painted texture, the model's colours (lifted) and glow: lit paper, like everything here
+    mat: share(
+      new THREE.MeshLambertMaterial({
+        map: TEX.pyr_base,
+        emissiveMap: TEX.pyr_glow,
+        vertexColors: true,
+        color: new THREE.Color(PYR_BRIGHT, PYR_BRIGHT, PYR_BRIGHT),
+        emissive: new THREE.Color(...PYR_GLOW),
+        side: THREE.DoubleSide
+      })
+    ),
+    parts: pyrParts(
+      PYR_SRC.pos.map((v, i) => (i % 3 === 1 ? v - lo : v) * k),
+      (PYR_SPLIT - lo) * k
+    ) // with the capstone, not the orb
+  };
+  PYR.foot = PYR.parts[0].b0 + PYR_PAD; // the square Red Cap and the talkers are kept out of: half its side
+  PYR.turn = Math.atan2(PYR.parts[0].sn, PYR.parts[0].cs); // the body's own turn in the model
+  PYR.core = PYR.parts[1].y0 + 0.04 * PYR_H; // the glowing core's height, between the body and the orb
+  // a pool of red light on the floor (additive, no depth written: light, not things)
+  const glow = { map: glowRed, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false };
+  PYR.poolM = share(new THREE.MeshBasicMaterial({ ...glow, opacity: 0.45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  PYR.poolG = share(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2));
+  PYR.rimGeo = share(pyrInkRim(g));
+  PYR.rimMat = share(
+    new THREE.ShaderMaterial({
+      uniforms: { res: { value: new THREE.Vector2(1, 1) }, w: { value: PYR_RIM }, ink: { value: new THREE.Color(COL.ink) } },
+      vertexShader: `uniform vec2 res; uniform float w;
+        void main(){
+          vec4 c = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+          vec2 n = (projectionMatrix * modelViewMatrix * vec4(normal, 0.)).xy * res;
+          c.xy += normalize(n + vec2(1e-6)) / res * 2. * w * c.w;
+          gl_Position = c;
+        }`,
+      fragmentShader: `uniform vec3 ink; void main(){ gl_FragColor = vec4(ink, 1.); }`,
+      side: THREE.BackSide
+    })
+  );
+  // the orb is its own mesh (it turns); the body is the rest; the rim keeps both
+  PYR.orbY = (PYR_ORB[1] - lo) * k;
+  PYR.orbGeo = pyrCut(g, body, n, PYR.orbY);
+  PYR.geo = pyrCut(g, 0, body);
+}
+// the model scaled to PYR_H (its foot on the ground), the capstone swapped for the orb: one geometry, the body's corners first
+// (body of them), then the orb's (up to n); lo and k map the model's own heights to the floor's
+function pyrShape() {
+  const S = PYR_SRC,
+    keep = [];
+  for (let t = 0; t < S.idx.length; t += 3)
+    if (!(Math.min(...[0, 1, 2].map(j => S.pos[S.idx[t + j] * 3 + 1])) > PYR_CAP_Y)) keep.push(S.idx[t], S.idx[t + 1], S.idx[t + 2]);
+  const orb = new THREE.SphereGeometry(PYR_ORB[0], 24, 16).toNonIndexed(),
+    n = keep.length + orb.attributes.position.count,
+    pos = new Float32Array(n * 3),
+    uv = new Float32Array(n * 2),
+    col = new Float32Array(n * 3);
+  let lo = Infinity,
+    hi = -Infinity;
+  for (let i = 1; i < S.pos.length; i += 3) {
+    lo = Math.min(lo, S.pos[i]);
+    hi = Math.max(hi, S.pos[i]);
+  }
+  const k = PYR_H / (hi - lo); // its foot on the ground, PYR_H tall
+  keep.forEach((v, i) => {
+    pos.set([S.pos[v * 3] * k, (S.pos[v * 3 + 1] - lo) * k, S.pos[v * 3 + 2] * k], i * 3);
+    uv.set([S.uv[v * 2], S.uv[v * 2 + 1]], i * 2);
+    col.set(
+      S.pal.slice(S.col[v] * 3, S.col[v] * 3 + 3).map(c => lerp(c, 1, PYR_LIFT)),
+      i * 3
+    );
+  });
+  const OP = orb.attributes.position,
+    OU = orb.attributes.uv,
+    oc = PYR_ORB_COL.map(c => lerp(c, 1, PYR_ORB[2]));
+  for (let j = 0, i = keep.length; j < OP.count; j++, i++) {
+    pos.set([OP.getX(j) * k, (OP.getY(j) + PYR_ORB[1] - lo) * k, OP.getZ(j) * k], i * 3);
+    uv.set([0.54 + 0.42 * OU.getX(j), 0.54 + 0.42 * OU.getY(j)], i * 2); // the painting's top quarter, wrapped round it
+    col.set(oc, i * 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.computeVertexNormals(); // flat: every triangle has its own corners
+  for (let j = 0, i = keep.length; j < OP.count; j++, i++) {
+    const v = new THREE.Vector3(OP.getX(j), OP.getY(j), OP.getZ(j)).normalize(); // but the orb is smooth
+    g.attributes.normal.setXYZ(i, v.x, v.y, v.z);
+  }
+  orb.dispose();
+  return { g, body: keep.length, n, lo, k };
+}
+// the ink rim: the same triangles with each corner's normal averaged over the faces that meet there (no gaps open at the edges)
+function pyrInkRim(g) {
+  const rg = g.clone(),
+    P = rg.attributes.position,
+    N = rg.attributes.normal,
+    sum = new Map(),
+    key = i => P.getX(i).toFixed(3) + ',' + P.getY(i).toFixed(3) + ',' + P.getZ(i).toFixed(3);
+  for (let i = 0; i < P.count; i++) {
+    const k = key(i),
+      v = sum.get(k) || new THREE.Vector3();
+    sum.set(k, v.add(new THREE.Vector3(N.getX(i), N.getY(i), N.getZ(i))));
+  }
+  for (let i = 0; i < P.count; i++) {
+    const v = sum.get(key(i)).clone().normalize();
+    N.setXYZ(i, v.x, v.y, v.z);
+  }
+  rg.deleteAttribute('uv');
+  rg.deleteAttribute('color');
+  return rg;
+}
+// corners a..b of the pyramid's geometry as a shared mesh of their own, lowered by dy
+function pyrCut(g, a, b, dy) {
+  const q = new THREE.BufferGeometry();
+  for (const [name, sz] of [
+    ['position', 3],
+    ['normal', 3],
+    ['uv', 2],
+    ['color', 3]
+  ]) {
+    const arr = g.attributes[name].array.slice(a * sz, b * sz);
+    if (dy && name === 'position') for (let i = 1; i < arr.length; i += 3) arr[i] -= dy;
+    q.setAttribute(name, new THREE.BufferAttribute(arr, sz));
+  }
+  return share(q);
 }
 // one pyramid in cell (x, z): the baked body (a pillar's see-through rules), the turning orb, the rim drawn by the body, the tie
 // half seen inside, and the pool of light; squared to the corridors (one random number)
@@ -196,8 +204,19 @@ function buildPyramid(x, z, cx, cz, rng) {
   });
   G.group.add(seeThru(still(t), false, 'pyramid'));
   q.see = G.see[t.userData.seeId - 1];
-  // what the slingshot's aim locks on (aimInfo), like a talker: the reticle and a pebble go for its orb
-  q.tgt = {
+  q.tgt = pyrTarget(q, cx, cz);
+  const orb = new THREE.Mesh(PYR.orbGeo, PYR.mat); // not baked: it turns (pyrTick)
+  orb.position.set(cx, PYR.orbY, cz);
+  orb.rotation.set(PYR_ORB_TILT, x * 1.7 + z * 2.3, 0);
+  G.group.add(orb);
+  q.orb = orb;
+  q.rim = pyrRimFor(t);
+  // the tie it holds: pyrTick keeps it on the face towards the camera
+  [q.tie, q.pool] = pyrTieAndPool(cx, cz);
+}
+// what the slingshot's aim locks on (aimInfo), like a talker: the reticle and a pebble go for its orb
+function pyrTarget(q, cx, cz) {
+  return {
     pyr: q,
     pos: new THREE.Vector3(cx, 0, cz),
     r: PYR.foot,
@@ -211,22 +230,22 @@ function buildPyramid(x, z, cx, cz, rng) {
     dying: false,
     hidden: false
   };
-  const orb = new THREE.Mesh(PYR.orbGeo, PYR.mat); // not baked: it turns (pyrTick)
-  orb.position.set(cx, PYR.orbY, cz);
-  orb.rotation.set(PYR_ORB_TILT, x * 1.7 + z * 2.3, 0);
-  G.group.add(orb);
-  q.orb = orb;
+}
+// the ink rim for pyramid t: not in the scene, its pyramid draws it (pyrRim)
+function pyrRimFor(t) {
   if (!G.rimUp) {
     // three.js sends a shape to the graphics card only for things in the scene: an invisible stand-in does it for the rims
     G.rimUp = new THREE.Mesh(PYR.rimGeo, HIDE_MAT);
     G.rimUp.frustumCulled = false;
     G.group.add(G.rimUp);
   }
-  const rim = new THREE.Mesh(PYR.rimGeo, PYR.rimMat); // not in the scene: its pyramid draws it (pyrRim)
+  const rim = new THREE.Mesh(PYR.rimGeo, PYR.rimMat);
   rim.position.copy(t.position);
   rim.rotation.copy(t.rotation);
-  q.rim = rim;
-  // the tie it holds: pyrTick keeps it on the face towards the camera
+  return rim;
+}
+// the tie half seen inside, and the pool of red light round its foot
+function pyrTieAndPool(cx, cz) {
   const tie = paper('tie', 0.5, 0.06),
     tm = tie.userData.mat,
     pool = new THREE.Mesh(PYR.poolG, PYR.poolM);
@@ -247,8 +266,7 @@ function buildPyramid(x, z, cx, cz, rng) {
   pool.position.set(cx, 0.03, cz);
   pool.scale.setScalar(PYR_H * 2);
   G.group.add(tie, pool);
-  q.tie = tie;
-  q.pool = pool;
+  return [tie, pool];
 }
 // the pyramids' glow breathes, all together: their core and scratches (emissive) and the pools on the floor
 function pyrGlow() {
@@ -268,6 +286,11 @@ function pyrScream(n) {
     f0 = two ? 128 : 98,
     vol = (two ? 0.3 : 0.24) * auK(AU.at);
   if (vol < 0.002) return;
+  screamVoices(c, t, two, dur, f0, screamBus(c, t, two, dur, vol));
+  sNoise({ dur: dur * 0.9, f: 1400, f2: 500, q: 1.4, gain: two ? 0.09 : 0.07, a: 0.08 }); // the breath under it
+}
+// the scream's way out: its envelope, distortion, a closing low-pass and a stone vault's echo; returns its input
+function screamBus(c, t, two, dur, vol) {
   const g = c.createGain(),
     sh = c.createWaveShaper(),
     lp = c.createBiquadFilter(),
@@ -292,6 +315,11 @@ function pyrScream(n) {
   fb.connect(dl);
   dl.connect(wet);
   wet.connect(AU.master);
+  return g;
+}
+// the voices, out of tune, with a vibrato, each through three vowel formants closing from "aah" to "ooh"; the second scream
+// adds a shriek
+function screamVoices(c, t, two, dur, f0, g) {
   const voices = [
     [1, 0.5],
     [1.013, 0.45],
@@ -335,7 +363,6 @@ function pyrScream(n) {
   }
   vib.start(t);
   vib.stop(t + dur + 0.05);
-  sNoise({ dur: dur * 0.9, f: 1400, f2: 500, q: 1.4, gain: two ? 0.09 : 0.07, a: 0.08 }); // the breath under it
 }
 // a yo-yo, a pebble or a talker's shot at p (radius rad) against the pyramids: true if it struck one. A volley (the drops of one
 // spray) is one blow to each pyramid it reaches

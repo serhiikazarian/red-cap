@@ -46,8 +46,10 @@ const post = new THREE.ShaderMaterial({
     finC: { value: new THREE.Vector2(0.5, 0.5) }
   },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
+  // tDep is highp: WebGL2 samplers default to lowp, which many phone GPUs honour, rounding depth into steps the outlines
+  // then draw as lines that slide with the camera
   fragmentShader: `
-    uniform sampler2D tCol, tDep, tSee; uniform vec4 seeBox, heroBox; uniform float lite; uniform vec2 px, grainOff, spx, finC; uniform float cn, cf, dotScale, far, psy, time, dpr, seeOn, fin, finT; uniform vec3 inkCol; varying vec2 vUv;
+    uniform sampler2D tCol, tSee; uniform highp sampler2D tDep; uniform vec4 seeBox, heroBox; uniform float lite; uniform vec2 px, grainOff, spx, finC; uniform float cn, cf, dotScale, far, psy, time, dpr, seeOn, fin, finT; uniform vec3 inkCol; varying vec2 vUv;
     float gh(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     float ild(vec2 uv){ float z = texture2D(tDep, uv).x * 2. - 1.; return (cf + cn - z * (cf - cn)) / (2. * cn * cf); } // 1 / linear depth
     float ld(vec2 uv){ return 1. / ild(uv); }
