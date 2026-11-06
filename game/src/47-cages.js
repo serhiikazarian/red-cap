@@ -3,74 +3,79 @@
 function buildCages(F) {
   G.cages = [];
   for (const [x, z, type] of F.cages || []) {
-    const cx = x * CELL + CELL / 2,
-      cz = z * CELL + CELL / 2;
+    const cx = cellMid(x),
+      cz = cellMid(z);
     let e = G.enemies.find(q => q.type === type && cellOf(q.pos.x, q.pos.z)[0] === x && cellOf(q.pos.x, q.pos.z)[1] === z) || makeEnemy(type, cx, cz);
     e.caged = true;
     if (e.fly != null) e.fly = 1.3;
     const g = new THREE.Group();
     g.position.set(cx, heightAt(cx, cz), cz);
     G.group.add(g);
-    if (type === 'Z') {
-      // the stake stands just behind him whichever way the camera looks; the ropes go round both
-      const wood = new THREE.MeshLambertMaterial({ color: 0x9a5a2a, emissive: 0x4a1c08 }),
-        cord = new THREE.MeshLambertMaterial({ color: 0xc9a25a, emissive: 0x2a1606 });
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.27, 4.4, 10), wood);
-      pole.position.set(0, 2.2, -0.38);
-      e.face.add(pole);
-      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.5, 10), wood);
-      tip.position.y = 2.45;
-      pole.add(tip);
-      const ropes = new THREE.Group(),
-        half = sizeOf('bruno', 3).w * 0.33;
-      for (const [y, k] of [
-        [0.35, 1.05],
-        [0.8, 1.12],
-        [1.25, 1.06]
-      ]) {
-        const t = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 5, 20), cord);
-        t.rotation.x = Math.PI / 2;
-        t.scale.set(half * k, 0.45, 1);
-        t.position.set(0, y, -0.22);
-        t.rotation.z = (Math.random() - 0.5) * 0.25;
-        ropes.add(t);
-      }
-      e.tilt.add(ropes);
-      const scorchM = new THREE.Mesh(decalGeo, new THREE.MeshBasicMaterial({ color: COL.ink, transparent: true, opacity: 0.5, depthWrite: false }));
-      scorchM.rotation.x = -Math.PI / 2;
-      scorchM.position.y = 0.02;
-      scorchM.scale.setScalar(1.2);
-      g.add(scorchM);
-      G.cages.push({ g, roof: ropes, pole, e, x: cx, z: cz, rattle: 0, broken: false });
-      keepOut(cx, cz, 1.7);
-      continue;
-    }
-    const iron = new THREE.MeshLambertMaterial({ color: 0x2a2522 }),
-      rust = new THREE.MeshLambertMaterial({ color: 0x7a281b });
-    const W = 2.3,
-      H = 2.9;
-    const base = new THREE.Mesh(new THREE.BoxGeometry(W, 0.16, W), iron);
-    base.position.y = 0.08;
-    g.add(base);
-    const barG = new THREE.CylinderGeometry(0.05, 0.05, H, 6),
-      ironL = [[new THREE.BoxGeometry(W, 0.18, W), M4(0, H, 0)]],
-      rustL = [];
-    for (let side = 0; side < 4; side++)
-      for (let i = -2; i <= 2; i++) {
-        const o = i * 0.46,
-          h = W * 0.48;
-        (i % 2 ? rustL : ironL).push([
-          barG,
-          M4(side < 2 ? o : side === 2 ? h : -h, H / 2, side < 2 ? (side ? -h : h) : o, 0, 0, (Math.random() - 0.5) * 0.07)
-        ]);
-      }
-    const roof = new THREE.Mesh(mergeGeos(ironL), iron),
-      rustBars = new THREE.Mesh(mergeGeos(rustL), rust);
-    g.add(roof, rustBars);
-    barG.dispose(); // merged into the two pieces above
-    G.cages.push({ g, roof, e, x: cx, z: cz, rattle: 0, broken: false });
+    const parts = type === 'Z' ? brunoStake(e, g) : { roof: ironCage(g) };
+    e.cage = { g, ...parts, e, x: cx, z: cz, rattle: 0, broken: false }; // its own cage, for updCaged
+    G.cages.push(e.cage);
     keepOut(cx, cz, 1.7);
   }
+}
+// Bruno's stake: it stands just behind him whichever way the camera looks, the ropes go round both, a scorch mark under him;
+// the ropes are the cage's roof (they go when it breaks), the pole may stay
+function brunoStake(e, g) {
+  const wood = new THREE.MeshLambertMaterial({ color: 0x9a5a2a, emissive: 0x4a1c08 }),
+    cord = new THREE.MeshLambertMaterial({ color: 0xc9a25a, emissive: 0x2a1606 });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.27, 4.4, 10), wood);
+  pole.position.set(0, 2.2, -0.38);
+  e.face.add(pole);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.5, 10), wood);
+  tip.position.y = 2.45;
+  pole.add(tip);
+  const ropes = new THREE.Group(),
+    half = sizeOf('bruno', 3).w * 0.33;
+  for (const [y, k] of [
+    [0.35, 1.05],
+    [0.8, 1.12],
+    [1.25, 1.06]
+  ]) {
+    const t = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 5, 20), cord);
+    t.rotation.x = Math.PI / 2;
+    t.scale.set(half * k, 0.45, 1);
+    t.position.set(0, y, -0.22);
+    t.rotation.z = (Math.random() - 0.5) * 0.25;
+    ropes.add(t);
+  }
+  e.tilt.add(ropes);
+  const scorchM = new THREE.Mesh(decalGeo, new THREE.MeshBasicMaterial({ color: COL.ink, transparent: true, opacity: 0.5, depthWrite: false }));
+  scorchM.rotation.x = -Math.PI / 2;
+  scorchM.position.y = 0.02;
+  scorchM.scale.setScalar(1.2);
+  g.add(scorchM);
+  return { roof: ropes, pole };
+}
+// a Grin's iron cage: a base, a lid and twenty bars, alternately iron and rust, a little crooked; returns the lid and bars
+function ironCage(g) {
+  const iron = new THREE.MeshLambertMaterial({ color: 0x2a2522 }),
+    rust = new THREE.MeshLambertMaterial({ color: 0x7a281b });
+  const W = 2.3,
+    H = 2.9;
+  const base = new THREE.Mesh(new THREE.BoxGeometry(W, 0.16, W), iron);
+  base.position.y = 0.08;
+  g.add(base);
+  const barG = new THREE.CylinderGeometry(0.05, 0.05, H, 6),
+    ironL = [[new THREE.BoxGeometry(W, 0.18, W), M4(0, H, 0)]],
+    rustL = [];
+  for (let side = 0; side < 4; side++)
+    for (let i = -2; i <= 2; i++) {
+      const o = i * 0.46,
+        h = W * 0.48;
+      (i % 2 ? rustL : ironL).push([
+        barG,
+        M4(side < 2 ? o : side === 2 ? h : -h, H / 2, side < 2 ? (side ? -h : h) : o, 0, 0, (Math.random() - 0.5) * 0.07)
+      ]);
+    }
+  const roof = new THREE.Mesh(mergeGeos(ironL), iron),
+    rustBars = new THREE.Mesh(mergeGeos(rustL), rust);
+  g.add(roof, rustBars);
+  barG.dispose(); // merged into the two pieces above
+  return roof;
 }
 function breakCage(c, byHit) {
   if (c.broken) return;

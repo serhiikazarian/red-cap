@@ -74,29 +74,12 @@ function seeThru(o, dyn, how) {
 }
 // after instanceProps, before baking: what each thing is drawn with, and its shapes
 function seePrep() {
-  const box = new THREE.Box3(),
-    v = new THREE.Vector3();
   // floor one's floaters (glasses, golden spirals, boxes) fade without a contour
   for (const d of G.deco) if (!d.m.userData.seeId) seeThru(d.m, true, G.F.deco === 'corridor' ? 'plain' : undefined);
   G.group.updateMatrixWorld(true);
   for (const c of G.see) {
     if (c.solid === 'pyramid') {
-      // its own shape (pyrParts) in its own space, for the camera's keep-off and every reason to fade; x, z, r: the circle round its foot
-      const M = c.o.matrixWorld,
-        e = M.elements;
-      c.items = [];
-      c.w = [
-        {
-          pyr: true,
-          parts: PYR.parts,
-          inv: new THREE.Matrix4().copy(M).invert(),
-          x: e[12],
-          z: e[14],
-          y0: e[13],
-          y1: e[13] + PYR_H,
-          r: PYR.parts[0].b0 * Math.SQRT2
-        }
-      ];
+      seePyrShape(c);
       continue;
     }
     c.items = c.o.userData.boxes || [];
@@ -105,54 +88,77 @@ function seePrep() {
       c.items = [inst.inst];
       c.inst = true;
     }
-    if (!c.dyn) {
-      box.makeEmpty();
-      if (c.items.length)
-        for (const it of c.items) {
-          it.owner.updateMatrix();
-          tmpM.multiplyMatrices(it.owner.matrix, it.local);
-          for (let k = 0; k < 8; k++) box.expandByPoint(v.set(k & 1 ? 0.5 : -0.5, k & 2 ? 0.5 : -0.5, k & 4 ? 0.5 : -0.5).applyMatrix4(tmpM));
-        }
-      else box.setFromObject(c.o);
-      if (box.isEmpty()) {
-        c.off = true;
-        continue;
-      }
-      c.w = [
-        {
-          cap: true,
-          x: (box.min.x + box.max.x) / 2,
-          z: (box.min.z + box.max.z) / 2,
-          r: Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2,
-          y0: box.min.y,
-          y1: box.max.y
-        }
-      ];
-      // an onlooker steps aside and back: its column goes with it (it never fades, so it has to be where it really stands)
-      if (c.hard && !isStill(c.o))
-        c.at = [c.w[0].x - c.o.position.x, c.w[0].z - c.o.position.z, box.min.y - c.o.position.y, box.max.y - c.o.position.y];
-    } else {
-      // moving: spheres in the thing's own space, one per part (a part bigger than 3 m across is left to the others, if there are others)
-      const M = c.o.parent ? c.o.matrixWorld : (c.o.updateMatrix(), c.o.matrix),
-        inv = new THREE.Matrix4().copy(M).invert(),
-        list = [];
-      const add = (g, mw) => {
-        if (!g.boundingSphere) g.computeBoundingSphere();
-        const sp = g.boundingSphere.clone().applyMatrix4(mw).applyMatrix4(inv);
-        list.push(sp);
-      };
-      if (c.inst) {
-        c.w = [{ box: true, m: new THREE.Matrix4(), inv: new THREE.Matrix4(), sc: new THREE.Vector3() }];
-        continue;
-      }
-      if (c.o.userData.seeSph) list.push(...c.o.userData.seeSph.map(sp => sp.clone()));
-      else c.o.traverse(m => m.isMesh && add(m.geometry, m.matrixWorld));
-      const sc = M.getMaxScaleOnAxis(),
-        small = list.filter(sp => sp.radius * sc <= 3);
-      c.sph = small.length ? small : list;
-      c.w = c.sph.map(() => ({ c: new THREE.Vector3(), r: 0 }));
-    }
+    if (!c.dyn) seeColumn(c);
+    else seeSpheres(c);
   }
+}
+// a pyramid: its own shape (pyrParts) in its own space, for the camera's keep-off and every reason to fade; x, z, r: the circle
+// round its foot
+function seePyrShape(c) {
+  const M = c.o.matrixWorld,
+    e = M.elements;
+  c.items = [];
+  c.w = [
+    {
+      pyr: true,
+      parts: PYR.parts,
+      inv: new THREE.Matrix4().copy(M).invert(),
+      x: e[12],
+      z: e[14],
+      y0: e[13],
+      y1: e[13] + PYR_H,
+      r: PYR.parts[0].b0 * Math.SQRT2
+    }
+  ];
+}
+// a still thing: one upright column round its boxes (or the whole object); nothing there: off
+function seeColumn(c) {
+  const box = new THREE.Box3(),
+    v = new THREE.Vector3();
+  if (c.items.length)
+    for (const it of c.items) {
+      it.owner.updateMatrix();
+      tmpM.multiplyMatrices(it.owner.matrix, it.local);
+      for (let k = 0; k < 8; k++) box.expandByPoint(v.set(k & 1 ? 0.5 : -0.5, k & 2 ? 0.5 : -0.5, k & 4 ? 0.5 : -0.5).applyMatrix4(tmpM));
+    }
+  else box.setFromObject(c.o);
+  if (box.isEmpty()) {
+    c.off = true;
+    return;
+  }
+  c.w = [
+    {
+      cap: true,
+      x: (box.min.x + box.max.x) / 2,
+      z: (box.min.z + box.max.z) / 2,
+      r: Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2,
+      y0: box.min.y,
+      y1: box.max.y
+    }
+  ];
+  // an onlooker steps aside and back: its column goes with it (it never fades, so it has to be where it really stands)
+  if (c.hard && !isStill(c.o)) c.at = [c.w[0].x - c.o.position.x, c.w[0].z - c.o.position.z, box.min.y - c.o.position.y, box.max.y - c.o.position.y];
+}
+// moving: spheres in the thing's own space, one per part (a part bigger than 3 m across is left to the others, if there are others)
+function seeSpheres(c) {
+  const M = c.o.parent ? c.o.matrixWorld : (c.o.updateMatrix(), c.o.matrix),
+    inv = new THREE.Matrix4().copy(M).invert(),
+    list = [];
+  const add = (g, mw) => {
+    if (!g.boundingSphere) g.computeBoundingSphere();
+    const sp = g.boundingSphere.clone().applyMatrix4(mw).applyMatrix4(inv);
+    list.push(sp);
+  };
+  if (c.inst) {
+    c.w = [{ box: true, m: new THREE.Matrix4(), inv: new THREE.Matrix4(), sc: new THREE.Vector3() }];
+    return;
+  }
+  if (c.o.userData.seeSph) list.push(...c.o.userData.seeSph.map(sp => sp.clone()));
+  else c.o.traverse(m => m.isMesh && add(m.geometry, m.matrixWorld));
+  const sc = M.getMaxScaleOnAxis(),
+    small = list.filter(sp => sp.radius * sc <= 3);
+  c.sph = small.length ? small : list;
+  c.w = c.sph.map(() => ({ c: new THREE.Vector3(), r: 0 }));
 }
 
 // how far p stands from the thing's foot, across the ground: a pillar's round foot, a pyramid's square one
@@ -364,24 +370,11 @@ function seeSolid(c, dt, cp, fo) {
 function seeTick(dt) {
   SEE.on = SEE.gr = SEE.dyn = false;
   if (!G || !G.see.length) return;
-  // what the camera must see: Red Cap (chest and head), the locked target, any boss in the fight
-  const fo = [seeA.set(hero.pos.x, hero.pos.y + 0.9, hero.pos.z).clone(), seeA.set(hero.pos.x, hero.pos.y + 1.6, hero.pos.z).clone()];
-  if (SEE.tg && !SEE.tg.dead) fo.push(new THREE.Vector3(SEE.tg.pos.x, hitHeight(SEE.tg), SEE.tg.pos.z));
-  for (const e of G.enemies)
-    if (e.boss && e !== SEE.tg && !e.dead && !e.dying && !e.hidden && !e.dormant && !e.waiting && e.pos.distanceTo(hero.pos) < 24)
-      fo.push(new THREE.Vector3(e.pos.x, hitHeight(e), e.pos.z));
-  const cp = camera.position;
+  const fo = seeFocus(),
+    cp = camera.position;
   for (const c of G.see) {
     if (c.off || c.hard) continue;
-    let want = 1;
-    if (c.solid) want = seeSolid(c, dt, cp, fo);
-    else if (!c.gone && c.near)
-      for (const s of c.w) {
-        // right in front of the lens (or brushing it), it would fill the screen
-        if (seeIn(cp, s, 0.8)) want = SEE_A;
-        else for (const f of fo) if (seeCross(cp, f, s)) want = SEE_A;
-        if (want < 1) break;
-      }
+    const want = seeWant(c, dt, cp, fo);
     // in over ~0.15 s, back over ~0.3 s; a pillar or pyramid over SOLID_T
     c.a =
       want < c.a
@@ -390,54 +383,81 @@ function seeTick(dt) {
     if (c.a < 0.999 && !c.on) seeOn(c, true);
     else if (c.a >= 0.999 && c.on) seeOn(c, false);
     if (!c.on) continue;
-    if (c.solid && c.line) {
-      // a pillar's contour: only while it hides Red Cap, as strong as it has faded; in the mask only while there is one
-      c.lvl = (c.g * (1 - c.a)) / (1 - SEE_A);
-      const ln = c.lvl > 0.01;
-      if (ln !== c.ln)
-        for (const o of seeDrawn(c)) {
-          if (ln) o.layers.enable(1);
-          else o.layers.disable(1);
-        }
-      c.ln = ln;
-    }
+    if (c.solid && c.line) seeLine(c);
     if (c.ln) {
       SEE.on = true;
       if (c.dyn) SEE.dyn = true;
       else SEE.gr = true;
     }
-    const tall = c.solid ? Math.min(1, (c.w[0].y1 - c.w[0].y0) / 7) : 1; // a pillar or pyramid's height against a 7 m pillar (SOLID_FOOT)
-    let foot = 1e9; // the thing's lowest point
-    for (const s of c.w) foot = Math.min(foot, s.box ? s.m.elements[13] - 0.5 * s.sc.y : s.cap || s.pyr ? s.y0 : s.c.y - s.r);
-    const fade = mm => {
-      const u = mm.userData.seeU;
-      u.seeA.value = c.a;
-      // a pillar or pyramid keeps a solid foot; anything else fades evenly (the gradient sits below it)
-      u.seeY0.value = foot + (c.solid ? SOLID_FOOT[0] * tall : -2);
-      u.seeY1.value = foot + (c.solid ? SOLID_FOOT[1] * tall : -1);
-    };
-    for (const m of c.meshes)
-      for (const mm of Array.isArray(m.material) ? m.material : [m.material]) {
-        const o = mm === m.material ? m.userData.seeOrig : m.userData.seeOrig[m.material.indexOf(mm)];
-        mm.opacity = o.opacity;
-        fade(mm);
-        mm.visible = o.visible;
-        if (o.color) mm.color.copy(o.color);
-        if (o.emissive) mm.emissive.copy(o.emissive);
-      }
-    for (const it of c.items)
-      if (it.see) {
-        it.owner.updateMatrix();
-        it.see.matrix.multiplyMatrices(it.owner.matrix, it.local);
-        it.see.matrixWorldNeedsUpdate = true; // its parent (G.group) is frozen, so nothing else would carry the new place into its world matrix
-        fade(it.seeMat);
-        if (it.im.instanceColor) it.im.getColorAt(it.idx, seeCol);
-        else seeCol.set(1, 1, 1);
-        it.seeMat.color.copy(it.im.material.color).multiply(seeCol);
-      }
+    seeApply(c);
   }
 }
-// the mask: only the see-through things, white on black, at half size
+// what the camera must see: Red Cap (chest and head), the locked target, any boss in the fight
+function seeFocus() {
+  const fo = [seeA.set(hero.pos.x, hero.pos.y + 0.9, hero.pos.z).clone(), seeA.set(hero.pos.x, hero.pos.y + 1.6, hero.pos.z).clone()];
+  if (SEE.tg && !SEE.tg.dead) fo.push(new THREE.Vector3(SEE.tg.pos.x, hitHeight(SEE.tg), SEE.tg.pos.z));
+  for (const e of G.enemies)
+    if (e.boss && e !== SEE.tg && !e.dead && !e.dying && !e.hidden && !e.dormant && !e.waiting && e.pos.distanceTo(hero.pos) < 24)
+      fo.push(new THREE.Vector3(e.pos.x, hitHeight(e), e.pos.z));
+  return fo;
+}
+// how see-through a thing should be now: a pillar or pyramid by its own rules (seeSolid); anything else when it is right in front
+// of the lens or between the camera and something it must see
+function seeWant(c, dt, cp, fo) {
+  let want = 1;
+  if (c.solid) want = seeSolid(c, dt, cp, fo);
+  else if (!c.gone && c.near)
+    for (const s of c.w) {
+      // right in front of the lens (or brushing it), it would fill the screen
+      if (seeIn(cp, s, 0.8)) want = SEE_A;
+      else for (const f of fo) if (seeCross(cp, f, s)) want = SEE_A;
+      if (want < 1) break;
+    }
+  return want;
+}
+// a pillar's contour: only while it hides Red Cap, as strong as it has faded; in the mask only while there is one
+function seeLine(c) {
+  c.lvl = (c.g * (1 - c.a)) / (1 - SEE_A);
+  const ln = c.lvl > 0.01;
+  if (ln !== c.ln)
+    for (const o of seeDrawn(c)) {
+      if (ln) o.layers.enable(1);
+      else o.layers.disable(1);
+    }
+  c.ln = ln;
+}
+// the fade on every material and instanced part of a thing
+function seeApply(c) {
+  const tall = c.solid ? Math.min(1, (c.w[0].y1 - c.w[0].y0) / 7) : 1; // a pillar or pyramid's height against a 7 m pillar (SOLID_FOOT)
+  let foot = 1e9; // the thing's lowest point
+  for (const s of c.w) foot = Math.min(foot, s.box ? s.m.elements[13] - 0.5 * s.sc.y : s.cap || s.pyr ? s.y0 : s.c.y - s.r);
+  const fade = mm => {
+    const u = mm.userData.seeU;
+    u.seeA.value = c.a;
+    // a pillar or pyramid keeps a solid foot; anything else fades evenly (the gradient sits below it)
+    u.seeY0.value = foot + (c.solid ? SOLID_FOOT[0] * tall : -2);
+    u.seeY1.value = foot + (c.solid ? SOLID_FOOT[1] * tall : -1);
+  };
+  for (const m of c.meshes)
+    for (const mm of Array.isArray(m.material) ? m.material : [m.material]) {
+      const o = mm === m.material ? m.userData.seeOrig : m.userData.seeOrig[m.material.indexOf(mm)];
+      mm.opacity = o.opacity;
+      fade(mm);
+      mm.visible = o.visible;
+      if (o.color) mm.color.copy(o.color);
+      if (o.emissive) mm.emissive.copy(o.emissive);
+    }
+  for (const it of c.items)
+    if (it.see) {
+      it.owner.updateMatrix();
+      it.see.matrix.multiplyMatrices(it.owner.matrix, it.local);
+      it.see.matrixWorldNeedsUpdate = true; // its parent (G.group) is frozen, so nothing else would carry the new place into its world matrix
+      fade(it.seeMat);
+      if (it.im.instanceColor) it.im.getColorAt(it.idx, seeCol);
+      else seeCol.set(1, 1, 1);
+      it.seeMat.color.copy(it.im.material.color).multiply(seeCol);
+    }
+}
 // the screen box (uv) the faded things' mask can reach, widened by the contour samples' reach; the ink pass looks only inside it
 const seeBB = new THREE.Box3(),
   seeP = new THREE.Vector3();
@@ -469,6 +489,7 @@ function seeBounds(out) {
   const sp = post.uniforms.spx.value; // one mask pixel; the samples reach 2.8 of them, bilinear filtering one more
   return out.set(x0 * 0.5 + 0.5 - 5 * sp.x, y0 * 0.5 + 0.5 - 5 * sp.y, x1 * 0.5 + 0.5 + 5 * sp.x, y1 * 0.5 + 0.5 + 5 * sp.y);
 }
+// the mask: only the see-through things, white on black, at half size
 function seeMask() {
   seeBounds(post.uniforms.seeBox.value);
   const bg = scene.background,

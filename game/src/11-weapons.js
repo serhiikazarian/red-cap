@@ -108,7 +108,7 @@ function yoyo() {
     fx = dx / d;
     fz = dz / d;
   }
-  G.yySide = -(G.yySide || 1);
+  G.yySide = -G.yySide;
   const now = playT;
   hero.combo = third ? 3 : now - (hero.lastThrow || -9) < 1.1 ? ((hero.combo || 0) % 3) + 1 : 1;
   hero.lastThrow = now;

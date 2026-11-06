@@ -217,8 +217,8 @@ function grumpThrough(e, open) {
     for (let ix = hx - 2; ix <= hx + 2; ix++) {
       const pr = propR(ch(ix, iz));
       if (!pr) continue;
-      const px = (ix + 0.5) * CELL,
-        pz = (iz + 0.5) * CELL,
+      const px = cellMid(ix),
+        pz = cellMid(iz),
         t = (px - e.pos.x) * ux + (pz - e.pos.z) * uz;
       if (t <= 0 || t >= d) continue; // not between them
       const off = Math.abs((px - e.pos.x) * uz - (pz - e.pos.z) * ux),
