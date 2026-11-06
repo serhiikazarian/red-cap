@@ -19,10 +19,10 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
   definitions `rg -n "^(async )?function name\b|^(const|let) name\b" game/src`. Never read a whole `game/src` file, nor
   `game/assets/`, `game/vendor/`, `tests/baseline/` or a built HTML.
 - Edits are targeted (Edit, or a small exact-match patch), never a whole-file rewrite.
-- Change the file that owns the behaviour, and tidy what you touch (names, dead lines, stale comments, long functions into
-  named steps: `node tools/sizes.js`). Comments say how things work now. Each file opens with its tuning numbers and often a
-  comment with its rules: read that first.
-- `tools/` scripts, one word out (`OK`, `SAME`, `SAVED`, `SHIPPED`); a sequence needed twice becomes one. Cut long output;
+- Change the file that owns the behaviour, and tidy what you touch (names, dead lines, stale comments, long functions
+  into named steps: `node tools/sizes.js`; none is 68 lines or more: keep it so). Comments say how things work now. Each
+  file opens with its tuning numbers and often a comment with its rules: read that first.
+- `tools/` scripts, one word out (`OK`, `SAME`, `SAVED`, `SHIPPED`, `PRERELEASED`); a sequence needed twice becomes one. Cut long output;
   long runs in the background (Monitor), never poll. A probe: `tests/shot.js` with one expression (in a file via
   `"$(cat f)"` when it holds `$`). One screenshot only for a visual change.
 
@@ -46,7 +46,8 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - Bigger changes: `NODE_PATH=$(npm root -g) node tests/soak.js game/red-cap.html 8` → `errors []` (~8 min).
 - Probes and pictures: `docs/ARCHITECTURE.md` § Testing. The test browser draws on the CPU (a load ~40 s, frames 80–280 ms
   apart): real-GPU speed and smoothness can't be judged there; test timing logic with a fake clock instead.
-- CI (`.github/workflows/pages.yml`) runs `check.sh` on every push, publishes `main`, tags and releases each version.
+- CI (`.github/workflows/pages.yml`) runs `check.sh` on pushes to `main` and `prerelease` and on pull requests; only `main`
+  publishes, tags and releases. `prerelease` keeps the built game as a download (the run's Summary page, Artifacts, 30 days).
 
 ## Ship (only after Serj says yes)
 1. Version = current + 0.01 (1.09 → 1.10) unless Serj names one: `#version` in `game/index.html` (`v1.10`) and
@@ -55,6 +56,10 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
    Never merge, squash or force-push by hand. Pages updates in ~3 min; CI tags `vN.NN`.
 3. Undo: `git revert <commit>`, ship anew. An older version: `git fetch --tags`, `git checkout vN.NN -- game`, check, ship
    anew. Never rewrite `main`'s history.
+- To try a version first (when Serj asks): label and history as for a ship, then `tools/prerelease.sh N.NN "<attribution
+  lines>"` → `PRERELEASED N.NN` (checks, one commit on top of `prerelease`, and of `main` when it lacks it; the same
+  version may go again). CI builds it; Serj downloads it from the run's Summary page (Artifacts). It needs no force push;
+  `git push --force-with-lease origin HEAD:prerelease` is allowed (settings) to replace it outright, never another branch.
 - Between versions (the stop hook asks): `tools/wip.sh "message" "<attribution lines>"` → `SAVED` (work branch only).
 
 ## Rules that bite
@@ -72,11 +77,14 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
   pyramids) use `Math.random`.
 - Still meshes are baked (`bakeStatics`): anything that moves or changes later is not `still()`.
 - See-through: big props via `seeThru(o, dyn, how)`; never a global `renderOrder > 0` on a see-through part.
-- Talker materials (`e.mats`) get their colour reset every frame (hit flash): colour parts with textures or vertex colours.
+- Talker materials (`e.mats`) are brought back every frame to the hit flash or no tint (written only where different, so
+  another writer's colour is undone): colour parts with textures or vertex colours.
 - One talker's specifics go in its `TALKERS` entry, never `e.type === 'X'` in shared code.
-- Core colours: `COL.ink` / `HEX.paper` … (00-util), `var(--ink)` … in style.css; never retype their hex values.
-- A delay in play: `later(sec, fn)`, never `setTimeout`. Game rules run on `playT` (stops while paused, slows with hit-stop);
-  `performance.now()` only for cosmetic wobble. Floor motion goes in `G.anim`.
+- Core colours: `COL.ink` / `HEX.paper` … (00-util), `var(--ink)` … in style.css; never retype their hex values (the word
+  lists write `${HEX.paper}`). Still typed out: the scissors' strokes in index.html. A cell's centre: `cellMid(i)`.
+- A delay in play: `later(sec, fn)`, never `setTimeout` (screen flashes and `toast` keep `setTimeout` on purpose:
+  `later()` stops on death and does not run on the title). Game rules run on `playT` (stops while paused, slows with
+  hit-stop); `performance.now()` only for cosmetic wobble. Floor motion goes in `G.anim`.
 - `G` declares every field in `newFloor` (50-level): never `G.x = G.x || []`.
 - Loudness: `VOL` (01-audio), one share per sound name; never retype gains.
 
@@ -92,7 +100,7 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 then read around the hits. Older: `git show $(git rev-list --max-parents=0 HEAD):HISTORY.md | rg -n "word"`.
 
 ## Not verified by playing
-On a real GPU: the loading's chosen sharpness (floors start crisp?), the scissors' pace, low-end frame rate, floor three's
-busiest moments (smoke, fog wall). By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the exhale. By
-feel: see-through fades in motion, Grump ring cracks, hologram gaze timing, Bruno's circle, talkers breaking pyramids.
-Touch on a real phone; controller on hardware.
+On a real GPU: the loading's chosen sharpness (floors start crisp?), the scissors' pace, low-end frame rate, floor
+three's busiest moments (smoke, fog wall). By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the
+exhale. By feel: the yo-yo's hit-stop inside slow motion (now short), see-through fades in motion, Grump ring cracks,
+hologram gaze timing, Bruno's circle, talkers breaking pyramids. Touch on a real phone; controller on hardware.
