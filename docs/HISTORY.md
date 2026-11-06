@@ -385,3 +385,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - A boss's health bar shows only while no wall stands between him and Red Cap: it fades out behind one (after 0.3 s, so a
   corner can't make it blink) and fades back in when he is in sight (`bossInFight`, `#boss.on` in style.css). Seen with
   the Priest and Bruno.
+- Build: a code file without a last line break gets one before the next file is joined on, so it can never run into it
+  (`include` in game/build.py; every file has one today, so the built game is the same).
