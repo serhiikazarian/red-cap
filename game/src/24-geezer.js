@@ -201,7 +201,7 @@ const GEEZER_STATES = {
 TALKERS.Y = {
   make: makeGeezer,
   update: updateGeezer,
-  bar: e => (e.exhaust > 0 ? ['', false, 'WINDED'] : [e.st === 'gaze' ? 'Eyes lightin’ up — take cover' : '', false]),
+  bar: e => (e.exhaust > 0 ? ['', false, 'WINDED'] : ['', false]),
   warn: e =>
     e.st === 'gaze'
       ? { c: '#b48cff', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'Y' + e.flashes }

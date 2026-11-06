@@ -172,7 +172,6 @@ TALKERS.S = {
   make: makeSmoker,
   update: updateSmoker,
   hushed: smokerHushed,
-  bar: e => [e.hidden ? 'Hidin’ in his smoke' : 'Every hit shakes out pebbles', !e.hidden],
   hurt: e => giveAmmo(Math.random() < 0.5 ? 2 : 3, e.pos), // every hit shakes pebbles out of him
   drops: e => {
     if (hero.hp <= 2) dropHeart(e.pos.x, e.pos.z);

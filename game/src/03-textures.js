@@ -145,7 +145,7 @@ function sizeOf(name, h) {
 const canvasTexCache = {};
 const WORLD_FONT = '"Rock Salt", "Permanent Marker", Impact, sans-serif',
   MARKER_FONT = '"Permanent Marker", Impact, sans-serif',
-  HERO_WORDS = new Set(['HOT', 'BURNT', 'ALL BETTER', 'BIG HEART', 'BLESSED', 'SNAGGED', 'TORN', 'EMPTY', 'BUSTED']);
+  HERO_WORDS = new Set(['HOT', 'BURNT', 'ALL BETTER', 'BIG HEART', 'BLESSED', 'SNAGGED', 'TORN', 'EMPTY', 'BUSTED', 'How did I get here?']);
 // the words each floor has shown this session (drawn again when the floor is built next)
 const WORDS_USED = [new Map(), new Map(), new Map()],
   WORDS_SEED = [
@@ -165,11 +165,18 @@ const WORDS_USED = [new Map(), new Map(), new Map()],
   ].map(w => [w, /^(THWIP|TORN)$/.test(w) ? HEX.paper : w === 'EMPTY' ? HEX.smoke : /^\+|BIG/.test(w) ? HEX.bile : HEX.tie]),
   // each floor's words, as word|colour with _ for a space
   WORDS_FLOOR = [
-    `POPPED|${HEX.paper} YOUNG_MAN|${HEX.paper} WINDED|${HEX.bile} BONK|${HEX.paper} HMMPH|${HEX.paper} MISSED|${HEX.paper} LOOK_AT_ME|#b48cff *WHEEZE*|${HEX.bile} boo|#d8d4cc BOO!|#d8d4cc !!|${HEX.tie}`,
+    `How_did_I_get_here?|${HEX.paper} POPPED|${HEX.paper} YOUNG_MAN|${HEX.paper} WINDED|${HEX.bile} BONK|${HEX.paper} HMMPH|${HEX.paper} MISSED|${HEX.paper} LOOK_AT_ME|#b48cff *WHEEZE*|${HEX.bile} boo|#d8d4cc BOO!|#d8d4cc !!|${HEX.tie}`,
     `POPPED|${HEX.paper} BUSTED|${HEX.paper} ENOUGH|${HEX.tie} AGE_OF_CAPRICORN|${HEX.tie} PAIN!|${HEX.tie} SCORCHED_EARTH|${HEX.tie} SHAME!|${HEX.tie} THE_END_IS_NIGH!|${HEX.tie} FORBIDDEN_KNOWLEDGE!|${HEX.tie} PREY|${HEX.tie} LET_ME_OUT|${HEX.tie} BLESSED|${HEX.tie} HAAA|${HEX.bile} HUH?|${HEX.paper} BOO|${HEX.paper} KNEEL|${HEX.paper} SHIELDED|#d8d4cc RISE|#d8d4cc HOT|${HEX.hot} BURNT|${HEX.hot} EEK!|${HEX.bile} AAAH!|${HEX.bile} MADONE!|${HEX.hot} STUPID|${HEX.hot} STUPID!|${HEX.hot} MORON|${HEX.hot} TOOL|${HEX.hot} YOU_FOOL|${HEX.hot}`,
-    `ENOUGH|${HEX.tie} SILENCE|${HEX.tie} WELCOME|${HEX.paper} CATCH|${HEX.paper} BACK_ON|${HEX.paper} CRACK|${HEX.paper} PSST|${HEX.paper} HA|${HEX.paper} HA!|${HEX.paper} HA_HA|${HEX.paper} HUSH|${HEX.paper} TOO_THICK|${HEX.paper} TINK|${HEX.paper} BOUNCE|${HEX.paper} NOPE|${HEX.paper} MISS_ME?|${HEX.paper} I'LL_TAKE_A_BREAK|${HEX.paper} STOP_TALKIN’|${HEX.bile} RING_ME|${HEX.bile} QUIET|${HEX.bile} HUSH|${HEX.bile} HA_HA_HA|${HEX.bile} HEE|${HEX.bile} WHEE|${HEX.bile} ?|${HEX.bile} @|${HEX.bile} GRRR|${HEX.tie} GRR|${HEX.ink} SHUT_UP|${HEX.ink} STOP|${HEX.ink} BLAH|${HEX.ink} \u2026|${HEX.ink} *COUGH*|${HEX.smoke} *HACK*|${HEX.smoke}`
+    `${spacedWord('NOT\nFUNNY')}|${HEX.tie} SILENCE|${HEX.tie} WELCOME|${HEX.paper} CATCH|${HEX.paper} CRACK|${HEX.paper} PSST|${HEX.paper} HA|${HEX.paper} HA!|${HEX.paper} HA_HA|${HEX.paper} HUSH|${HEX.paper} TOO_THICK|${HEX.paper} TINK|${HEX.paper} BOUNCE|${HEX.paper} NOPE|${HEX.paper} MISS_ME?|${HEX.paper} I'LL_TAKE_A_BREAK|${HEX.paper} STOP_TALKIN’|${HEX.bile} RING_ME|${HEX.bile} QUIET|${HEX.bile} HUSH|${HEX.bile} HA_HA_HA|${HEX.bile} HEE|${HEX.bile} WHEE|${HEX.bile} ?|${HEX.bile} @|${HEX.bile} GRRR|${HEX.tie} GRR|${HEX.ink} SHUT_UP|${HEX.ink} STOP|${HEX.ink} BLAH|${HEX.ink} \u2026|${HEX.ink} *COUGH*|${HEX.smoke} *HACK*|${HEX.smoke}`
   ].map(l => l.split(' ').map(p => p.replace(/_/g, ' ').split('|')));
-// a word on a 512 x 176 canvas, inked round, on two lines if long, shrunk until it fits
+// a word with a thin space between its letters, a little airier (the Jester's NOT FUNNY: on one line the T ran into the F)
+function spacedWord(w) {
+  return w
+    .split('\n')
+    .map(l => [...l].join('\u2009'))
+    .join('\n');
+}
+// a word on a 512 x 176 canvas, inked round, on two lines if long (or where it has a \n), shrunk until it fits
 function wordTex(text, color = HEX.tie, stroke = HEX.ink) {
   if (G && WORDS_USED[floorIdx]) WORDS_USED[floorIdx].set(text + '|' + color, [text, color]);
   const face = /^[+-]\d/.test(text) || HERO_WORDS.has(text) ? MARKER_FONT : WORLD_FONT;
@@ -180,7 +187,7 @@ function wordTex(text, color = HEX.tie, stroke = HEX.ink) {
   c.height = 176;
   const x = c.getContext('2d');
   const sp = text.indexOf(' ', Math.floor(text.length / 2) - 3),
-    lines = text.length > 13 && sp > 0 ? [text.slice(0, sp), text.slice(sp + 1)] : [text];
+    lines = text.includes('\n') ? text.split('\n') : text.length > 13 && sp > 0 ? [text.slice(0, sp), text.slice(sp + 1)] : [text]; // \n: its own break
   const lw = lines.length > 1 ? 13 : 18,
     pad = lw / 2 + 6,
     ink = l => {
