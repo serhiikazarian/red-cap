@@ -429,3 +429,11 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   two buttons red); from it the arrows, WASD and Tab go anywhere and Enter presses whatever is red. Its hover red stays, but
   gives way when the keyboard has taken the focus to another button (`:has(button:focus…)` in style.css).
 - Title label `v1.46`.
+
+## 1.47 (6 Nov 2026)
+- Floating words (Red Cap's opening line, HMMPH, BOO!, RING ME, NOT FUNNY…) are drawn over the finished page, after the ink
+  pass (`wordScene` in 02-render): the pass no longer draws its edge lines across them (the holes in "How did I get here?"
+  where a wall corner or a Shade lay behind), nor darkens them toward the screen's edges (the line greyed as it rose), and
+  a nearly faded word no longer tints the page round it. Pictures remade (f1-fight, f2-fight, f3-fight, f3-start, jester).
+- Title label `v1.47`.
+

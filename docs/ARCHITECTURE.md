@@ -135,6 +135,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Menu buttons and the exit door enter a floor in steps: `state` `'leave'` (the ink veil, 0.36 s) → `'build'` (the paper scrap
   while the floor is built: planned 1.4 s for floor one, 0.7 s for two, 3 s for three) → `'intro'`. Plain `startGame()` /
   `enterFloor(i)` still build at once.
+- Floating words live in `wordScene` (02-render), drawn after the ink pass straight onto the page: never put a word sprite
+  in `scene` (the pass would cut it with edge lines, darken it, and the see-through mask would catch its quad).
 - Red Cap's first words on a new game: `OPENING` (60-flow), in marker font (`HERO_WORDS`), rising slowly (`floatWord`'s
   `rise`).
 - Loading does real work: `warmUp` pre-draws `WORDS_SEED` + `WORDS_FLOOR[floor]` + words used this session and every `TEX`
