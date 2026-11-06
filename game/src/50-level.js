@@ -178,7 +178,7 @@ function newFloor(F, w) {
     ldWake: 0,
     ld: null,
     jawPickup: null,
-    jawT: 6, // until the masked Jester next goes for the jaw
+    jawT: 6, // until the jaw Red Cap carries next taunts the masked Jester (it knocks his mask off)
     npcHearts: 0 // hearts shaken out of onlookers on this floor (at most two: hitNpc)
   };
   buildHeights(F);

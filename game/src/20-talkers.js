@@ -255,8 +255,7 @@ function hitHeight(e) {
 // What is special about a talker comes from its TALKERS entry (see the top of this file), in this order: shielded, struck, hurt
 function damage(e, n, dx, dz, force, weapon) {
   if (e.caged) {
-    const c = G.cages.find(q => q.e === e);
-    if (c) breakCage(c, true);
+    if (e.cage) breakCage(e.cage, true);
     return;
   }
   const T = TALKERS[e.type];

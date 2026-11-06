@@ -94,7 +94,7 @@ function routeCells(clearOfProps) {
 // lights only where the way is not obvious: a turn, a fork, the foot of a climb, and the exit
 function guideMarks(cells) {
   const open = (x, z) => !solid(x, z) && ch(x, z) !== 'g',
-    hc = (x, z) => heightAt((x + 0.5) * CELL, (z + 0.5) * CELL),
+    hc = (x, z) => heightAt(cellMid(x), cellMid(z)),
     marks = [];
   let lastI = -9;
   for (let i = 1; i < cells.length - 1; i++) {
@@ -144,8 +144,8 @@ function guidePath(F, rng) {
     [qx, qz] = cells[cells.length - 2],
     dx = ex - qx,
     dz = ez - qz,
-    cx = (ex + 0.5) * CELL,
-    cz = (ez + 0.5) * CELL;
+    cx = cellMid(ex),
+    cz = cellMid(ez);
   for (const sd of [-1, 1]) {
     const px = cx - dz * sd * 1.25,
       pz = cz + dx * sd * 1.25;
@@ -153,7 +153,7 @@ function guidePath(F, rng) {
     else if (wallDist(px, pz) > 0.5 && clearOf(px, pz, 0.5)) brazier(px, heightAt(px, pz), pz, 0.9);
   }
 }
-// one route light at (px, pz), unless it would stand in a wall, a pit, a prop or clutter: a brass footlight on the first floor,
+// one route light at (px, pz), unless it would stand in a wall, on a ramp, in a prop or in clutter: a brass footlight on the first floor,
 // a stake with a burning tip (hot to touch) on the second
 function guideLamp({ K, corridor, glowM }, px, pz) {
   const [pix, piz] = cellOf(px, pz);
@@ -161,7 +161,7 @@ function guideLamp({ K, corridor, glowM }, px, pz) {
     solid(pix, piz) ||
     wallDist(px, pz) < 0.25 ||
     kindAt(pix, piz) === 2 ||
-    (propR(ch(pix, piz)) && Math.hypot(px - (pix + 0.5) * CELL, pz - (piz + 0.5) * CELL) < propR(ch(pix, piz)) + 0.3)
+    (propR(ch(pix, piz)) && Math.hypot(px - cellMid(pix), pz - cellMid(piz)) < propR(ch(pix, piz)) + 0.3)
   )
     return;
   if (!clearOf(px, pz, 0.3)) return;

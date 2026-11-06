@@ -458,7 +458,6 @@ function seeApply(c) {
       it.seeMat.color.copy(it.im.material.color).multiply(seeCol);
     }
 }
-// the mask: only the see-through things, white on black, at half size
 // the screen box (uv) the faded things' mask can reach, widened by the contour samples' reach; the ink pass looks only inside it
 const seeBB = new THREE.Box3(),
   seeP = new THREE.Vector3();
@@ -490,6 +489,7 @@ function seeBounds(out) {
   const sp = post.uniforms.spx.value; // one mask pixel; the samples reach 2.8 of them, bilinear filtering one more
   return out.set(x0 * 0.5 + 0.5 - 5 * sp.x, y0 * 0.5 + 0.5 - 5 * sp.y, x1 * 0.5 + 0.5 + 5 * sp.x, y1 * 0.5 + 0.5 + 5 * sp.y);
 }
+// the mask: only the see-through things, white on black, at half size
 function seeMask() {
   seeBounds(post.uniforms.seeBox.value);
   const bg = scene.background,

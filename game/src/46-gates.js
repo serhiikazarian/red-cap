@@ -15,7 +15,7 @@ function fogWall(row) {
   const x0 = xs[0] * CELL,
     x1 = (xs[xs.length - 1] + 1) * CELL,
     W = x1 - x0,
-    cz = (row + 0.5) * CELL,
+    cz = cellMid(row),
     H = 7;
   const U = { time: { value: 0 }, fade: { value: 1 }, len: { value: W } };
   const mat = fogMat(U, 0),
@@ -170,7 +170,7 @@ function trailPath() {
         break;
       }
     k--;
-    pts.push({ x: (x + 0.5) * CELL, z: (z + 0.5) * CELL });
+    pts.push({ x: cellMid(x), z: cellMid(z) });
   }
   pts[pts.length - 1] = { x: G.portal.x, z: G.portal.z };
   const out = [pts[0]];

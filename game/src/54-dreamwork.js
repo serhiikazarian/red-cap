@@ -7,8 +7,7 @@ function wallTops(rng, n, gap) {
   const cand = [],
     out = [];
   for (let z = 1; z < G.h - 1; z++)
-    for (let x = 1; x < G.w - 1; x++)
-      if (G.map[z][x] === '#' && DIRS4.some(([a, b]) => !solid(x + a, z + b))) cand.push([(x + 0.5) * CELL, (z + 0.5) * CELL]);
+    for (let x = 1; x < G.w - 1; x++) if (G.map[z][x] === '#' && DIRS4.some(([a, b]) => !solid(x + a, z + b))) cand.push([cellMid(x), cellMid(z)]);
   for (let t = 0; t < n * 40 && out.length < n && cand.length; t++) {
     const c = cand[(rng() * cand.length) | 0];
     if (!out.some(o => Math.hypot(o[0] - c[0], o[1] - c[1]) < gap)) out.push(c);
@@ -21,8 +20,7 @@ function openSpots(rng, n, gap) {
     out = [];
   for (let z = 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++)
-      if (!solid(x, z) && ch(x, z) !== 'g' && kindAt(x, z) === 0 && clearOf((x + 0.5) * CELL, (z + 0.5) * CELL, 1.5))
-        cand.push([(x + 0.5) * CELL, (z + 0.5) * CELL]);
+      if (!solid(x, z) && ch(x, z) !== 'g' && kindAt(x, z) === 0 && clearOf(cellMid(x), cellMid(z), 1.5)) cand.push([cellMid(x), cellMid(z)]);
   for (let t = 0; t < n * 40 && out.length < n && cand.length; t++) {
     const c = cand[(rng() * cand.length) | 0];
     if (!out.some(o => Math.hypot(o[0] - c[0], o[1] - c[1]) < gap)) out.push(c);

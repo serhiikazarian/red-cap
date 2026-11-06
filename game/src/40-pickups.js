@@ -61,8 +61,8 @@ function dropHeart(x, z, big) {
   for (let iz = 1; iz < G.h - 1; iz++)
     for (let ix = 1; ix < G.w - 1; ix++) {
       const c = ch(ix, iz),
-        cx = (ix + 0.5) * CELL,
-        cz = (iz + 0.5) * CELL,
+        cx = cellMid(ix),
+        cz = cellMid(iz),
         d = Math.hypot(cx - x, cz - z);
       if (
         d >= bd ||
@@ -92,8 +92,8 @@ function hideHearts(n, piles = 0) {
   for (let z = 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) {
       if (ch(x, z) !== '.' || kindAt(x, z) === 2) continue;
-      const px = (x + 0.5) * CELL,
-        pz = (z + 0.5) * CELL;
+      const px = cellMid(x),
+        pz = cellMid(z);
       if (!clearOf(px, pz, 0.8) || Math.hypot(px - hero.pos.x, pz - hero.pos.z) < 12) continue;
       if (G.enemies.some(e => Math.hypot(e.pos.x - px, e.pos.z - pz) < 6)) continue;
       const walls = DIRS4.filter(([a, b]) => solid(x + a, z + b)).length;
@@ -177,8 +177,8 @@ function spawnPickup(x, z, big) {
 function updPickups(dt) {
   const now = performance.now() / 1000;
   if (G.F.roomHeart && !G.roomHeartGiven && hero.hp <= 2) {
-    const rx = (G.F.roomHeart[0] + 0.5) * CELL,
-      rz = (G.F.roomHeart[1] + 0.5) * CELL;
+    const rx = cellMid(G.F.roomHeart[0]),
+      rz = cellMid(G.F.roomHeart[1]);
     if (Math.hypot(hero.pos.x - rx, hero.pos.z - rz) < 7) {
       G.roomHeartGiven = true;
       spawnPickup(rx, rz);

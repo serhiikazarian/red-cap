@@ -392,8 +392,8 @@ function calViews(n) {
       if (r > run) [run, dir] = [r, [dx, dz]];
     }
     if (!dir) continue;
-    const cx = (x + 0.5) * CELL,
-      cz = (z + 0.5) * CELL,
+    const cx = cellMid(x),
+      cz = cellMid(z),
       y = heightAt(cx, cz),
       eye = new THREE.PerspectiveCamera(); // a camera's lookAt turns its back (-z) to the target
     eye.position.set(cx, y + 2.4, cz);
