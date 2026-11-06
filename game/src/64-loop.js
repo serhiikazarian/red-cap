@@ -112,7 +112,8 @@ function playStep(dt) {
     }
   }
 }
-// the boss whose bar shows: the nearest one in the fight (a boss is in it once close and face to face), within 26 m
+// the boss whose bar shows: the nearest one in the fight (a boss is in it once close and face to face), within 26 m and
+// with no wall between them (behind one, his bar fades out: 07-hud, style.css)
 function bossInFight() {
   let boss = null,
     bd = 1e9;
@@ -120,7 +121,7 @@ function bossInFight() {
     if (!e.boss || e.noBar || e.dead || e.dying || e.dormant || e.away || e.waiting || e.caged) continue;
     const d = e.pos.distanceTo(hero.pos);
     if (!e.engaged && d < 9 && clearOfWalls(e.pos, hero.pos)) e.engaged = true;
-    if (e.engaged && d < 26 && d < bd) {
+    if (e.engaged && d < 26 && d < bd && clearOfWalls(e.pos, hero.pos)) {
       bd = d;
       boss = e;
     }
