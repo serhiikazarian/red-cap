@@ -515,59 +515,70 @@ function dropFaces(n) {
   }
   jesterLaugh(jester());
 }
+// each falling mask's step; true once it is gone
+const SLAB_STATES = {
+  // a ring pulses where it will land
+  warn(s) {
+    s.ring.material.opacity = 0.4 + Math.sin(s.t * 30) * 0.4;
+    s.ring.scale.setScalar(1 + s.t * 0.3);
+    if (s.t > 0) return false;
+    s.st = 'fall';
+    s.slab.visible = true;
+    s.t = 0.35;
+    return false;
+  },
+  // down from 14 m; landing on Red Cap hurts
+  fall(s) {
+    s.slab.position.y = Math.max(0.2, 14 * (s.t / 0.35));
+    if (s.t <= 0) slabLands(s);
+    return false;
+  },
+  // it lies there a while, then sinks away
+  lie(s, dt) {
+    s.ring.material.opacity = 0.5 + Math.sin(s.t * 8) * 0.3;
+    if (s.t < 0.6) s.slab.position.y -= dt * 1.2;
+    if (s.t > 0) return false;
+    G.group.remove(s.slab);
+    G.group.remove(s.ring);
+    return true;
+  },
+  // kicked back at the Jester (jesterBlow): it spins after him and strikes him, or crumbles when its time runs out
+  fly(s, dt) {
+    const J = jester();
+    s.slab.rotation.y += dt * 9;
+    if (J) {
+      const dx = J.pos.x - s.slab.position.x,
+        dz = J.pos.z - s.slab.position.z,
+        d = Math.hypot(dx, dz) || 1;
+      s.slab.position.x += (dx / d) * 14 * dt;
+      s.slab.position.z += (dz / d) * 14 * dt;
+      if (d < J.r + 0.8) {
+        jesterStruck(J, s.slab.position.x, s.slab.position.z);
+        s.t = 0;
+      }
+    }
+    if (s.t > 0) return false;
+    burst(s.slab.position.clone().setY(1.5), [0x9a9e98, COL.paper], 12, 5, 0.2);
+    G.group.remove(s.slab);
+    return true;
+  }
+};
+function slabLands(s) {
+  s.st = 'lie';
+  s.t = 6;
+  if (performance.now() - slabBoomT > 120) SFX.boom(); // masks landing together: one boom
+  slabBoomT = performance.now();
+  cam.shake = Math.max(cam.shake, 0.35);
+  s.ring.material.color.setHex(COL.bile);
+  s.ring.scale.setScalar(1);
+  burst(new THREE.Vector3(s.x, 0.3, s.z), [0x9a9e98, COL.paper, COL.ink], 12, 5, 0.22);
+  if (Math.hypot(hero.pos.x - s.x, hero.pos.z - s.z) < 1.4) hurtHero(1, new THREE.Vector3(s.x, 0, s.z));
+}
 function updateSlabs(dt) {
   for (let i = slabs.length - 1; i >= 0; i--) {
     const s = slabs[i];
     s.t -= dt;
-    if (s.st === 'warn') {
-      s.ring.material.opacity = 0.4 + Math.sin(s.t * 30) * 0.4;
-      s.ring.scale.setScalar(1 + s.t * 0.3);
-      if (s.t <= 0) {
-        s.st = 'fall';
-        s.slab.visible = true;
-        s.t = 0.35;
-      }
-    } else if (s.st === 'fall') {
-      s.slab.position.y = Math.max(0.2, 14 * (s.t / 0.35));
-      if (s.t <= 0) {
-        s.st = 'lie';
-        s.t = 6;
-        if (performance.now() - slabBoomT > 120) SFX.boom(); // masks landing together: one boom
-        slabBoomT = performance.now();
-        cam.shake = Math.max(cam.shake, 0.35);
-        s.ring.material.color.setHex(COL.bile);
-        s.ring.scale.setScalar(1);
-        burst(new THREE.Vector3(s.x, 0.3, s.z), [0x9a9e98, COL.paper, COL.ink], 12, 5, 0.22);
-        if (Math.hypot(hero.pos.x - s.x, hero.pos.z - s.z) < 1.4) hurtHero(1, new THREE.Vector3(s.x, 0, s.z));
-      }
-    } else if (s.st === 'fly') {
-      const J = jester();
-      s.slab.rotation.y += dt * 9;
-      if (J) {
-        const dx = J.pos.x - s.slab.position.x,
-          dz = J.pos.z - s.slab.position.z,
-          d = Math.hypot(dx, dz) || 1;
-        s.slab.position.x += (dx / d) * 14 * dt;
-        s.slab.position.z += (dz / d) * 14 * dt;
-        if (d < J.r + 0.8) {
-          jesterStruck(J, s.slab.position.x, s.slab.position.z);
-          s.t = 0;
-        }
-      }
-      if (s.t <= 0) {
-        burst(s.slab.position.clone().setY(1.5), [0x9a9e98, COL.paper], 12, 5, 0.2);
-        G.group.remove(s.slab);
-        slabs.splice(i, 1);
-      }
-    } else {
-      s.ring.material.opacity = 0.5 + Math.sin(s.t * 8) * 0.3;
-      if (s.t < 0.6) s.slab.position.y -= dt * 1.2;
-      if (s.t <= 0) {
-        G.group.remove(s.slab);
-        G.group.remove(s.ring);
-        slabs.splice(i, 1);
-      }
-    }
+    if (SLAB_STATES[s.st](s, dt)) slabs.splice(i, 1);
   }
 }
 TALKERS.M = {

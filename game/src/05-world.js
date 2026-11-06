@@ -166,8 +166,37 @@ function nearRaised(x, z) {
 function buildRaised(F) {
   if (!F.raise) return;
   const top = new THREE.MeshLambertMaterial({ map: texRepeat(F.floor, 0.6, 0.6), color: 0xd8d0c4 }),
-    side = new THREE.MeshLambertMaterial({ map: TEX[F.walls[0]], color: 0x9a9a9a });
-  const rail = new THREE.MeshLambertMaterial({ color: F.deco === 'mouth' ? 0x4a1a12 : 0x2a2418 });
+    side = new THREE.MeshLambertMaterial({ map: TEX[F.walls[0]], color: 0x9a9a9a }),
+    rail = new THREE.MeshLambertMaterial({ color: F.deco === 'mouth' ? 0x4a1a12 : 0x2a2418 }),
+    wedge = rampGeometry();
+  for (let z = 0; z < G.h; z++)
+    for (let x = 0; x < G.w; x++) {
+      const k = kindAt(x, z);
+      if (k === 1) raisedBlock(x, z, [side, side, top, side, side, side], rail);
+      else if (k === 2) {
+        const m = new THREE.Mesh(wedge, [side, top]);
+        m.position.set(cellMid(x), 0, cellMid(z));
+        m.rotation.y = { E: 0, W: Math.PI, N: Math.PI / 2, S: -Math.PI / 2 }[G.rd[x + z * G.w]];
+        G.group.add(still(m));
+      }
+    }
+}
+// a block LIFT high filling cell (x, z), with a rail along every side that drops to low ground
+function raisedBlock(x, z, mats, rail) {
+  const cx = cellMid(x),
+    cz = cellMid(z),
+    b = new THREE.Mesh(new THREE.BoxGeometry(CELL, LIFT, CELL), mats);
+  b.position.set(cx, LIFT / 2, cz);
+  G.group.add(still(b));
+  for (const [dx, dz] of DIRS4) {
+    if (solid(x + dx, z + dz) || kindAt(x + dx, z + dz) !== 0) continue;
+    const r = new THREE.Mesh(dx ? new THREE.BoxGeometry(0.12, 0.9, CELL) : new THREE.BoxGeometry(CELL, 0.9, 0.12), rail);
+    r.position.set(cx + dx * (CELL / 2 - 0.06), LIFT + 0.45, cz + dz * (CELL / 2 - 0.06));
+    G.group.add(still(r));
+  }
+}
+// one cell's ramp, rising toward +x: the slope (material 1) and its two triangular sides (material 0)
+function rampGeometry() {
   const h = CELL / 2,
     P3 = [],
     UV = [],
@@ -177,10 +206,11 @@ function buildRaised(F) {
         UV.push(v[3], v[4]);
       }
     };
+  // each corner: x, y, z, u, v
   const A = [-h, 0, -h, 0, 0],
     B = [-h, 0, h, 0, 1],
     C = [h, LIFT, h, 1, 1],
-    D = [h, LIFT, -h, 1, 0]; // the slope, rising toward +x
+    D = [h, LIFT, -h, 1, 0];
   tri(A, B, C);
   tri(A, C, D);
   const s0 = [-h, 0, h, 0, 0],
@@ -190,36 +220,14 @@ function buildRaised(F) {
     n1 = [h, 0, -h, 1, 0],
     n2 = [h, LIFT, -h, 1, LIFT / CELL];
   tri(s0, s1, s2);
-  tri(n0, n2, n1); // the two triangular sides
+  tri(n0, n2, n1);
   const wedge = new THREE.BufferGeometry();
   wedge.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3));
   wedge.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2));
   wedge.computeVertexNormals();
   wedge.addGroup(0, 6, 1);
   wedge.addGroup(6, 6, 0);
-  for (let z = 0; z < G.h; z++)
-    for (let x = 0; x < G.w; x++) {
-      const k = kindAt(x, z),
-        cx = cellMid(x),
-        cz = cellMid(z);
-      if (k === 1) {
-        const b = new THREE.Mesh(new THREE.BoxGeometry(CELL, LIFT, CELL), [side, side, top, side, side, side]);
-        b.position.set(cx, LIFT / 2, cz);
-        G.group.add(still(b));
-        for (const [dx, dz] of DIRS4)
-          if (!solid(x + dx, z + dz) && kindAt(x + dx, z + dz) === 0) {
-            // a rail along every drop
-            const r = new THREE.Mesh(dx ? new THREE.BoxGeometry(0.12, 0.9, CELL) : new THREE.BoxGeometry(CELL, 0.9, 0.12), rail);
-            r.position.set(cx + dx * (CELL / 2 - 0.06), LIFT + 0.45, cz + dz * (CELL / 2 - 0.06));
-            G.group.add(still(r));
-          }
-      } else if (k === 2) {
-        const m = new THREE.Mesh(wedge, [side, top]);
-        m.position.set(cx, 0, cz);
-        m.rotation.y = { E: 0, W: Math.PI, N: Math.PI / 2, S: -Math.PI / 2 }[G.rd[x + z * G.w]];
-        G.group.add(still(m));
-      }
-    }
+  return wedge;
 }
 // pushes a circle (centre p, radius r) out of walls, cells at another height (when y is given), props, pyramids and stakes
 // in the 3×3 cells around it; who (a talker, or none) may be drawn wider than it walks
