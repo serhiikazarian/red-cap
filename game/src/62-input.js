@@ -96,6 +96,11 @@ addEventListener('blur', () => {
   keys.clear();
   if (state === 'play') pause(true);
 });
+// a phone turned upright mid-play pauses (style.css covers the screen and asks to turn it back)
+if (touchUI)
+  matchMedia('(orientation: portrait)').addEventListener('change', m => {
+    if (m.matches && state === 'play') pause(true);
+  });
 // ----- touch: a stick on the left, buttons on the right
 $('#touch').addEventListener('pointerdown', () => {
   if (state === 'intro') beginFloor();

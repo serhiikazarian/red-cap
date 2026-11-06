@@ -157,7 +157,7 @@ button:focus, button:focus-visible { outline: none; }
 #card .sheet { width: min(560px, 100%); text-align: center; transform: rotate(1deg); }
 #card .num { font-size: .8rem; letter-spacing: .2em; text-transform: uppercase; }
 /* the catalogue: one pinned card per talker */
-.pager { display: grid; gap: 14px; height: min(600px, calc(100vh - 80px)); overflow: hidden; }
+.pager { display: grid; gap: 14px; height: min(600px, calc(100vh - 80px)); height: min(600px, calc(100dvh - 80px)); overflow: hidden; } /* dvh: the browser's bars left out */
 #win, #catalogue { overflow: hidden; } /* paged, never scrolled */
 .wake-sheet { grid-template-rows: 1fr auto; width: min(820px, 100%); }
 .wpage { display: grid; gap: 16px; align-content: center; min-height: 0; }
@@ -171,7 +171,7 @@ button:focus, button:focus-visible { outline: none; }
 .cat-sheet { width: min(980px, 100%); grid-template-rows: auto 1fr auto auto; }
 .cat-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .cat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; align-content: start; min-height: 0; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; align-content: start; min-height: 0; overflow-y: auto; overscroll-behavior: contain; } /* scrolls only if a row cannot fit (catLayout pages the rest) */
 .cat-card { margin: 0; position: relative; display: grid; gap: 4px; justify-items: center; align-content: start; text-align: center; padding: 10px 8px 12px; border: 2px solid var(--ink); background: var(--sheet); transform: rotate(var(--r, 0deg)); box-shadow: 3px 3px 0 rgba(13,11,10,.25); }
 .cat-card img { height: clamp(52px, 11vh, 88px); width: auto; max-width: 100%; object-fit: contain; }
 .cat-card .nm { font-family: var(--display); font-size: 1.05rem; line-height: 1.1; }
@@ -198,3 +198,22 @@ button:focus, button:focus-visible { outline: none; }
 #bSling { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); background: #6b5a2a; }
 #bDodge { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); background: #3a332c; }
 @media (max-width: 560px) { .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }
+/* a short window (a phone on its side, a low desktop window): the paged sheets go compact so a row of cards fits */
+@media (max-height: 520px) {
+  #catalogue, #win { padding-block: 10px; }
+  .pager.sheet { padding: 12px 22px; height: calc(100vh - 46px); height: calc(100dvh - 46px); gap: 8px; } /* 46: the padding round it and its tilt */
+  .pager .cat-head h2 { font-size: 1.5rem; }
+  .cat-grid { gap: 8px; }
+  .cat-card { padding: 6px 6px 8px; gap: 2px; }
+  .cat-card img { height: 40px; }
+  .cat-card .nm { font-size: .9rem; }
+  .cat-card .ln { font-size: .66rem; line-height: 1.25; }
+  .cat-floor b { font-size: 1.1rem; }
+  .pnav button { font-size: 1.3rem; padding: 0 16px 3px; }
+}
+/* phones play on their side: held upright, a sheet asks to turn it (60-flow pauses play) */
+#turn { display: none; }
+@media (pointer: coarse) and (orientation: portrait) {
+  #turn { display: grid; place-items: center; position: fixed; inset: 0; z-index: 1000; background: var(--ink); padding: 24px; }
+}
+@media (max-height: 340px) { .cat-card img { height: 30px; } .pager .cat-head h2 { font-size: 1.25rem; } }
