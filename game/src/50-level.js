@@ -145,7 +145,41 @@ function newFloor(F, w) {
     niches: [],
     keep: [], // story ground set dressing keeps off
     pyr: null, // floor two's pyramids by cell, when the floor has them
-    props: null // floor three's cover blocks by cell, when the floor has them
+    props: null, // floor three's cover blocks by cell, when the floor has them
+    texs: [], // textures the floor makes that no mesh holds yet (the Grump's walls): warmUp uploads them
+    doorT: 0, // until the exit door is next checked (openDoor, every 0.5 s of play)
+    lamp: null, // the light that follows Red Cap
+    hk: null, // raised ground per cell (buildHeights): 0 floor, 1 raised, 2 a ramp; rd: the way each ramp rises
+    rd: null,
+    wallTop: {}, // each wall cell's height (x + z * width), for things set on top
+    blockBase: {}, // floor three: each wall cell's bottom block height (the paintings hang on it)
+    rimUp: null, // floor two: the stand-in that uploads the pyramids' rim shape (pyrRimFor)
+    spirits: null, // floor one's floating faces (narcPages)
+    papers: null, // floor one's falling newspapers
+    drips: null, // floor one's drips
+    fogWall: null, // floor three's fog gate while it stands (fogWall)
+    paperTrail: null, // the scraps from Red Cap to the open door (updPaperTrail)
+    psyWind: 0, // the Geezer's psychedelic wind on the picture, set again every frame
+    leftN: 0, // talkers left at the last count (updLeft): one left calls the last call
+    lastTieT: 0, // how long Red Cap has been on his last tie (an onlooker may shake a heart out of him)
+    roomHeartGiven: false, // the floor's heart room has given its heart
+    yySide: 1, // the yo-yo's throws alternate sides: the side of the last one
+    usherHint: false, // hints already shown on this floor
+    npcHint: false,
+    mineHint: false,
+    wetHint: false,
+    totemIdle: null, // seconds since a big totem was last rung (null: never); totemTaught: their use has been seen
+    totemTaught: false,
+    finalFx: null, // the Jester's final blow: its effects, where he fell, his mask waiting to be taken
+    finalAt: null,
+    finalMask: null,
+    plaques: null, // floor three's secret: the two plaques, the painting, its waking, the boss (G.ld), the jaw to take
+    ldPainting: null,
+    ldWake: 0,
+    ld: null,
+    jawPickup: null,
+    jawT: 6, // until the jaw Red Cap carries next taunts the masked Jester (it knocks his mask off)
+    npcHearts: 0 // hearts shaken out of onlookers on this floor (at most two: hitNpc)
   };
   buildHeights(F);
   scene.add(G.group);
@@ -173,103 +207,116 @@ function newFloor(F, w) {
 // floating block now and then), the gate, pillars, pyramids and totems, props, the start, talkers, hearts and the exit door.
 // Things on raised ground are lifted with it.
 function buildCells(F, w, box, rng) {
-  const map = G.map;
-  const wallMats = F.walls.map(t => {
-    const [k, c] = t.split(':'); // a tint after the colon (floor two's darker walls)
+  const B = { F, w, box, rng, mats: wallMaterials(F), cornice: [], webFaces: [], movedFrom: {}, movedTo: new Set() };
+  // B.cornice: floor two's wall tops (corniceGeo), merged after the walls; B.webFaces: the faces under them, for the webs (addWebs)
+  for (const [fx, fz, tx, tz] of F.blockMoved || []) {
+    B.movedFrom[fx + ',' + fz] = [tx, tz];
+    B.movedTo.add(tx + ',' + tz);
+  }
+  for (let z = 0; z < G.h; z++) for (let x = 0; x < w; x++) buildCell(B, x, z);
+  if (B.cornice.length)
+    G.group.add(still(new THREE.Mesh(mergeGeos(B.cornice), new THREE.MeshLambertMaterial({ color: 0x24100c, emissive: 0x1a0402 }))));
+  if (F.deco === 'mouth') addWebs(w, B.webFaces);
+  if (F.deco === 'blocks') addPaintings(w);
+}
+// the floor's wall materials, one per wall texture; a tint after the colon (floor two's darker walls)
+function wallMaterials(F) {
+  return F.walls.map(t => {
+    const [k, c] = t.split(':');
     const m = new THREE.MeshLambertMaterial({ map: TEX[k], color: c ? +c : 0xffffff });
     if (F.deco === 'mouth') m.onBeforeCompile = wallShade;
     return m;
   });
-  const cornice = [], // floor two's wall tops (corniceGeo), merged after the walls
-    webFaces = []; // and the faces under them, for the webs (addWebs)
-  G.wallTop = {}; // each wall cell's height (x + z * width), for things set on top
-  G.blockBase = {}; // floor three: each wall cell's bottom block height (the paintings hang on it)
-  const movedFrom = {},
-    movedTo = new Set();
-  for (const [fx, fz, tx, tz] of F.blockMoved || []) {
-    movedFrom[fx + ',' + fz] = [tx, tz];
-    movedTo.add(tx + ',' + tz);
+}
+// one cell of the map; whatever it adds on raised ground is lifted with it
+function buildCell(B, x, z) {
+  const { F, box, rng } = B,
+    c = G.map[z][x],
+    cx = cellMid(x),
+    cz = cellMid(z),
+    nBefore = G.group.children.length;
+  const mv = B.movedFrom[x + ',' + z];
+  if (mv) buildProp(F, cellMid(mv[0]), cellMid(mv[1]), rng);
+  if (c === '#') {
+    if (F.deco === 'blocks') blockWall(B, x, z);
+    else tallWall(B, x, z);
+  } else if (c === 'g') {
+    const h = 4.2,
+      m = new THREE.Mesh(box, new THREE.MeshLambertMaterial({ map: TEX.t_coal, color: 0x888888 }));
+    m.scale.set(CELL, h, CELL * 0.8);
+    m.position.set(cx, h / 2, cz);
+    m.userData = { y0: h / 2, h };
+    G.group.add(m);
+    G.gate.push(m);
+    if (F.deco === 'blocks') m.visible = false;
+  } else if (c === 'T') standing(F, x, z, cx, cz, rng);
+  else if (c === 'o') {
+    if (!B.movedTo.has(x + ',' + z)) buildProp(F, cx, cz, rng);
+  } else if (c === '_') for (let k = 0; k < 13; k++) rng();
+  else if (c === 'P')
+    hero.pos.set(F.start ? F.start[0] : cx, 0, F.start ? F.start[1] : cz); // F.start: a spot off the cell's centre
+  else if ('BGRUMZSYWq'.includes(c)) makeEnemy(c, cx, cz);
+  else if (c === 'h') {
+    if (heartPlaced(F)) spawnPickup(cx, cz);
+  } else if (c === 'X') buildDoor(cx, cz);
+  if (c !== '#' && kindAt(x, z) === 1) for (let k = nBefore; k < G.group.children.length; k++) G.group.children[k].position.y += LIFT;
+}
+// floor three's wall: 2-3 painted blocks stacked, the upper ones a little off and turned
+function blockWall({ w, box, rng, mats }, x, z) {
+  const cx = cellMid(x),
+    cz = cellMid(z);
+  let y = 0;
+  const n = 2 + ((rng() * 2) | 0);
+  for (let k = 0; k < n; k++) {
+    const h = 1.2 + rng() * 2.2,
+      m = new THREE.Mesh(box, mats[(rng() * mats.length) | 0]);
+    const inset = k ? rng() * 0.5 : 0;
+    m.scale.set(CELL - inset, h, CELL - inset);
+    m.position.set(cx + (k ? (rng() - 0.5) * 0.5 : 0), y + h / 2, cz + (k ? (rng() - 0.5) * 0.5 : 0));
+    m.rotation.y = k ? (rng() - 0.5) * 0.15 : 0;
+    G.group.add(still(m));
+    if (!k) G.blockBase[x + z * w] = h;
+    y += h;
   }
-  for (let z = 0; z < G.h; z++)
-    for (let x = 0; x < w; x++) {
-      const c = map[z][x],
-        cx = x * CELL + CELL / 2,
-        cz = z * CELL + CELL / 2,
-        nBefore = G.group.children.length;
-      const mv = movedFrom[x + ',' + z];
-      if (mv) buildProp(F, mv[0] * CELL + CELL / 2, mv[1] * CELL + CELL / 2, rng);
-      if (c === '#') {
-        if (F.deco === 'blocks') {
-          let y = 0;
-          const n = 2 + ((rng() * 2) | 0);
-          for (let k = 0; k < n; k++) {
-            const h = 1.2 + rng() * 2.2,
-              m = new THREE.Mesh(box, wallMats[(rng() * wallMats.length) | 0]);
-            const inset = k ? rng() * 0.5 : 0;
-            m.scale.set(CELL - inset, h, CELL - inset);
-            m.position.set(cx + (k ? (rng() - 0.5) * 0.5 : 0), y + h / 2, cz + (k ? (rng() - 0.5) * 0.5 : 0));
-            m.rotation.y = k ? (rng() - 0.5) * 0.15 : 0;
-            G.group.add(still(m));
-            if (!k) G.blockBase[x + z * w] = h;
-            y += h;
-          }
-        } else {
-          const h = F.wallH[0] + rng() * (F.wallH[1] - F.wallH[0]) + (nearRaised(x, z) ? LIFT : 0),
-            m = new THREE.Mesh(box, wallMats[(rng() * wallMats.length) | 0]);
-          m.scale.set(CELL, h, CELL);
-          m.position.set(cx, h / 2, cz);
-          G.group.add(still(m));
-          G.wallTop[x + z * w] = h;
-          if (F.deco === 'mouth')
-            for (const [a, b] of DIRS4) {
-              const nc = ch(x + a, z + b);
-              if (nc && nc !== '#') {
-                cornice.push([corniceGeo(a ? 0.04 : 0.06), M4(cx + (a * CELL) / 2, h, cz + (b * CELL) / 2, 0, Math.atan2(a, b), 0)]);
-                webFaces.push([cx + (a * CELL) / 2, cz + (b * CELL) / 2, a, b, h]);
-              }
-            }
-          if (rng() < 0.25) {
-            const f = new THREE.Mesh(box, wallMats[(rng() * wallMats.length) | 0]);
-            f.scale.set(CELL * (0.5 + rng() * 0.6), 0.8 + rng() * 1.6, CELL * (0.5 + rng() * 0.6));
-            f.position.set(cx + (rng() - 0.5), h + 1 + rng() * 2.5, cz + (rng() - 0.5));
-            f.rotation.set((rng() - 0.5) * 0.5, rng() * 3, (rng() - 0.5) * 0.5);
-            G.group.add(f);
-            G.deco.push({ m: f, spin: (rng() - 0.5) * 0.3, bob: rng() * 6, y: f.position.y });
-          }
-        }
-      } else if (c === 'g') {
-        const h = 4.2,
-          m = new THREE.Mesh(box, new THREE.MeshLambertMaterial({ map: TEX.t_coal, color: 0x888888 }));
-        m.scale.set(CELL, h, CELL * 0.8);
-        m.position.set(cx, h / 2, cz);
-        m.userData = { y0: h / 2, h };
-        G.group.add(m);
-        G.gate.push(m);
-        if (F.deco === 'blocks') m.visible = false;
-      } else if (c === 'T') {
-        if (F.deco === 'blocks' && z < 8)
-          buildTotem(cx, cz, false, rng); // in the Jester's chamber
-        else if (F.deco === 'mouth') buildPyramid(x, z, cx, cz, rng);
-        else if (F.deco === 'blocks') buildTotem(cx, cz, true, rng);
-        else {
-          const t = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.65, 7, 8), new THREE.MeshLambertMaterial({ color: 0x1a1612 }));
-          t.position.set(cx, 3.5, cz);
-          G.group.add(seeThru(still(t), false, 'pillar')); // a pillar's rules: seeSolid
-        }
-      } else if (c === 'o') {
-        if (!movedTo.has(x + ',' + z)) buildProp(F, cx, cz, rng);
-      } else if (c === '_') for (let k = 0; k < 13; k++) rng();
-      else if (c === 'P')
-        hero.pos.set(F.start ? F.start[0] : cx, 0, F.start ? F.start[1] : cz); // F.start: a spot off the cell's centre
-      else if ('BGRUMZSYWq'.includes(c)) makeEnemy(c, cx, cz);
-      else if (c === 'h') {
-        if (heartPlaced(F)) spawnPickup(cx, cz);
-      } else if (c === 'X') buildDoor(cx, cz);
-      if (c !== '#' && kindAt(x, z) === 1) for (let k = nBefore; k < G.group.children.length; k++) G.group.children[k].position.y += LIFT;
+}
+// one tall box (taller next to raised ground); floor two's gets a cornice on each open side; now and then a block floats above
+function tallWall({ F, w, box, rng, mats, cornice, webFaces }, x, z) {
+  const cx = cellMid(x),
+    cz = cellMid(z);
+  const h = F.wallH[0] + rng() * (F.wallH[1] - F.wallH[0]) + (nearRaised(x, z) ? LIFT : 0),
+    m = new THREE.Mesh(box, mats[(rng() * mats.length) | 0]);
+  m.scale.set(CELL, h, CELL);
+  m.position.set(cx, h / 2, cz);
+  G.group.add(still(m));
+  G.wallTop[x + z * w] = h;
+  if (F.deco === 'mouth')
+    for (const [a, b] of DIRS4) {
+      const nc = ch(x + a, z + b);
+      if (nc && nc !== '#') {
+        cornice.push([corniceGeo(a ? 0.04 : 0.06), M4(cx + (a * CELL) / 2, h, cz + (b * CELL) / 2, 0, Math.atan2(a, b), 0)]);
+        webFaces.push([cx + (a * CELL) / 2, cz + (b * CELL) / 2, a, b, h]);
+      }
     }
-  if (cornice.length) G.group.add(still(new THREE.Mesh(mergeGeos(cornice), new THREE.MeshLambertMaterial({ color: 0x24100c, emissive: 0x1a0402 }))));
-  if (F.deco === 'mouth') addWebs(w, webFaces);
-  if (F.deco === 'blocks') addPaintings(w);
+  if (rng() < 0.25) {
+    const f = new THREE.Mesh(box, mats[(rng() * mats.length) | 0]);
+    f.scale.set(CELL * (0.5 + rng() * 0.6), 0.8 + rng() * 1.6, CELL * (0.5 + rng() * 0.6));
+    f.position.set(cx + (rng() - 0.5), h + 1 + rng() * 2.5, cz + (rng() - 0.5));
+    f.rotation.set((rng() - 0.5) * 0.5, rng() * 3, (rng() - 0.5) * 0.5);
+    G.group.add(f);
+    G.deco.push({ m: f, spin: (rng() - 0.5) * 0.3, bob: rng() * 6, y: f.position.y });
+  }
+}
+// a T cell: a totem on floor three (unlit in the Jester's chamber), a pyramid on floor two, a dark pillar elsewhere
+function standing(F, x, z, cx, cz, rng) {
+  if (F.deco === 'blocks' && z < 8)
+    buildTotem(cx, cz, false, rng); // in the Jester's chamber
+  else if (F.deco === 'mouth') buildPyramid(x, z, cx, cz, rng);
+  else if (F.deco === 'blocks') buildTotem(cx, cz, true, rng);
+  else {
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.65, 7, 8), new THREE.MeshLambertMaterial({ color: 0x1a1612 }));
+    t.position.set(cx, 3.5, cz);
+    G.group.add(seeThru(still(t), false, 'pillar')); // a pillar's rules: seeSolid
+  }
 }
 // floor one's corner room (the curtain and the endless doorway): sometimes a pile of pebbles somewhere in it
 function roomPile(F) {

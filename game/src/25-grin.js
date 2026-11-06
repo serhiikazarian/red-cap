@@ -54,12 +54,28 @@ function grinBall(h) {
     S = SHAPES.grin_fire,
     H = h * S.scale,
     W = H * S.aspect,
-    cy = H / 2;
+    cy = H / 2,
+    R = h * 0.46;
   fire.position.z = -0.3;
   fire.scale.setScalar(1.12);
   g.add(fire); // the corona sits just behind and a little larger, so flames lick past the head
-  const R = h * 0.46,
-    geo = new THREE.SphereGeometry(R, 40, 28),
+  const mat = grinHeadMat(fire, W, H, cy);
+  mat.color = mat.uniforms.tint.value;
+  const ball = new THREE.Mesh(grinHeadGeo(R, cy), mat);
+  fire.userData.sortRank = 1; // drawn in this order at the Grin's distance (sortUnits): its glow and flames, the fire card, the ball, the mouth
+  ball.userData.sortRank = 2;
+  g.add(ball);
+  g.userData.mat = fire.userData.mat;
+  g.userData.ballMat = mat;
+  const mouth = grinMouth(W, H, cy, R);
+  g.add(mouth);
+  g.userData.mouth = mouth;
+  g.userData.mouthMat = mouth.material;
+  return g;
+}
+// the head: a sphere made lumpy, a little wide and flat, its foot at y 0
+function grinHeadGeo(R, cy) {
+  const geo = new THREE.SphereGeometry(R, 40, 28),
     p = geo.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i),
@@ -70,7 +86,11 @@ function grinBall(h) {
   }
   geo.computeVertexNormals();
   geo.translate(0, cy, 0);
-  const mat = new THREE.ShaderMaterial({
+  return geo;
+}
+// the head's look: the painted face, lit from the front, its rim burning away into lavender fire
+function grinHeadMat(fire, W, H, cy) {
+  return new THREE.ShaderMaterial({
     uniforms: {
       map: { value: TEX.grin_fire },
       tint: { value: new THREE.Color(0xffffff) },
@@ -100,14 +120,9 @@ function grinBall(h) {
     depthWrite: false,
     ...INK_HIDE
   });
-  mat.color = mat.uniforms.tint.value;
-  const ball = new THREE.Mesh(geo, mat);
-  fire.userData.sortRank = 1; // drawn in this order at the Grin's distance (sortUnits): its glow and flames, the fire card, the ball, the mouth
-  ball.userData.sortRank = 2;
-  g.add(ball);
-  g.userData.mat = fire.userData.mat;
-  g.userData.ballMat = mat;
-  // the grin, cut from the same painting and inked round twice, hangs a hand's width in front of the face it was torn from
+}
+// the grin, cut from the same painting and inked round twice, hangs a hand's width in front of the face it was torn from
+function grinMouth(W, H, cy, R) {
   const MS = SHAPES.grin_mouth,
     mmat = new THREE.MeshBasicMaterial({ map: TEX.grin_mouth, transparent: true, depthWrite: false, ...INK_HIDE });
   const mouth = new THREE.Mesh(new THREE.PlaneGeometry(MS.fw * W * 1.15, MS.fh * H * 1.15), mmat);
@@ -115,10 +130,7 @@ function grinBall(h) {
   mouth.userData.sortRank = 3;
   mouth.userData.base = mouth.position.clone();
   mouth.userData.jx = mouth.userData.jy = 0;
-  g.add(mouth);
-  g.userData.mouth = mouth;
-  g.userData.mouthMat = mmat;
-  return g;
+  return mouth;
 }
 // the burning ball in a violet glow with seven flames; drawnR (its ball and wiggle) keeps it out of a pyramid's foot
 function makeGrin(e, add) {
@@ -172,44 +184,14 @@ function updGrin(e, dt, dist, ux, uz, mv) {
       e.st = 'hover';
       e.t = rand(1.2, 2.2);
     }
-  } else if (e.st === 'hover') {
-    if (!seen) {
-      [mv.x, mv.z] = steer(e);
-      mv.sp = 3.6;
-    } else {
-      const want = dist > 8 ? 1 : dist < 4.5 ? -1 : 0;
-      const side = Math.sin(performance.now() / 900 + e.seed) > 0 ? 1 : -1;
-      mv.x = ux * want + -uz * side * 0.8;
-      mv.z = uz * want + ux * side * 0.8;
-      mv.sp = 3.4;
-    }
-    if (dist < 1.9 && e.stagger <= 0) {
-      e.st = 'bite';
-      e.t = 0.3;
-    } else if (seen && e.t <= 0 && e.stagger <= 0) {
-      e.st = 'wind';
-      e.t = 0.55;
-      floatWord('HAAA', e.pos.clone().setY(e.fly + 1.1), HEX.bile, 0.7);
-    }
-  } else if (e.st === 'wind') {
+  } else if (e.st === 'hover') grinHover(e, seen, dist, ux, uz, mv);
+  else if (e.st === 'wind') {
     if (animTick) {
       shake(e.tilt, 0.07);
       e.body.scale.setScalar(1 + (0.55 - e.t) * 0.4);
       e.tilt.rotation.x = -(0.55 - e.t) * 0.6;
     }
-    if (e.t <= 0) {
-      e.body.scale.setScalar(1);
-      e.tilt.rotation.x = 0;
-      e.tilt.position.set(0, e.fly, 0);
-      const from = e.pos.clone().setY(e.fly),
-        to = hero.pos
-          .clone()
-          .setY(hero.pos.y + 1.1)
-          .addScaledVector(new THREE.Vector3(hero.vel.x, 0, hero.vel.y), (dist / 10.5) * 0.6);
-      fireball(from, to.sub(from).normalize());
-      e.st = 'hover';
-      e.t = rand(2, 3.2);
-    }
+    if (e.t <= 0) grinSpit(e, dist);
   } else if (e.st === 'bite') {
     mv.x = ux;
     mv.z = uz;
@@ -223,6 +205,46 @@ function updGrin(e, dt, dist, ux, uz, mv) {
     }
   }
   e.tilt.position.y = e.fly;
+  grinFlames(e, dt);
+}
+// hovering: hunting him by the map until he is seen, then keeping a wary distance and strafing; too close, a bite; else, when
+// its wait is over, the wind-up
+function grinHover(e, seen, dist, ux, uz, mv) {
+  if (!seen) {
+    [mv.x, mv.z] = steer(e);
+    mv.sp = 3.6;
+  } else {
+    const want = dist > 8 ? 1 : dist < 4.5 ? -1 : 0;
+    const side = Math.sin(performance.now() / 900 + e.seed) > 0 ? 1 : -1;
+    mv.x = ux * want + -uz * side * 0.8;
+    mv.z = uz * want + ux * side * 0.8;
+    mv.sp = 3.4;
+  }
+  if (dist < 1.9 && e.stagger <= 0) {
+    e.st = 'bite';
+    e.t = 0.3;
+  } else if (seen && e.t <= 0 && e.stagger <= 0) {
+    e.st = 'wind';
+    e.t = 0.55;
+    floatWord('HAAA', e.pos.clone().setY(e.fly + 1.1), HEX.bile, 0.7);
+  }
+}
+// the wind-up done: a fireball spat where he is going
+function grinSpit(e, dist) {
+  e.body.scale.setScalar(1);
+  e.tilt.rotation.x = 0;
+  e.tilt.position.set(0, e.fly, 0);
+  const from = e.pos.clone().setY(e.fly),
+    to = hero.pos
+      .clone()
+      .setY(hero.pos.y + 1.1)
+      .addScaledVector(new THREE.Vector3(hero.vel.x, 0, hero.vel.y), (dist / 10.5) * 0.6);
+  fireball(from, to.sub(from).normalize());
+  e.st = 'hover';
+  e.t = rand(2, 3.2);
+}
+// its fire: sparks, the glow's flicker, the corona's flames
+function grinFlames(e, dt) {
   if (Math.random() < dt * 18)
     burst(fxAt(e.pos, rand(-0.6, 0.6), e.fly + rand(-0.1, 0.7), rand(-0.6, 0.6)), [COL.hot, COL.bile, COL.tie], 1, 1, 0.22, {
       g: -5,

@@ -1,7 +1,11 @@
-// usage: node tests/replay-cmp.js a.json b.json
+// usage: node tests/replay-cmp.js a b   (folders of replays from tests/replay.js, or older single files)
 // Prints, for every scenario, whether the two replays are the same, or the first sample where they part.
 const fs = require('fs');
-const [a, b] = process.argv.slice(2).map(f => JSON.parse(fs.readFileSync(f, 'utf8')));
+const { loadTraces } = require('./jobs');
+const errors = w => (fs.statSync(w).isFile() ? JSON.parse(fs.readFileSync(w, 'utf8')).errors : fs.existsSync(w + '/errors.json') ? JSON.parse(fs.readFileSync(w + '/errors.json', 'utf8')) : []);
+const [wa, wb] = process.argv.slice(2),
+  [a, b] = [wa, wb].map(loadTraces);
+[a.errors, b.errors] = [errors(wa), errors(wb)];
 let same = true;
 for (const k of Object.keys(a)) {
   if (k === 'errors') continue;

@@ -173,3 +173,136 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - The floor's state `G` declares its fields in `newFloor`; the `G.x || []` guards are gone (`pyr`, `props`: null on floors
   without them).
 - Test baselines remade. Title label `v1.23`.
+
+## 1.24 (3 Nov 2026)
+- Floor two: besides the 1 or 2 bomb pyramids, 1 or 2 others (two: `PYR_EMPTY_TWO`, 30%) are empty: no tie seen inside, no
+  heart when they shatter (`hideBombs`, 48-bombs).
+- Floor two: talkers' shots (a Grin's fireball, Bruno's insults and embers, the Priest's blood spray) strike a pyramid like
+  Red Cap's blows, three to shatter it; one spray is one blow to each pyramid it reaches (`volley`), and the Priest's rain
+  strikes each pyramid inside his circle once as it lands (`RAIN_R`).
+- Floor three's loading: before `calibrate`, `settle` draws every timed view once an animation frame until two rounds agree
+  (`SETTLE_ROUNDS`, `SETTLE_TOL`, `SETTLE_MAX`), so the GPU's leftover build work no longer sets the floor's ratio too low and
+  it opens sharp instead of climbing during the first seconds.
+- Test baselines remade. Title label `v1.24`.
+
+## 1.25 (3 Nov 2026)
+- Every floor's loading finds its drawing settings from real frames before play (`tune`, 60-flow): `settle` (now on every
+  floor) until frame times stop changing, `calibrate` for a first pick, then `climb`: frames played at the better settings
+  (`resLadder`) are judged by the controller's own late-frame rule (`tryRung`), and the best that passes is kept. A floor no
+  longer starts blurry and sharpens a few seconds into play on a machine that holds the sharper setting.
+- Checks: `tools/same.sh` runs every full replay and picture three at a time, the touched floors first, with a progress
+  line a job (~75 s, was ~3 min with short replays); the harness enters floor one without its loading cut and shader
+  warm-up. Replay baselines are one file per scenario, one sample a line (`tests/baseline/replay/`); `tools/same.sh new`
+  takes the last check's run of the same build and writes only what changed. `tools/check.sh` boots alongside lint.
+- Title label `v1.25`.
+
+## 1.26 (3 Nov 2026)
+- Loading scissors cross their line at one even speed and the floor shows as they arrive (`snipRun`, 60-flow); the run is
+  timed by how long that floor took to load in this browser (`redcap.load.v1`, guess `LOAD_GUESS` the first time); a load
+  that runs long slows them in even steps (`SNIP_SLOW_AT`, `SNIP_SLOW`) instead of stalling them at the end.
+- `CLAUDE.md` condensed; docs are now synced once, at the end of a chat.
+- Title label `v1.26`.
+
+## 1.27 (3 Nov 2026)
+- Loading no longer restarts or sticks: the scissors slow down only to `SNIP_RATE_MIN` and keep their place on a speed change
+  (the browser's own rate change lost it after a long slow stretch); arrival is checked on a timer, not an animation promise;
+  `enterFloor` ignores a second start while a floor is on its way in.
+- `tune` draws one frame each animation frame (the one-shot `calibrate` is gone), tries the best setting first, ends on
+  `TUNE_MAX` or a fault; remembered load times are averaged and capped (`LOAD_MAX`).
+- The scissors cut the line open behind them (`.snip::before`).
+- Floor one is built and warmed on the title (`titleWarm`), so its first loading screen is shorter; `LOAD_GUESS` lowered.
+- The title's music button turns red under the controller's selection.
+- Title label `v1.27`.
+
+## 1.28 (3 Nov 2026)
+- Shorter first loading screen: load times start afresh (`redcap.load.v2`: 1.26's could hold a stuck load), a faster load
+  is taken at once and a slower one averaged in, `SNIP_MARGIN` 1.1, `LOAD_MAX` 10 s, `SETTLE_MIN` 12 frames.
+- Title label `v1.28`.
+
+## 1.29 (3 Nov 2026)
+- Shorter loading screens: the sharpness search ends within `TUNE_MAX` 3 s (the controller goes on from there), settling
+  within `SETTLE_MAX` 60 frames; the scissors' run is never planned past `LOAD_MAX` 5 s; `LOAD_GUESS` 2 s for floors one and two.
+- Title label `v1.29`.
+
+## 1.30 (3 Nov 2026)
+- Floor three: the Grump's rings end, torn, at the first wall (or the closed fog gate) in each direction, as the rules already
+  had it (`waveWalls`: the distance in `WAVE_WALL_N` directions, measured once at build, read by the rings' shader as `uWall`).
+- `G.texs`: textures a floor makes that no mesh holds yet; `warmUp` uploads them.
+- Title label `v1.30`.
+
+## 1.31 (4 Nov 2026)
+- Floor three: a ring meeting a wall tears as at a sound block (cracks ahead, a burning rim, shards, then a jagged fade);
+  the wall distances are averaged over neighbouring directions (`WAVE_WALL_SOFT`), so the edge no longer follows the grid.
+- Title label `v1.31`.
+
+## 1.32 (4 Nov 2026)
+- Resuming from the pause menu with Esc or a controller no longer leaves the cursor showing for the rest of the run: a
+  refused mouse capture is asked again on the next key or click in play (the sticky `dragLook` is gone).
+- Title label `v1.32`.
+
+## 1.33 (4 Nov 2026)
+- The first loading screen no longer freezes before the scissors show: the world isn't drawn while the ink covers the
+  title (`worldOn`), so floor one's first, heaviest frame is drawn once, under the scissors (about 1.5 s sooner overall in
+  the test browser).
+- Scissors: `tune()` tells how long it expects still to take (`tuneLeft`), and they steer towards the pace that ends just
+  then, each change eased over `SNIP_EASE`; the stepped halvings near the end (`SNIP_SLOW`) are gone, and slowing near the
+  end is kept only for when no estimate is left.
+- Title label `v1.33`.
+
+## 1.34 (4 Nov 2026)
+- Scissors no longer jump back to the start: a run that ended while the page was held up (a heavy frame) is left at its end
+  until the floor is ready, as a speed change on an ended animation started it over; speed changes go through
+  `updatePlaybackRate`, which keeps the place they are drawn at (setting the time again pulled them back while the page was
+  busy).
+- Title label `v1.34`.
+
+## 1.35 (6 Nov 2026)
+- The yo-yo's hit-stop counts down in unslowed time: inside slow motion (a bomb, the Jester stunned or torn) it lasted five
+  times too long. The Jester replay's baseline is remade for it.
+- The real-time screen flashes and hints (`setTimeout`) carry a note on why they don't use `later()`: it stops on death and
+  doesn't run on the title.
+- The six longest functions split into named steps, no change in play or looks: `updEnemy` (`updCaged`, `updDazed`,
+  `keepClear`), `updCamera` (`camPivotAt`, `pushOffWall` for both wall pushes, `camReach`, `camEase`, `heroFade`,
+  `updReticle`), `pyramid` (`pyrBuild`, `pyrShape`, `pyrInkRim`, `pyrCut`), `dreamBlocks` (`paperBirds`, `blockCritters`,
+  `pastelMotes`), `ldHair` (`ldHairSway`, `ldHairPick`, `ldHairLash`, `ldHairSnare`), `decorNarcissism` (`narcPortraits`,
+  `narcMirrors`, `narcNewsprint`, `narcGlasses`, `narcPages`).
+- The other 24 functions of 68 lines or more split the same way, no change in play or looks: `addWebs` (`cornerWebs`,
+  `faceWebs`, `stripWebs`, `webMesh`), `webTex` (`webCorner`, `webStrip`), `buildCells` (`buildCell`, `wallMaterials`,
+  `blockWall`, `tallWall`, `standing`), `dreamMouth` (one step per decoration), `clutter` (one builder per kind), `guidePath`
+  (`guideLamp`), `updWarn` (`warnMarkers`, `warnPlace`, `warnGlow`), `fogWall` (`fogMat`, `fogPuffs`, `fogTick`),
+  `updPaperTrail` (`trailStart`, `trailGeo`, `trailLay`), `seePrep` (`seePyrShape`, `seeColumn`, `seeSpheres`), `seeTick`
+  (`seeFocus`, `seeWant`, `seeLine`, `seeApply`), `touchControls`, `pollPad` (`padPlay`, `padMenu`), `ambience`, `updGrin`,
+  `grinBall`, `pyrScream` (`screamBus`, `screamVoices`), `buildPyramid`, `buildProp`, `buildHero` (`heroFigure`,
+  `buildYoyo`), `updBruno`, `buildCages` (`brunoStake`, `ironCage`), `addPaintings`, `enterFloor` (`floorSupplies`,
+  `floorCut`). The unread cobweb counter `G.strips` is gone. Nothing in `game/src` is 68 lines or longer now.
+- `cellMid(i)` (05-world, next to `cellOf`): the middle of a cell in metres, in place of `i * CELL + CELL / 2` and
+  `(i + 0.5) * CELL` written out 71 times (the same numbers for whole cells); `blockWall` and `tallWall` work it out themselves from the cell.
+- Every field of `G` is declared in `newFloor` now (33 were first set elsewhere: `G.doorT`, `G.npcHearts`, the hints, the
+  final blow's, the secret's, …), starting as they behaved unset; the `|| 0`, `?? 6` and `|| 1` fallbacks are gone.
+- `updEnemy`: a caged talker reaches its cage directly (`e.cage`, set by `buildCages`) instead of searching `G.cages` every
+  frame; the stances that keep their own sway are one set made once (`OWN_SWAY`), not a list built per talker per frame.
+  The hit-flash colour is still checked every frame (the Jester's blink relies on it being undone), but each material is
+  written only when its colour is not already the one wanted (`HIT_RED`, `NO_TINT`).
+- The floating-word lists (`WORDS_FLOOR`, 03-textures) name core colours (`${HEX.paper}` …) instead of typing them out
+  (69 places); the lists come out the same, character for character.
+- CI: pushes to `prerelease` build and check the game and keep it as a download on the run's page (30 days); only `main`
+  publishes, tags and releases (a manual run on another branch could publish before).
+- Tried on the `prerelease` branch first, then shipped to `main`. On `prerelease` four times: the second 1.35 added the 24
+  splits, the third `cellMid` and the two `G` fields, the fourth the rest of `G`, the cage link, the review's fixes and the
+  word lists' colours; the hit-flash check came with the ship.
+- Title label `v1.35`.
+
+## 1.36 (6 Nov 2026)
+- Phones: no more lines sliding across floors and walls. The ink pass now reads depth at high precision (many phone GPUs
+  rounded it into steps that the outlines drew as lines).
+- Jester: no more RETURN TO SENDER word when a fallen face is knocked back at him.
+- The "Esc pauses · M mutes" hint is gone from the bottom of the screen; the weapon labels keep their place.
+
+## 1.37 (6 Nov 2026), no change to the game
+- Work left on two older branches, brought in: `tools/prerelease.sh` (a version to try on the `prerelease` branch in one
+  step, `PRERELEASED N.NN`) and the 1.35 sync of `CLAUDE.md` and `docs/ARCHITECTURE.md`; from 1.23, `tools/script.py`
+  reads and writes with pathlib, and the long comment lines of `ship.sh` and `wip.sh` are wrapped (its ~5 min notes for
+  `same.sh` were out of date and stay out).
+- Docs: the ink pass's highp depth sampler (1.36), force-pushing `prerelease` allowed in the settings (only that branch).
+- Every branch brought up to date with `main`.
+- Title label `v1.37`.

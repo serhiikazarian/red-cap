@@ -75,7 +75,7 @@ function emberShot(from, dir) {
   sTone({ f: 900, f2: 300, dur: 0.15, type: 'triangle', gain: 0.1 });
 }
 
-// shots fly; walls and props stop them; blood and rain fall and may leave a pool; one that reaches Red Cap hurts him
+// shots fly; walls and props stop them, and a pyramid takes one as a blow; blood and rain fall and may leave a pool; one that reaches Red Cap hurts him
 // (blood soaks him even when the blow itself is not taken)
 function updShots(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {
@@ -92,7 +92,10 @@ function updShots(dt) {
     if (solid(ix, iz)) dead = true;
     else {
       const pr = propR(ch(ix, iz));
-      if (pr && p.y < 3.2 && Math.hypot(p.x - (ix * CELL + CELL / 2), p.z - (iz * CELL + CELL / 2)) < pr + 0.15) dead = true;
+      if (pr && p.y < 3.2 && Math.hypot(p.x - cellMid(ix), p.z - cellMid(iz)) < pr + 0.15) {
+        dead = true;
+        if (b.kind !== 'rain') hitPyr(p, 0.15, b.volley); /* a pyramid takes it as a blow (the rain strikes once as it lands) */
+      }
     }
     if (b.kind === 'rain') b.v.y -= 9 * dt;
     if ((b.kind === 'blood' || b.kind === 'rain') && p.y < heightAt(p.x, p.z) + 0.05) {

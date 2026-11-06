@@ -1,11 +1,13 @@
 // Start-up: load the pictures, make the canvas textures, build Red Cap and the particle pools, then the title. While the
 // paper is still being cut ("Cuttin’ paper…" stays at least TITLE_MIN), the work every start would otherwise pay for is done:
-// compile the ink pass and Red Cap, and decode the pictures off the main thread (each floor uploads its own in warmUp)
+// compile the ink pass and Red Cap, build and warm floor one once (its shaders compiled, its pictures uploaded, so the first
+// loading screen only rebuilds it fresh), and decode the pictures off the main thread (each floor uploads its own in warmUp)
 const TITLE_MIN = 1000; // ms "Cuttin’ paper…" stays on the title at least
 async function titleWarm() {
   if (state !== 'title') return;
   renderer.compile(postScene, postCam);
   renderer.compile(scene, camera);
+  floorBuilt(0); // not drawn: the title covers the world, and Start builds floor one again with its own dice
   for (const t of Object.values(TEX)) {
     if (state !== 'title') return; // started: warmUp does the rest
     const im = t.image;

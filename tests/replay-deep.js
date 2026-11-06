@@ -1,6 +1,7 @@
-// usage: node tests/replay-deep.js a.json b.json : the first deep sample where two DEEP=1 replays differ, field by field
-const fs = require('fs');
-const [a, b] = process.argv.slice(2).map(f => JSON.parse(fs.readFileSync(f, 'utf8')));
+// usage: node tests/replay-deep.js a b : the first deep sample where two DEEP=1 replays (folders from tests/replay.js)
+// differ, field by field
+const { loadTraces } = require('./jobs');
+const [a, b] = process.argv.slice(2).map(loadTraces);
 for (const k of Object.keys(a)) {
   if (k === 'errors') continue;
   const x = a[k], y = b[k];

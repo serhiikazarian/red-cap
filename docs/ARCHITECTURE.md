@@ -32,7 +32,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 
 ## World and placement (05-world, 04-floors)
 - Grid `CELL = 3` m; `solid()` ('#', and 'g' while `G.gateClosed`); raised floor `LIFT = 1.5` (things built inside a raised
-  cell are lifted automatically: don't add height twice); `heightAt` for ground height.
+  cell are lifted automatically: don't add height twice); `heightAt` for ground height. `cellOf(x, z)` gives the cell at a
+  point, `cellMid(i)` the middle of cell i in metres.
 - Random set dressing must pass `clearOf(x, z, r)`; story things claim ground with `keepOut(x, z, r)`; `storyGround()` lays
   down the map's story cells and talkers.
 - Map legend and per-floor settings live in `FLOORS` (04-floors); the optional fields `start` and `pitch` set the opening view.
@@ -42,12 +43,16 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   alpha-cleared pixels, and `inkCard` gives him his own smooth outline. Grain and vignette live in the post shader.
 - Soft alpha: soft-alpha things keep the target's alpha (`CustomBlending`, `blendSrcAlpha` Zero, `blendDstAlpha` One), so the
   ink lines round them are not cut. The ink pass skips where the render target's alpha < 1.
+- The ink pass reads depth through `uniform highp sampler2D tDep`: WebGL2 samplers default to lowp, which many phone GPUs
+  honour, rounding depth into steps the outlines draw as lines sliding with the camera. A new depth read is highp too.
 - Sorting: `renderer.setTransparentSort` draws far to near, but a figure of parts in a set order (a Grin: `userData.sortRank`,
   `sortZ` from `sortUnits()` each frame) sorts as one thing. Words keep `renderOrder` 10 (always on top).
-- Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). `calibrate()` (60-flow) times real frames
-  under the ink during loading, from the opening view and `CAL_VIEWS` more spread over the floor (`calViews`): each floor
-  starts from the screen's full ratio, and when the second-slowest view is over `CAL_MS` it switches to `lite` (single ink
-  lines), then lowers the ratio. Heavy moments (thick smoke, the fog wall) are left to the controller: each second of play it
+- Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). Under the ink during loading, `tune()`
+  (60-flow) draws real frames from the opening view and `CAL_VIEWS` more spread over the floor (`calViews`): `settle` until
+  their times stop changing, then `calibrate` (GPU-timed: from the screen's full ratio, when the second-slowest view is over
+  `CAL_MS` it switches to `lite`, single ink lines, then lowers the ratio), then `climb` (`tryRung`: frames at better
+  settings, judged by the controller's own late-frame rule, halving the rungs of `resLadder` each try), so play starts at
+  the best setting the machine holds. Heavy moments (thick smoke, the fog wall) are left to the controller: each second of play it
   counts late frames (over `LATE_AT` frames of a 60 Hz screen); over `LATE_DROP` it steps down (thinner smoke `RES.thin` →
   `PUFF_LOW`, only while there is that much smoke; then `lite`; then the ratio, to `RES_MIN`, then `RES_LOW`), and after three
   near-perfect seconds it steps back up in reverse order. A stray hitch moves nothing; a failed step up is undone and held back
@@ -82,7 +87,9 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   (keep it: the dice rolls must stay in the same order). Long fights run one step per state (`JESTER_ST[e.st]` …).
   Each talker's file holds its build, fight and helpers, tuning at the top. Attack warnings: a talker's `warn(e)` (07-hud
   `warnOf`, `updWarn`).
-- `e.mats` are reset to white (or the hit flash) every frame: coloured parts use textures or vertex colours.
+- `e.mats` are brought back to no tint (or the hit flash's red) every frame, written only where the colour differs
+  (`HIT_RED`, `NO_TINT`): another writer's colour (the Jester's blink) is undone the next frame, so coloured parts use
+  textures or vertex colours. A caged talker's cage is `e.cage`.
 
 ## Sound (01-audio)
 - Synth: `sTone`, `sNoise`, `SFX.*`. Recorded clips: `sPlay(name)` → `{ s, g }` (null before decoding; `AU.buf` is filled
@@ -109,11 +116,19 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Playwright + swiftshader (`tests/browser.js`), viewport 880×500. First render of new shaders is slow (tens of seconds).
 - `tests/harness.js`: frozen clock, seeded dice (fixed from the page's first line, so start-up drawing such as the smoke
   texture repeats; three.js ids on their own dice), sound off, a scripted player; used by the replay and picture tests that
-  prove a change alters nothing. `tools/same.sh` runs them; by hand: `tests/replay.js build out.json [quick]` +
-  `tests/replay-cmp.js a.json b.json`, `tests/pics.js build dir` + `tests/pics-cmp.py dirA dirB [diffDir]` (diffDir gets
-  side-by-side + difference images). The harness fixes the drawing quality (`RES_MIN`, single ink lines). Run with
-  `NODE_PATH=$(npm root -g)`, one browser at a time. When a replay differs and the cause isn't obvious: `DEEP=1 node tests/replay.js …` for both builds, then `node tests/replay-deep.js a.json b.json`
-  names the first dice roll (with its call stack) or field where they part.
+  prove a change alters nothing. The scenarios and pictures are listed in `tests/jobs.js`; `tools/same.sh` runs them all
+  (`tests/same.js`: `JOBS` pages at a time, default 3; the floors touched since `main` first, by `FLOOR_FILES`; the run kept in
+  `out/same` with the build's fingerprint, which `new` turns into the baselines). By hand: `tests/replay.js build outDir [name…]`
+  + `tests/replay-cmp.js dirA dirB`, `tests/pics.js build dir` + `tests/pics-cmp.py dirA dirB [diffDir] [name]` (diffDir gets
+  side-by-side + difference images). The harness enters floor one without its loading cut or shader warm-up (each run
+  rebuilds its own floor) and fixes the drawing quality (`RES_MIN`, single ink lines); opening a page is most of a job's
+  time (~4 s), the frames are cheap (600 in under a second). Run with `NODE_PATH=$(npm root -g)`, one browser at a time. When
+  a replay differs and the cause isn't obvious: `DEEP=1 node tests/replay.js build outDir name` for both builds, then
+  `node tests/replay-deep.js dirA dirB` names the first dice roll (with its call stack) or field where they part.
+- The replays never press the controller or touch: probe them with `tests/shot.js` (a fake `navigator.getGamepads`, then
+  `pollPad(dt)`; `PointerEvent`s on `#stickZone` / `#lookZone`).
+- CI's boot test can fail on an overloaded runner ("Install checking tools" taking ~10 min, a `.trim()` on `null` from
+  three.js): re-run the failed job before suspecting the code.
 - Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (`<js>` is one expression:
   wrap statements in `(async () => { ... })()`; what it returns is printed as JSON). To pin the camera, wrap
   `renderer.render` and set the camera when `c===camera`.

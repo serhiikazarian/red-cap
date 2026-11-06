@@ -1,99 +1,106 @@
 # Red Cap
 
-Serj's browser 3D comic-ink "paper" slasher made from their own paintings: three floors, three.js r128, built into one
-self-contained HTML (~6 MB, no network needed). Live: https://serhiikazarian.github.io/red-cap/ (GitHub Pages, from `main`).
-Current version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
+Browser 3D comic-ink "paper" slasher made from the author's own paintings: three floors, three.js r128, built into one offline
+HTML (~6 MB). Live: https://serhiikazarian.github.io/red-cap/ (GitHub Pages, from `main`).
+Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 
 ## Working with Serj
-- Serj does not code: plain language, they/them unless told otherwise. Reply with what changed, what was tested, what to check in play.
-- Implement **only what is asked**. If look, sound or play is ambiguous, ask one short question first (AskUserQuestion, with options).
-- The game is settled for a festival demo: nothing that changes how it plays, looks or sounds unless Serj asks.
-- When a task is done and every check passes, say so and **ask whether to ship**. Never push `main` without their yes
-  (saving to the work branch, `tools/wip.sh`, is fine).
+- Serj does not code: plain language, they/them. Reply with what changed, what was tested, what to check in play.
+- Only what is asked. Ambiguous look, sound, play or workflow: one AskUserQuestion with options first.
+- Before anything slow, one line on what runs and how long; relay progress as it lands (a difference the moment it shows).
+- Done and every check passes: say so and ask whether to ship. Never push `main` without their yes (`tools/wip.sh` is fine).
+- **Docs wait for the end of the chat.** During it change code (with its comments) and what shipping needs: the `#version`
+  label and a `## N.NN (date)` entry in `docs/HISTORY.md`, one short bullet per change. On the end-of-chat summary, sync
+  `CLAUDE.md`, `docs/ARCHITECTURE.md` and that chat's history once to the latest build. Mid-chat only when Serj asks, or
+  when later work in the chat depends on it (say so first).
 
 ## Working surgically (tokens matter)
-- Find before reading: `rg -n "name" game/src` (always give a path: bare `rg` waits on stdin). Definitions:
-  `rg -n "^(async )?function name\b|^(const|let) name\b" game/src`. Then read only the lines around the hit (offset/limit).
-  Never read a whole file in `game/src`; never open `game/assets/`, `game/vendor/`, `tests/baseline/` or a built HTML.
-- Make the change in the file that owns the behaviour. When rewriting code, tidy what you touch in the same pass: clearer
-  names, dead or duplicated lines, stale comments, a long function split into named steps (`node tools/sizes.js` lists the
-  longest). Tidying must not change play or looks: when the task itself doesn't alter play, prove it with `tools/same.sh`.
-- Comments describe how things work now, never what they used to be or what was changed.
-- Tuning numbers sit at the top of each file; many files open with a comment explaining their rules: read that first.
-- Don't reread docs already in context. One screenshot only when the change is visual.
-- Commands: use the `tools/` scripts (one line in, one word out: `OK`, `SAME`, `SAVED`, `SHIPPED`); a sequence needed twice
-  becomes a script there. Cut long output (`tail`, `grep`); run long checks in the background and wait for their notice,
-  never poll. A probe: `tests/shot.js` with one expression, not a new file, unless it will be reused.
+- Find, then read only around the hit (offset/limit): `rg -n "name" game/src` (always a path: bare `rg` waits on stdin);
+  definitions `rg -n "^(async )?function name\b|^(const|let) name\b" game/src`. Never read a whole `game/src` file, nor
+  `game/assets/`, `game/vendor/`, `tests/baseline/` or a built HTML.
+- Edits are targeted (Edit, or a small exact-match patch), never a whole-file rewrite.
+- Change the file that owns the behaviour, and tidy what you touch (names, dead lines, stale comments, long functions
+  into named steps: `node tools/sizes.js`; none is 68 lines or more: keep it so). Comments say how things work now. Each
+  file opens with its tuning numbers and often a comment with its rules: read that first.
+- `tools/` scripts, one word out (`OK`, `SAME`, `SAVED`, `SHIPPED`, `PRERELEASED`); a sequence needed twice becomes one. Cut long output;
+  long runs in the background (Monitor), never poll. A probe: `tests/shot.js` with one expression (in a file via
+  `"$(cat f)"` when it holds `$`). One screenshot only for a visual change.
 
 ## Layout
-- `game/src/*.js`: the game, one file per part, joined in name order into one script by `game/build.py` (one shared scope: any
-  file can call any function; only top-level `const`/`let` must exist before they are used at load). Groups: 0x core (helpers,
-  sound, drawing + ink pass, textures, floor data, world grid, effects, HUD), 1x Red Cap and weapons, 20 shared talker code
-  (`TALKERS[letter]`: how it is made, moves, is hit and torn, its boss bar; the list heads 20-talkers.js), 21 shots, 22–31 one
-  file per talker, 4x floor features (48 bombs, 49 the floor-three secret), 5x building a floor (53 walls, 54 dream
-  architecture, 55 baking, 56 see-through), 6x flow, menus, input, camera, loop, boot.
-- `game/index.html` (page; its marker lines are filled by `game/build.py`), `game/style.css`, `game/fonts.css`,
-  `game/assets/` (the real files: `img/*.webp` → ASSETS, `sfx/*.mp3` → SOUNDS, `fonts/*.woff2`, `shapes.json` → SHAPES;
-  the build packs them into the one offline file), `game/vendor/three-r128.min.js`.
-- `tests/` (headless Playwright probes; `tests/browser.js` starts them), `tools/`, `docs/ARCHITECTURE.md` (deeper rules, by
-  section: read only the one you need).
+- `game/src/*.js`, joined in name order into one script by `game/build.py` (one scope: any file calls any function; only
+  top-level `const`/`let` must exist before use at load). 0x core (helpers, sound, drawing + ink pass, textures, floors,
+  world grid, effects, HUD); 1x Red Cap, weapons; 20 shared talker code (`TALKERS[letter]`, hooks listed at its top), 21
+  shots, 22–31 one file per talker; 4x floor features (pickups, traps, totems, 44 pyramids, niches, gates, cages, 48 bombs,
+  49 floor-three secret); 5x building a floor (50 level, props, decor, 53 architecture, 54 dreamwork, 55 baking, 56
+  see-through); 6x flow and loading, menus, input, camera, loop, boot.
+- `game/index.html` (markers filled by the build), `game/style.css`, `game/assets/` (`img/*.webp` → ASSETS, `sfx/*.mp3` →
+  SOUNDS, fonts, `shapes.json`), `game/vendor/three-r128.min.js`. `tests/` (Playwright probes), `tools/`,
+  `docs/ARCHITECTURE.md` (deeper rules by section: read only the one you need).
 
 ## Checks
-- After every change: `tools/check.sh` → `OK` (format, build, lint, unused names, boot; else `FAIL <step>` and its output).
-- Proving a change does NOT alter play or looks (tidying, optimising): `tools/same.sh` → `SAME` (~5 min: scripted replays with a
-  frozen clock and seeded dice, plus fixed pictures of each floor, against `tests/baseline/`; `full` for the long replay).
-- A change meant to alter play or looks will differ: after Serj approves it, `tools/same.sh new` remakes the baselines.
-- Bigger changes: `NODE_PATH=$(npm root -g) node tests/soak.js game/red-cap.html 8` → last line `errors []` (~8 min).
-- Writing a probe or taking a picture: read `docs/ARCHITECTURE.md` § Testing first.
-- CI (`.github/workflows/pages.yml`) runs the same quick checks on every push and pull request, publishes `main`, and tags
-  and releases each version.
+- Every change: `tools/check.sh` → `OK` (~15 s: format, build, lint, unused names, boot through the real loading screen).
+- Play and looks unchanged: `tools/same.sh` → `SAME` (~75 s: 12 full replays with a frozen clock and seeded dice + 7
+  pictures against `tests/baseline/`, three at a time, the touched floors first; `2>&1` streams a line a job). Replays enter
+  floors directly: the loading screen needs its own probe.
+- Meant to change: after Serj's yes, `tools/same.sh new` (seconds after a check of the same build; writes only what changed).
+- Bigger changes: `NODE_PATH=$(npm root -g) node tests/soak.js game/red-cap.html 8` → `errors []` (~8 min).
+- Probes and pictures: `docs/ARCHITECTURE.md` § Testing. The test browser draws on the CPU (a load ~40 s, frames 80–280 ms
+  apart): real-GPU speed and smoothness can't be judged there; test timing logic with a fake clock instead.
+- CI (`.github/workflows/pages.yml`) runs `check.sh` on pushes to `main` and `prerelease` and on pull requests; only `main`
+  publishes, tags and releases. `prerelease` keeps the built game as a download (the run's Summary page, Artifacts, 30 days).
 
 ## Ship (only after Serj says yes)
-1. Version = current + 0.01, two digits after the point (1.06 → 1.07; 1.09 → 1.10; 1.99 → 2.00), unless Serj names one. Set the
-   title label (`#version` in `game/index.html`: `v1.07`) and append `## N.NN (date)` to `docs/HISTORY.md` (short plain
-   bullets, key names in backticks). A change to play or looks: `tools/same.sh new` first (remakes the baselines).
-2. `tools/ship.sh N.NN "<attribution lines>"` → `SHIPPED N.NN`: checks, one commit `N.NN` on top of `main` with exactly the
-   current files, pushes `main`, and links the work branch to it. Never merge, squash or force-push by hand: that is what made
-   1.21 conflict. Pages updates in ~3 min; CI then tags `vN.NN` and makes the release (cloud sessions can't push tags).
-3. Undo: `git revert <commit>`, ship as a new version. Back to an older version: `git fetch --tags`, then
-   `git checkout vN.NN -- game`, check, ship as a new version. Never rewrite `main`'s history (tags and releases point into it).
-- Saving work between versions (the session's stop hook asks for it): `tools/wip.sh "message" "<attribution lines>"` →
-  `SAVED`: commits and pushes the work branch only, which publishes nothing. Never push `main` any other way.
+1. Version = current + 0.01 (1.09 → 1.10) unless Serj names one: `#version` in `game/index.html` (`v1.10`) and
+   `## N.NN (date)` in `docs/HISTORY.md`. Play or looks changed: `tools/same.sh new` first.
+2. `tools/ship.sh N.NN "<attribution lines>"` → `SHIPPED N.NN` (checks, one commit on top of `main`, links the work branch).
+   Never merge, squash or force-push by hand. Pages updates in ~3 min; CI tags `vN.NN`.
+3. Undo: `git revert <commit>`, ship anew. An older version: `git fetch --tags`, `git checkout vN.NN -- game`, check, ship
+   anew. Never rewrite `main`'s history.
+- To try a version first (when Serj asks): label and history as for a ship, then `tools/prerelease.sh N.NN "<attribution
+  lines>"` → `PRERELEASED N.NN` (checks, one commit on top of `prerelease`, and of `main` when it lacks it; the same
+  version may go again). CI builds it; Serj downloads it from the run's Summary page (Artifacts). It needs no force push;
+  `git push --force-with-lease origin HEAD:prerelease` is allowed (settings) to replace it outright, never another branch.
+- Between versions (the stop hook asks): `tools/wip.sh "message" "<attribution lines>"` → `SAVED` (work branch only).
 
 ## Rules that bite
-- **Load rule: anything new is prepared during the loading screen, never mid-game.** A new material or shader variant goes into
-  `warmSet()` (60-flow.js) as a stand-in mesh matching the real one's key (material type and flags, `onBeforeCompile`,
-  instancing, a `color` attribute if the real geometry has one). A new texture goes into `warmUp()`'s `texs` (all `TEX` are in).
-  A new floating word goes into `WORDS_FLOOR[floor]` (`WORD|#colour`, `_` for spaces). Verify by counting
-  `renderer.info.programs` and `texImage2D` calls after `beginFloor`.
-- Never put `//` mid-line before code (use `/* */`). GLSL: no names `flat`, `smooth`, `in`, `out`, `sample`; `smoothstep(a, b, x)` needs a < b.
+- **Load rule: anything new is prepared during the loading screen, never mid-game.** A new material or shader variant: a
+  stand-in in `warmSet()` (60-flow) with the real one's key (material type and flags, `onBeforeCompile`, instancing, a
+  `color` attribute). A new texture: `warmUp()`'s `texs`. A new floating word: `WORDS_FLOOR[floor]` (`WORD|#colour`, `_`
+  for spaces). Verify by counting `renderer.info.programs` and `texImage2D` calls after `beginFloor`.
+- Loading (60-flow): `tune()` finds the drawing settings from real frames (settle, calibrate, then `climb` judged by the
+  controller's own late-frame rule) while the scissors cross at one speed (`snipRun`, timed by the remembered load time
+  `redcap.load.v1`); the floor shows as they arrive.
+- Never `//` mid-line before code (use `/* */`). GLSL: no names `flat`, `smooth`, `in`, `out`, `sample`; `smoothstep(a, b,
+  x)` needs a < b.
 - Player text spells -ing words as -in’ (typographic ’; not Sling/Ring/String). Censored: SH#T, F#CK.
-- Layout rng is seeded per floor (`mulberry`): new decoration uses its own `mulberry(seed)`, never the floor's rng.
-- Still meshes are baked (`bakeStatics`): anything that moves or changes later must not be marked `still()`.
-- See-through: register big props with `seeThru(o, dyn, how)`; never give a see-through part a global `renderOrder > 0`.
-- Talker materials (`e.mats`) get their colour reset every frame (hit flash): colour parts with textures or vertex colours.
-- What is special about one talker goes in its own `TALKERS` entry (hooks and traits listed at the top of 20-talkers.js), never
-  as `e.type === 'X'` in shared code.
-- Core colours: `COL.ink` / `HEX.paper` … (00-util) in code, `var(--ink)` … in style.css; never retype their hex values.
-- A delay in play: `later(sec, fn)` (held while paused, dropped with the floor), never `setTimeout`. Game rules (timings, where
-  a talker can be hit) run on `playT` (seconds of play: stops while paused, slows with hit-stop and the finale); the wall clock
-  `performance.now()` only for cosmetic wobble. Motion that belongs to a floor goes in `G.anim`, never its own animation loop.
-- The floor's state `G` declares every field in `newFloor` (50-level): add a new one there, never `G.x = G.x || []`.
-- Loudness: `VOL` (01-audio), one share per sound name; never retype gains to make a sound louder or quieter.
+- Layout rng is seeded per floor (`mulberry`): new decoration uses its own `mulberry(seed)`; per-start picks (bombs, empty
+  pyramids) use `Math.random`.
+- Still meshes are baked (`bakeStatics`): anything that moves or changes later is not `still()`.
+- See-through: big props via `seeThru(o, dyn, how)`; never a global `renderOrder > 0` on a see-through part.
+- Talker materials (`e.mats`) are brought back every frame to the hit flash or no tint (written only where different, so
+  another writer's colour is undone): colour parts with textures or vertex colours.
+- One talker's specifics go in its `TALKERS` entry, never `e.type === 'X'` in shared code.
+- Core colours: `COL.ink` / `HEX.paper` … (00-util), `var(--ink)` … in style.css; never retype their hex values (the word
+  lists write `${HEX.paper}`). Still typed out: the scissors' strokes in index.html. A cell's centre: `cellMid(i)`.
+- A delay in play: `later(sec, fn)`, never `setTimeout` (screen flashes and `toast` keep `setTimeout` on purpose:
+  `later()` stops on death and does not run on the title). Game rules run on `playT` (stops while paused, slows with
+  hit-stop); `performance.now()` only for cosmetic wobble. Floor motion goes in `G.anim`.
+- `G` declares every field in `newFloor` (50-level): never `G.x = G.x || []`.
+- Loudness: `VOL` (01-audio), one share per sound name; never retype gains.
 
 ## Game
 - Floors: 1 *The Usher's Corridor* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged, pyramids
-  on T cells, niches); 3 *Stop Talkin’ Sh#t* (Grump U, Smokers S/W, blocks, Jester M behind the fog gate, totems, hidden boss L).
-- Red Cap: ties (hearts, 5), yo-yo, slingshot (pebbles, start 7, max 10), dodge. Map cell `CELL` = 3 m; floors in `FLOORS`.
-- Catalogue of talkers in localStorage `redcap.catalogue.v1`.
+  on T cells: 1–2 bombs, 1–2 empty, the rest a heart; three blows from Red Cap or talkers' shots break one); 3 *Stop Talkin’
+  Sh#t* (Grump U, Smokers S/W, blocks, Jester M behind the fog gate, totems, hidden boss L).
+- Red Cap: ties (hearts, 5), yo-yo, slingshot (pebbles, start 7, max 10), dodge. `CELL` = 3 m; floors in `FLOORS`.
+- localStorage: talker catalogue `redcap.catalogue.v1`, load times `redcap.load.v1`.
 
 ## History
-`docs/HISTORY.md` holds the versions from 1.05 on. Open it only when Serj asks when or why something changed, or a bug looks
-like a regression: search, then read the few lines around the hits. Older versions are not in the tree: search them with
-`git show $(git rev-list --max-parents=0 HEAD):HISTORY.md | rg -n "pyramid"` (never read it whole).
+`docs/HISTORY.md` (1.05 on): open only when Serj asks when or why something changed, or for a likely regression; search,
+then read around the hits. Older: `git show $(git rev-list --max-parents=0 HEAD):HISTORY.md | rg -n "word"`.
 
 ## Not verified by playing
-Real-GPU frame rate on low-end machines and the sharpness after calibration (`RES_LOW` included); floor three's busiest
-moments (smoke, fog wall) on a real machine; volumes (title music, pyramid scream, bomb blast); laughs, pops and the exhale by
-ear; see-through fades and contours in motion; feel of the Grump ring cracks, the hologram gaze timing, Bruno's circle;
-touch on a real phone; controller on hardware.
+On a real GPU: the loading's chosen sharpness (floors start crisp?), the scissors' pace, low-end frame rate, floor
+three's busiest moments (smoke, fog wall). By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the
+exhale. By feel: the yo-yo's hit-stop inside slow motion (now short), see-through fades in motion, Grump ring cracks,
+hologram gaze timing, Bruno's circle, talkers breaking pyramids. Touch on a real phone; controller on hardware.

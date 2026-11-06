@@ -1,13 +1,16 @@
-"""usage: python3 tests/pics-cmp.py dirA dirB [diffDir]
-For each picture in both folders: the share of pixels that differ by more than a little, and the largest difference.
+"""usage: python3 tests/pics-cmp.py dirA dirB [diffDir] [name]
+For each picture in both folders (or only name.png): the share of pixels that differ by more than a little, and the largest difference.
 Writes a side-by-side + difference image for any that differ when diffDir is given."""
 import sys, pathlib
 from PIL import Image, ImageChops
 
 a, b = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 out = pathlib.Path(sys.argv[3]) if len(sys.argv) > 3 else None
+only = sys.argv[4] + '.png' if len(sys.argv) > 4 else None
 same = True
 for pa in sorted(a.glob('*.png')):
+    if only and pa.name != only:
+        continue
     pb = b / pa.name
     if not pb.exists():
         print(f'{pa.name:14} missing in {b}')
