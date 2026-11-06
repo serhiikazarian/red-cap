@@ -38,6 +38,7 @@ function warmSet() {
   wm.userData.uWall = { value: waveOpen() };
   wm.onBeforeCompile = waveCompile;
   WARM.add(new THREE.Mesh(g, wm)); // the Grump's rings
+  WARM.add(new THREE.Mesh(g, totemRingMat())); // the totems' rings
   WARM.add(new THREE.Mesh(g, holoMat(fireTex))); // the niche holograms
   const gc = share(new THREE.PlaneGeometry(0.01, 0.01)); // coloured like the trail's scraps (their colours are part of the shader)
   gc.setAttribute('color', new THREE.Float32BufferAttribute(new Array(gc.attributes.position.count * 3).fill(1), 3));

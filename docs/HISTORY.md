@@ -307,7 +307,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Every branch brought up to date with `main`.
 - Title label `v1.37`.
 
-## 1.38 (6 Nov 2026), no change to play or looks
+## 1.38 (6 Nov 2026)
+- Shout rings (the Grump's and the totems'): their inside (seen from within, or the far half through the near one) is the
+  band in plain yellow, so the words never read mirrored (`RING_INSIDE_GLSL`, `ringInsideCompile`, `totemRingMat`; the
+  totem ring's shader has its stand-in in `warmSet`). Play otherwise unchanged; the rest of this version is a code clean-up:
 - Plain names: 124 cryptic top-level names spelled out across the code and tests (`upd*` → `update*`, `sTone`/`sNoise` →
   `playTone`/`playNoise`, `ch` → `cellAt`, `los` → `lineOfSight`, `post` → `inkPass`, `AU` → `AUDIO`, `EL` → `HUD`, `tmus*` →
   `titleMusic*`, `ld*` → `livingDying*`, `*_ST` → `*_STATES`, …), renamed by scope (locals and fields untouched).
