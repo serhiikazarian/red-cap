@@ -373,3 +373,4 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Title text: "A paper slasher in three floors. Silence the voices." (was "…, then awake.").
 - Health bars: the Geezer's stare warning line is gone (WINDED stays), Bruno's reads "Flarin’" (was "Flarin’ — back
   off"), the Smoker's has no line (was "Hidin’ in his smoke" / "Every hit shakes out pebbles").
+- Title label `v1.41`.
