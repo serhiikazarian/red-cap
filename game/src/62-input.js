@@ -319,10 +319,12 @@ addEventListener('gamepaddisconnected', () => {
 });
 // ----- the screens' buttons
 $('#startBtn').addEventListener('click', () => startGame(true));
-$('#musicBtn').addEventListener('click', () => {
+$('#musicBtn').addEventListener('click', e => {
   initAudio();
   titleMusicWant(!TITLE_MUSIC.want);
   TITLE_MUSIC.want ? titleMusicStart() : titleMusicStop();
+  // clicked or tapped (not pressed from the keyboard): Enter and Space go back to Start, or they would only toggle the music
+  if (e.detail > 0 && !$('#startBtn').disabled) $('#startBtn').focus({ preventScroll: true });
 });
 $('#resumeBtn').addEventListener('click', () => pause(false));
 $('#quitBtn').addEventListener('click', toTitle);

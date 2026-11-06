@@ -12,8 +12,11 @@ function showOnly(id) {
   });
 }
 let menuAt = 0;
+let hoverBtn = null; // the button under the mouse: focus follows the mouse only onto another one
 addEventListener('pointerover', e => {
   const b = e.target.closest && e.target.closest('.screen button');
+  if (b === hoverBtn) return; // still the same button (the music button's icon swaps under the pointer when clicked)
+  hoverBtn = b;
   if (b && !b.disabled && e.pointerType === 'mouse') b.focus({ preventScroll: true }); // the red (focus) follows the mouse too
 });
 const MENU_SHOWN = ['title', 'pause', 'dead', 'win', 'catalogue'];
