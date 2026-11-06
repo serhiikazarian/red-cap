@@ -318,4 +318,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   Jester's slabs (`SLAB_STATES`), the hidden boss's jaw and hair (`JAW_STATES`, `HAIR_STATES`).
 - Bare numbers named where they were touched (`SHOT_REACH`, `STEP_MAX`, `RING`, `AIM`, `SLOW_MO`, `HIT_STOP`, `GRUMP_*`, …);
   the Grump ring's shader in three named GLSL pieces (its text byte-identical).
+- Also split: `newFloor` (`floorState`, `floorLight`, `floorGround`), the loading's per-frame verdict (`judge` in `tune`),
+  block critters, the hair model, the hidden boss's pieces (one `LIVING_DYING_PIECES` table, names included).
+- Repeated code folded into shared helpers: `heroDist` (27 places), `ease` (21), `glowSprite` (12), `figureRig` (Red Cap,
+  talkers, onlookers), `KEEP_INK` (the blending that leaves the picture's alpha alone).
 - Title label `v1.38`.
