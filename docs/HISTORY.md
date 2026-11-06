@@ -306,3 +306,16 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Docs: the ink pass's highp depth sampler (1.36), force-pushing `prerelease` allowed in the settings (only that branch).
 - Every branch brought up to date with `main`.
 - Title label `v1.37`.
+
+## 1.38 (6 Nov 2026), no change to play or looks
+- Plain names: 124 cryptic top-level names spelled out across the code and tests (`upd*` → `update*`, `sTone`/`sNoise` →
+  `playTone`/`playNoise`, `ch` → `cellAt`, `los` → `lineOfSight`, `post` → `inkPass`, `AU` → `AUDIO`, `EL` → `HUD`, `tmus*` →
+  `titleMusic*`, `ld*` → `livingDying*`, `*_ST` → `*_STATES`, …), renamed by scope (locals and fields untouched).
+- Long functions split into named steps: shots (`flyShot`, `shotHitsScenery`, `shotLands`, `shotHitsHero`, `endShot`),
+  `collide`, the frame loop (`slowedDt`, `edgeTurn`), pebbles, aiming (one `offer` for talkers, parts and pyramids), the yo-yo
+  throw, bystanders, totems, Bruno's fire and model, `clearLevel`, raised ground, baking, the title music, smoke draws.
+- State machines as tables, one step per state, like the talkers': bear traps (`MINE_STATES`), the Grump (`GRUMP_STATES`), the
+  Jester's slabs (`SLAB_STATES`), the hidden boss's jaw and hair (`JAW_STATES`, `HAIR_STATES`).
+- Bare numbers named where they were touched (`SHOT_REACH`, `STEP_MAX`, `RING`, `AIM`, `SLOW_MO`, `HIT_STOP`, `GRUMP_*`, …);
+  the Grump ring's shader in three named GLSL pieces (its text byte-identical).
+- Title label `v1.38`.

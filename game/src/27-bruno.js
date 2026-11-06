@@ -39,25 +39,25 @@ function makeBruno(e, add, x, z) {
   glow.position.y = 1.1;
   e.root.add(glow);
   e.glow = glow;
-  const heat = new THREE.Mesh(
+  e.heat = fireDecal(0.6, 0.05, e.aura);
+  e.scorch = fireDecal(0.2, 0.04, BRUNO_SCORCH * 2);
+  e.scorch.visible = false; // shown once he is free
+  e.root.add(e.heat, e.scorch);
+  brunoFlames(e);
+}
+// a red glow lying on the ground round him, size across
+function fireDecal(opacity, y, size) {
+  const m = new THREE.Mesh(
     decalGeo,
-    new THREE.MeshBasicMaterial({ map: glowRed, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 })
+    new THREE.MeshBasicMaterial({ map: glowRed, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity })
   );
-  heat.rotation.x = -Math.PI / 2;
-  heat.position.y = 0.05;
-  heat.scale.setScalar(e.aura);
-  e.root.add(heat);
-  e.heat = heat;
-  const scorch = new THREE.Mesh(
-    decalGeo,
-    new THREE.MeshBasicMaterial({ map: glowRed, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.2 })
-  );
-  scorch.rotation.x = -Math.PI / 2;
-  scorch.position.y = 0.04;
-  scorch.scale.setScalar(BRUNO_SCORCH * 2);
-  scorch.visible = false; // shown once he is free
-  e.root.add(scorch);
-  e.scorch = scorch;
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = y;
+  m.scale.setScalar(size);
+  return m;
+}
+// the first six tongues ring him as far as his touch, the rest out to the edge of his heat; hidden until he is free
+function brunoFlames(e) {
   BRUNO_FIRE_M =
     BRUNO_FIRE_M || share(new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
   e.flames = [];
