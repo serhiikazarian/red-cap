@@ -282,7 +282,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - `updEnemy`: a caged talker reaches its cage directly (`e.cage`, set by `buildCages`) instead of searching `G.cages` every
   frame; the stances that keep their own sway are one set made once (`OWN_SWAY`), not a list built per talker per frame.
   The hit-flash colour reset every frame stays: the Jester's blink relies on it.
+- The floating-word lists (`WORDS_FLOOR`, 03-textures) name core colours (`${HEX.paper}` …) instead of typing them out
+  (69 places); the lists come out the same, character for character.
 - CI: pushes to `prerelease` build and check the game and keep it as a download on the run's page (30 days); only `main`
   publishes, tags and releases (a manual run on another branch could publish before).
-- First shipped to the `prerelease` branch, not `main` (three times: the second 1.35 adds the 24 splits, the third `cellMid` and the two `G` fields).
+- First shipped to the `prerelease` branch, not `main` (three times: the second 1.35 adds the 24 splits, the third `cellMid` and the two `G` fields, the fourth the rest of `G`, the cage link, the review's fixes and the
+  word lists' colours).
 - Title label `v1.35`.
