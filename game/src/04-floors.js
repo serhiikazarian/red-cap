@@ -30,6 +30,7 @@ const FLOORS = [
     words: COL.paper,
     deco: 'corridor',
     camThruFloaters: true, // the drifting faces, glasses and boxes never push the camera in (they only fade)
+    plainFloaters: true, // its floaters fade without a contour (56-see-through)
     yaw: Math.PI,
     drone: { notes: [46.25, 69.3], wave: 'sawtooth', cut: 260, lfo: 0.07, gain: 0.1 },
     firstUsher: [9, 6],
@@ -93,6 +94,9 @@ const FLOORS = [
     words: COL.bile,
     deco: 'mouth',
     strayShots: true, // the talkers' shots hurt the small talkers they hit by accident (21-shots)
+    pyramids: true, // its 'T' cells are pyramids (44-pyramids): their round body stops sight and pebbles, and they glow
+    flatProps: true, // its 'o' cells hold bear traps: flat, nothing to bump into or hide behind
+    embers: true, // sparks rise from the floor round Red Cap (64-loop)
     yaw: -2.85, // the start: Red Cap by the first pyramid, looking down the raised room past its two traps (the first Grin, close on
     // his left, stays out of view even on a 21:9 screen)
     pitch: 0.6,

@@ -176,7 +176,7 @@ function updateGrin(e, dt, dist, ux, uz, mv) {
   grinWiggle(e);
   e.y0 = e.fly - 0.8;
   e.y1 = e.fly + 0.8;
-  const seen = dist < 22 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const seen = dist < 22 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos);
   if (e.st === 'idle') {
     if (seen || dist < 9) {
       e.st = 'hover';

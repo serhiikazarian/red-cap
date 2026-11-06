@@ -374,3 +374,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Health bars: the Geezer's stare warning line is gone (WINDED stays), Bruno's reads "Flarin’" (was "Flarin’ — back
   off"), the Smoker's has no line (was "Hidin’ in his smoke" / "Every hit shakes out pebbles").
 - Title label `v1.41`.
+- Tidy, no change to play (replays SAME): floors say what they have instead of shared code asking which floor it is
+  (`plainFloaters`, `pyramids`, `flatProps`, `embers` in 04-floors; `BUMP_R` in 05-world); the two sight checks say which
+  they are: `clearOfWalls` (was `lineOfSight`), `clearOfCover` (was `losCover`).

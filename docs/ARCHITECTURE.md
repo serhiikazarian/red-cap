@@ -38,7 +38,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   down the map's story cells and talkers.
 - Map legend and per-floor settings live in `FLOORS` (04-floors); the optional fields `start` and `pitch` set the opening view,
   `camThruFloaters` (floor one: drifting things never push the camera in) and `strayShots` (floor two: see Talkers).
-- `lineOfSight` counts walls only; `losCover` also pillars and props, or pillars only with `props = false` (the Geezer's stare:
+- `clearOfWalls` counts walls only; `clearOfCover` also pillars and props, or pillars only with `props = false` (the Geezer's stare:
   `geezerSees`; his blink still treats an easel as cover, to spook).
 
 ## Drawing and the ink pass (02-render, 03-textures)

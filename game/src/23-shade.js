@@ -17,7 +17,7 @@ function updateShade(e, dt, dist, ux, uz, mv) {
   e.y1 = e.fly + 0.7;
   e.tilt.position.y = e.fly;
   if (e.st === 'idle') {
-    if (dist < 12 && lineOfSight(e.pos, hero.pos)) {
+    if (dist < 12 && clearOfWalls(e.pos, hero.pos)) {
       e.st = 'drift';
       floatWord('boo', e.pos.clone().setY(2.8), '#d8d4cc', 0.6);
     }

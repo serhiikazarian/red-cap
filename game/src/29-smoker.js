@@ -56,7 +56,7 @@ function updateSmoker(e, dt, dist, ux, uz, mv) {
     tp.applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
     smokePuff(tp, (e.st === 'smoke' ? rand(1.4, 2.2) : 0.45) * ks * (e.smoky ? 1.5 : 1), (e.st === 'smoke' ? 3 : 1.6) * ks, 0.5);
   }
-  const seen = dist < 20 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const seen = dist < 20 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos);
   const step = SMOKER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, seen);
   e.alpha = lerp(e.alpha, e.hidden ? 0.08 : 1, ease(6, dt));
@@ -135,7 +135,7 @@ function smokerReturns(e) {
       x = hero.pos.x + Math.cos(a) * r,
       z = hero.pos.z + Math.sin(a) * r,
       [ix, iz] = cellOf(x, z);
-    if (!solid(ix, iz) && lineOfSight(new THREE.Vector3(x, 0, z), hero.pos)) {
+    if (!solid(ix, iz) && clearOfWalls(new THREE.Vector3(x, 0, z), hero.pos)) {
       e.pos.set(x, 0, z);
       break;
     }
@@ -160,7 +160,7 @@ function smokerCough(e, dt, dist, ux, uz) {
     later(0.26, () => playNoise({ dur: 0.3, f: 340, f2: 150, q: 1.5, gain: 0.22 }));
     floatWord('*COUGH*', e.pos.clone().setY(e.fly + 2.6), HEX.smoke, 1);
     for (let k = 0; k < 6; k++) smokePuff(fxAt(e.pos, ux * k * 1.2, e.fly - 0.4, uz * k * 1.2), rand(1.8, 2.8), 2.5, 0.2);
-    if (dist < 8.5 && lineOfSight(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
+    if (dist < 8.5 && clearOfWalls(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
   }
 }
 // a totem's ring shakes a Smoker out of his smoke

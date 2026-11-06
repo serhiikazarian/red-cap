@@ -89,9 +89,9 @@ function updateUsher(e, dt, dist, ux, uz, mv) {
 const USHER_STATES = {
   idle(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (animTick) e.head.rotation.z = Math.sin(performance.now() / 400 + e.seed) * 0.1;
-    if ((dist < (e.sight || 20) && lineOfSight(e.pos, hero.pos)) || dist < 8) {
+    if ((dist < (e.sight || 20) && clearOfWalls(e.pos, hero.pos)) || dist < 8) {
       e.brows.forEach(b => (b.visible = true));
-      if (losCover(e.pos, hero.pos, e.r + 0.15)) aim();
+      if (clearOfCover(e.pos, hero.pos, e.r + 0.15)) aim();
       else {
         e.st = 'chase';
         SFX.growl();
@@ -109,7 +109,7 @@ const USHER_STATES = {
     if (dist < 2.8 * K && e.stagger <= 0) {
       e.st = 'wind';
       e.t = 0.3 * Math.sqrt(K);
-    } else if (dist > 3.2 * K && dist < 14 + (K - 1) * 8 && e.chargeCd <= 0 && e.stagger <= 0 && losCover(e.pos, hero.pos, e.r + 0.15)) aim();
+    } else if (dist > 3.2 * K && dist < 14 + (K - 1) * 8 && e.chargeCd <= 0 && e.stagger <= 0 && clearOfCover(e.pos, hero.pos, e.r + 0.15)) aim();
   },
   aim(e, dt, dist, ux, uz, mv, K, cs, aim) {
     // the tell: he stops, shakes, arms back, brows twitching

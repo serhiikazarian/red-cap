@@ -233,7 +233,7 @@ function livingDyingEye(e, dt, dist, ux, uz, mv, now) {
   mv.z = uz * want + ux * side * 0.9;
   mv.sp = 3.4;
   e.fly = 2.4 + Math.sin(now * 2 + e.seed) * 0.4;
-  if (e.t <= 0 && !hero.inSmoke && lineOfSight(e.pos, hero.pos)) {
+  if (e.t <= 0 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos)) {
     e.st = 'fire';
     e.t = 2.4;
     e.burst = 3;

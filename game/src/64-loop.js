@@ -119,7 +119,7 @@ function bossInFight() {
   for (const e of G.enemies) {
     if (!e.boss || e.noBar || e.dead || e.dying || e.dormant || e.away || e.waiting || e.caged) continue;
     const d = e.pos.distanceTo(hero.pos);
-    if (!e.engaged && d < 9 && lineOfSight(e.pos, hero.pos)) e.engaged = true;
+    if (!e.engaged && d < 9 && clearOfWalls(e.pos, hero.pos)) e.engaged = true;
     if (e.engaged && d < 26 && d < bd) {
       bd = d;
       boss = e;
@@ -141,7 +141,7 @@ function ambience(dt, tsec) {
   if (G.spirits) driftSpirits(tsec);
   if (G.papers) fallingPapers(dt, tsec);
   if (G.fires) fireSparks(dt);
-  if (G.F.deco === 'mouth' && state === 'play' && Math.random() < dt * 14)
+  if (G.F.embers && state === 'play' && Math.random() < dt * 14)
     burst(new THREE.Vector3(hero.pos.x + rand(-10, 10), 0.3, hero.pos.z + rand(-10, 10)), [COL.hot, COL.bile], 1, 0.4, 0.09, { g: -1.2, life: 2.5 });
   if (G.drips) driftDrips(dt);
   if (G.portal && G.portal.open) {

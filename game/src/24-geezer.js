@@ -1,7 +1,7 @@
 // The Geezer (Y): floor one's boss. Stares people mad, mostly himself, in mirrors.
 
 // his stare: walls and pillars hide Red Cap from it; an easel is too small to (though he still blinks round one, to spook)
-const geezerSees = e => losCover(e.pos, hero.pos, 0.3, false);
+const geezerSees = e => clearOfCover(e.pos, hero.pos, 0.3, false);
 
 // a big floating head, with two eye glows over the painted eyes
 function makeGeezer(e, add) {
@@ -50,7 +50,7 @@ function updateGeezer(e, dt, dist, ux, uz, mv) {
     s.scale.setScalar(0.5 + glow * 1.6 + (e.flashT > 0 ? 3 : 0));
   });
   // the page swirls as his eyes light up: full within 9 m, gone by 22 m
-  const seenK = (dist <= 9 ? 1 : Math.max(0, 1 - (dist - 9) / 13)) * (lineOfSight(e.pos, hero.pos) ? 1 : 0.05);
+  const seenK = (dist <= 9 ? 1 : Math.max(0, 1 - (dist - 9) / 13)) * (clearOfWalls(e.pos, hero.pos) ? 1 : 0.05);
   G.psyWind = Math.max(G.psyWind, (glow * 0.5 + (e.flashT > 0 ? 0.8 : 0)) * seenK);
   const step = GEEZER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, now, p2, seenK);
@@ -59,7 +59,7 @@ function updateGeezer(e, dt, dist, ux, uz, mv) {
 // his states, one step each (updateGeezer runs the one he is in)
 const GEEZER_STATES = {
   idle(e, dt, dist, ux, uz, mv, now, p2, seenK) {
-    if (hero.pos.z > 9 * CELL && lineOfSight(e.pos, hero.pos)) {
+    if (hero.pos.z > 9 * CELL && clearOfWalls(e.pos, hero.pos)) {
       e.st = 'drift';
       e.t = 1.8;
       SFX.growl();
@@ -81,7 +81,7 @@ const GEEZER_STATES = {
         e.side = Math.random() < 0.5 ? 1 : -1;
         floatWord('HMMPH', e.pos.clone().setY(5.2), HEX.paper, 1);
         SFX.growl();
-      } else if (!losCover(e.pos, hero.pos) ? Math.random() < 0.5 : p2 && Math.random() < 0.45) {
+      } else if (!clearOfCover(e.pos, hero.pos) ? Math.random() < 0.5 : p2 && Math.random() < 0.45) {
         // hidden from him, an easel too, just to spook (or now and then in his second half): he blinks to where he can see you
         e.st = 'blink';
         e.t = 0.45;
@@ -174,7 +174,7 @@ const GEEZER_STATES = {
           x = hero.pos.x + Math.cos(a) * r,
           z = hero.pos.z + Math.sin(a) * r,
           [ix, iz] = cellOf(x, z);
-        if (iz >= 10 && !solid(ix, iz) && !propRadius(cellAt(ix, iz)) && lineOfSight(new THREE.Vector3(x, 0, z), hero.pos)) {
+        if (iz >= 10 && !solid(ix, iz) && !propRadius(cellAt(ix, iz)) && clearOfWalls(new THREE.Vector3(x, 0, z), hero.pos)) {
           e.pos.set(x, 0, z);
           break;
         }

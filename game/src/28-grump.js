@@ -50,7 +50,7 @@ function wallStrip(px, n) {
 // no wall anywhere (the loading screen's stand-in ring); made on first use, after the boot's own drawing
 let WAVE_OPEN = null;
 const waveOpen = () => WAVE_OPEN || (WAVE_OPEN = wallStrip(new Uint8Array([255, 255, 255, 255]), 1));
-// how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (lineOfSight):
+// how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (clearOfWalls):
 // WAVE_WALL_N directions round him, the angle of each as the shader reads it (atan of z over x), softened across neighbours
 function waveWalls(x, z) {
   const d = [],
@@ -159,7 +159,12 @@ function updateWaves(e, dt, dist, ux, uz) {
         through = grumpThrough(e, open);
       if (hero.dodgeT > 0 || hero.dodgeIF > 0 || through <= 0) {
         w.hit = true; // a dodge timed right slips through; a whole block soaks it
-        if (through <= 0 && !(hero.dodgeT > 0 || hero.dodgeIF > 0) && lineOfSight(e.pos, hero.pos) && performance.now() - (e.muffledAt || 0) > 1500) {
+        if (
+          through <= 0 &&
+          !(hero.dodgeT > 0 || hero.dodgeIF > 0) &&
+          clearOfWalls(e.pos, hero.pos) &&
+          performance.now() - (e.muffledAt || 0) > 1500
+        ) {
           e.muffledAt = performance.now();
           bigWord('MUFFLED', HEX.paper, 1 / 1.7);
         }
@@ -213,7 +218,7 @@ TALKERS.U = {
 // the hearts a ring carries to Red Cap: 0 behind a sound block, rising as the block wears, the full amount (open) in the open.
 // A block shelters him when it stands between them and he is pressed up behind it (GRUMP_SHADE); a wall is total cover.
 function grumpThrough(e, open) {
-  if (!lineOfSight(e.pos, hero.pos)) return 0;
+  if (!clearOfWalls(e.pos, hero.pos)) return 0;
   const dx = hero.pos.x - e.pos.x,
     dz = hero.pos.z - e.pos.z,
     d = Math.hypot(dx, dz) || 1,
@@ -248,7 +253,7 @@ function grumpWear(e, w) {
     const b = G.props[k];
     if (b.hp <= 0 || w.blk.has(k)) continue;
     const dd = Math.hypot(b.x - e.pos.x, b.z - e.pos.z);
-    if (Math.abs(dd - w.r) > 0.6 || !lineOfSight(e.pos, tmpW.set(b.x, 0, b.z))) continue;
+    if (Math.abs(dd - w.r) > 0.6 || !clearOfWalls(e.pos, tmpW.set(b.x, 0, b.z))) continue;
     w.blk.add(k);
     b.flashT = 3; // it flashes either way: at first only to show what shouting does to a block
     if (e.wearOn) b.hp -= 0.0224; // about nine bursts of shouting from whole to spent
@@ -447,7 +452,7 @@ function waveShade(w) {
     const dx = b.x - c.x,
       dz = b.z - c.z,
       dd = Math.hypot(dx, dz);
-    if (dd < 1.2 || !lineOfSight(c, tmpW.set(b.x, 0, b.z))) continue;
+    if (dd < 1.2 || !clearOfWalls(c, tmpW.set(b.x, 0, b.z))) continue;
     sh[n++].set(Math.atan2(dz, dx), Math.asin(Math.min(1, GRUMP_SHADE.w / dd)), dd, st);
   }
   for (; n < WAVE_SH_N; n++) sh[n].set(0, 0, 0, 0);

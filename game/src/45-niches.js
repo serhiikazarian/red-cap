@@ -129,7 +129,7 @@ function updateNiches(dt) {
       d = Math.hypot(dx, dz) || 1,
       front = (dx * n.nx + dz * n.nz) / d, // 1: straight in front of it
       aim = (-dx * fx - dz * fz) / d; // 1: the camera looks right at it
-    const looking = d < NICHE_NEAR && front > 0.8 && aim > 0.96 && lineOfSight(hero.pos, tmpW.set(p.x + n.nx * 0.4, 0, p.z + n.nz * 0.4));
+    const looking = d < NICHE_NEAR && front > 0.8 && aim > 0.96 && clearOfWalls(hero.pos, tmpW.set(p.x + n.nx * 0.4, 0, p.z + n.nz * 0.4));
     n.look = looking ? n.look + dt : 0;
     if (looking && n.look >= NICHE_LOOK && !n.holo) holoShow(n);
     if (!n.holo) continue;
