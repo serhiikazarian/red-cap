@@ -10,6 +10,7 @@ const YOYO_TIME = [
     [0.96, 0.6]
   ],
   YOYO_QUEUE = 0.15, // a press this early is kept and thrown when ready
+  YOYO_CHAIN = 0.85, // s from one throw to the next (press to press) for the chain to go on; slower, it starts over at 1
   YOYO_CUT_BLEND = 0.07, // seconds a cut-short throw takes to blend into the new one
   YOYO_STRETCH = 1.2, // metres the reach may stretch to meet a locked target
   YOYO_GRACE = 0.15; // what the string looks like it brushes, it hits
@@ -18,7 +19,8 @@ const PEBBLE_RANGE = 24; // metres a pebble flies before it drops
 const mixCooldown = () => 1 - MIX.cd * (hero.mix || 0),
   mixPower = () => 1 + MIX.pow * (hero.mix || 0),
   mixPitch = () => (hero.mix && playT - hero.mixAt < MIX.win ? Math.pow(2, (MIX.semi * hero.mix) / 12) : 1);
-const yoyoNextThird = () => hero.combo === 2 && playT - (hero.lastThrow || -9) < 1.1;
+const yoyoChained = () => playT - (hero.lastThrow ?? -9) < YOYO_CHAIN,
+  yoyoNextThird = () => hero.combo === 2 && yoyoChained();
 const yoyoStop = y => (hitStop = Math.max(hitStop, y.power > 1 ? 0.09 : 0.055)); // a beat of stillness when it connects
 // reused points (no garbage a frame): the throwing hand, the yo-yo, the string's in-between tips, the middle of a string or band
 const tmpY = new THREE.Vector3(),
@@ -101,7 +103,7 @@ function yoyo() {
     [fx, fz] = reach !== null ? towards(a.target.pos) : [a.fx, a.fz]; // in reach (stretched or not): the throw turns to the target
   G.yySide = -G.yySide;
   const now = playT;
-  hero.combo = third ? 3 : now - (hero.lastThrow || -9) < 1.1 ? ((hero.combo || 0) % 3) + 1 : 1;
+  hero.combo = third ? 3 : yoyoChained() ? ((hero.combo || 0) % 3) + 1 : 1;
   hero.lastThrow = now;
   const power = third ? 2 : 1,
     tm = YOYO_TIME[hero.combo - 1],
