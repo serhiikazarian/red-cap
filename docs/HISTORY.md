@@ -423,3 +423,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - The title's music button stays red while the mouse is on it (after a click the focus goes to Start, which took its red
   away): `#musicBtn:hover` in style.css, on screens with a mouse only.
 - Title label `v1.45`.
+
+## 1.46 (6 Nov 2026)
+- Title focus, one red at a time: a click on the music button keeps the focus there (no more hand-off to Start, which left
+  two buttons red); from it the arrows, WASD and Tab go anywhere and Enter presses whatever is red. Its hover red stays, but
+  gives way when the keyboard has taken the focus to another button (`:has(button:focus…)` in style.css).
