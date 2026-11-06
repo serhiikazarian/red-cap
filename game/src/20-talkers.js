@@ -105,6 +105,8 @@ function rimify(e) {
   });
   if (e.fade) e.fade.push(...e.rims);
 }
+// stances that keep their own sway: the shared part leaves the figure's offset alone
+const OWN_SWAY = new Set(['wind', 'shout', 'inflate', 'stun', 'laugh']);
 // every frame: caged, dying and reeling talkers are handled here; otherwise its own update decides the move, then the shared
 // part moves it (rage, stagger, knockback), keeps it off the others, walls, clutter and cages, and sets it on the ground
 function updEnemy(e, dt) {
@@ -143,7 +145,7 @@ function updEnemy(e, dt) {
   e.root.position.copy(e.pos);
   if (animTick) {
     if (e.stagger > 0 && e.st !== 'wind') shake(e.tilt, 0.05);
-    else if (!['wind', 'shout', 'inflate', 'stun', 'laugh'].includes(e.st)) {
+    else if (!OWN_SWAY.has(e.st)) {
       e.tilt.position.x = e.tilt.position.z = 0;
     }
   }
@@ -151,7 +153,7 @@ function updEnemy(e, dt) {
 // in a cage: faces Red Cap and rattles (harder while the cage is being hit), standing on the ground
 function updCaged(e, dt) {
   faceCam(e, dt);
-  const c = G.cages.find(q => q.e === e);
+  const c = e.cage;
   if (c && animTick) {
     shake(e.tilt, c.rattle > 0 ? 0.12 : 0.02);
     if (c.pole) e.tilt.position.z = Math.abs(e.tilt.position.z) * 0.5;

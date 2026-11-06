@@ -148,6 +148,37 @@ function newFloor(F, w) {
     props: null, // floor three's cover blocks by cell, when the floor has them
     texs: [], // textures the floor makes that no mesh holds yet (the Grump's walls): warmUp uploads them
     doorT: 0, // until the exit door is next checked (openDoor, every 0.5 s of play)
+    lamp: null, // the light that follows Red Cap
+    hk: null, // raised ground per cell (buildHeights): 0 floor, 1 raised, 2 a ramp; rd: the way each ramp rises
+    rd: null,
+    wallTop: {}, // each wall cell's height (x + z * width), for things set on top
+    blockBase: {}, // floor three: each wall cell's bottom block height (the paintings hang on it)
+    rimUp: null, // floor two: the stand-in that uploads the pyramids' rim shape (pyrRimFor)
+    spirits: null, // floor one's floating faces (narcPages)
+    papers: null, // floor one's falling newspapers
+    drips: null, // floor one's drips
+    fogWall: null, // floor three's fog gate while it stands (fogWall)
+    paperTrail: null, // the scraps from Red Cap to the open door (updPaperTrail)
+    psyWind: 0, // the Geezer's psychedelic wind on the picture, set again every frame
+    leftN: 0, // talkers left at the last count (updLeft): one left calls the last call
+    lastTieT: 0, // how long Red Cap has been on his last tie (an onlooker may shake a heart out of him)
+    roomHeartGiven: false, // the floor's heart room has given its heart
+    yySide: 1, // the yo-yo's throws alternate sides: the side of the last one
+    usherHint: false, // hints already shown on this floor
+    npcHint: false,
+    mineHint: false,
+    wetHint: false,
+    totemIdle: null, // seconds since a big totem was last rung (null: never); totemTaught: their use has been seen
+    totemTaught: false,
+    finalFx: null, // the Jester's final blow: its effects, where he fell, his mask waiting to be taken
+    finalAt: null,
+    finalMask: null,
+    plaques: null, // floor three's secret: the two plaques, the painting, its waking, the boss (G.ld), the jaw to take
+    ldPainting: null,
+    ldWake: 0,
+    ld: null,
+    jawPickup: null,
+    jawT: 6, // until the masked Jester next goes for the jaw
     npcHearts: 0 // hearts shaken out of onlookers on this floor (at most two: hitNpc)
   };
   buildHeights(F);
@@ -178,8 +209,6 @@ function newFloor(F, w) {
 function buildCells(F, w, box, rng) {
   const B = { F, w, box, rng, mats: wallMaterials(F), cornice: [], webFaces: [], movedFrom: {}, movedTo: new Set() };
   // B.cornice: floor two's wall tops (corniceGeo), merged after the walls; B.webFaces: the faces under them, for the webs (addWebs)
-  G.wallTop = {}; // each wall cell's height (x + z * width), for things set on top
-  G.blockBase = {}; // floor three: each wall cell's bottom block height (the paintings hang on it)
   for (const [fx, fz, tx, tz] of F.blockMoved || []) {
     B.movedFrom[fx + ',' + fz] = [tx, tz];
     B.movedTo.add(tx + ',' + tz);

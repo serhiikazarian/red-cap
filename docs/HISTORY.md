@@ -277,7 +277,11 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `floorCut`). The unread cobweb counter `G.strips` is gone. Nothing in `game/src` is 68 lines or longer now.
 - `cellMid(i)` (05-world, next to `cellOf`): the middle of a cell in metres, in place of `i * CELL + CELL / 2` written out
   36 times; `blockWall` and `tallWall` work it out themselves from the cell.
-- `G.doorT` and `G.npcHearts` are declared in `newFloor` (were `G.x = (G.x || 0) …`).
+- Every field of `G` is declared in `newFloor` now (33 were first set elsewhere: `G.doorT`, `G.npcHearts`, the hints, the
+  final blow's, the secret's, …), starting as they behaved unset; the `|| 0`, `?? 6` and `|| 1` fallbacks are gone.
+- `updEnemy`: a caged talker reaches its cage directly (`e.cage`, set by `buildCages`) instead of searching `G.cages` every
+  frame; the stances that keep their own sway are one set made once (`OWN_SWAY`), not a list built per talker per frame.
+  The hit-flash colour reset every frame stays: the Jester's blink relies on it.
 - CI: pushes to `prerelease` build and check the game and keep it as a download on the run's page (30 days); only `main`
   publishes, tags and releases (a manual run on another branch could publish before).
 - First shipped to the `prerelease` branch, not `main` (three times: the second 1.35 adds the 24 splits, the third `cellMid` and the two `G` fields).

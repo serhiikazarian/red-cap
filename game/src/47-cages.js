@@ -12,7 +12,8 @@ function buildCages(F) {
     g.position.set(cx, heightAt(cx, cz), cz);
     G.group.add(g);
     const parts = type === 'Z' ? brunoStake(e, g) : { roof: ironCage(g) };
-    G.cages.push({ g, ...parts, e, x: cx, z: cz, rattle: 0, broken: false });
+    e.cage = { g, ...parts, e, x: cx, z: cz, rattle: 0, broken: false }; // its own cage, for updCaged
+    G.cages.push(e.cage);
     keepOut(cx, cz, 1.7);
   }
 }
