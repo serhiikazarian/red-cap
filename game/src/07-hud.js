@@ -15,8 +15,15 @@ function updateLeft() {
   const n = aliveCount();
   $('#left').innerHTML = `${n ? n + (n === 1 ? ' talker' : ' talkers') + ' left' : 'Floor quiet'}<small>${G.F.num} · ${G.F.name}</small>`;
   $('#left').classList.toggle('last', n === 1);
-  if (n === 1 && G.leftN > 1) lastCall();
+  if (n === 1 && G.leftN > 1 && !G.finalFx) lastCall(); // not once the Jester has fallen: the game is ending
   G.leftN = n;
+}
+// the screen's words go at once (the centred words, the last call, the hint): the ending plays on a clean picture
+function quietScreen() {
+  $('#bigWord').classList.remove('on');
+  $('#lastCall').classList.remove('on');
+  clearTimeout(toastT);
+  $('#toast').style.opacity = 0;
 }
 // a big word in the middle of the screen (HOT, MISSED, FRENZY ...), with an optional smaller line under it
 function bigWord(text, color, size = 1, under = '') {

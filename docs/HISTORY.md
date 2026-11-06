@@ -333,3 +333,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Repeated code folded into shared helpers: `heroDist` (27 places), `ease` (21), `glowSprite` (12), `figureRig` (Red Cap,
   talkers, onlookers), `KEEP_INK` (the blending that leaves the picture's alpha alone).
 - Title label `v1.38`.
+
+## 1.39 (6 Nov 2026)
+- The ending plays on a clean screen: from the Jester's final blow there is no 1 TALKER LEFT call (even with the hidden
+  boss still about: `updateLeft` checks `G.finalFx`), and taking his mask clears whatever words and hint are showing
+  (`quietScreen`, 07-hud).
+- Tidy: the hair's lash state points straight at `livingDyingHairLash` (it only passed the call on).
+- Title label `v1.39`.
