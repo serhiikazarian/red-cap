@@ -232,7 +232,7 @@ function grinSpit(e, dist) {
   e.body.scale.setScalar(1);
   e.tilt.rotation.x = 0;
   e.tilt.position.set(0, e.fly, 0);
-  const from = e.pos.clone().setY(e.fly),
+  const from = e.pos.clone().setY(e.gy + e.fly), // from the ball itself, raised ground too
     to = hero.pos
       .clone()
       .setY(hero.pos.y + 1.1)

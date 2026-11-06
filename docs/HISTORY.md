@@ -377,3 +377,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Tidy, no change to play (replays SAME): floors say what they have instead of shared code asking which floor it is
   (`plainFloaters`, `pyramids`, `flatProps`, `embers` in 04-floors; `BUMP_R` in 05-world); the two sight checks say which
   they are: `clearOfWalls` (was `lineOfSight`), `clearOfCover` (was `losCover`).
+- A Grin on raised ground spits its fireball from where it is drawn (was from 1.5 m lower, as if on the floor below):
+  `grinSpit`.
