@@ -95,7 +95,7 @@ function jesterWaits(e, dt) {
     e.dormant = false;
     e.engaged = true;
     G.totemIdle = null; // the two nearest big totems flash at once
-    if (G.F.lowHeart && hero.hp < 3) spawnPickup((G.F.lowHeart[0] + 0.5) * CELL, (G.F.lowHeart[1] + 0.5) * CELL);
+    if (G.F.lowHeart && hero.hp < 3) spawnPickup(cellMid(G.F.lowHeart[0]), cellMid(G.F.lowHeart[1]));
     e.t = 1.4;
     SFX.laugh();
     toast('Immune when masked. Ring a totem nearby, or knock a fallen face back.');

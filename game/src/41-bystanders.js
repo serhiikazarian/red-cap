@@ -104,7 +104,7 @@ function updBystanders(dt) {
     }
   }
   // how long Red Cap has been on his last tie (hitNpc)
-  G.lastTieT = state === 'play' && hero.hp === 1 ? (G.lastTieT || 0) + dt : state === 'play' ? 0 : G.lastTieT || 0;
+  G.lastTieT = state === 'play' && hero.hp === 1 ? G.lastTieT + dt : state === 'play' ? 0 : G.lastTieT;
 }
 // each onlooker has a voice: the hat hums, the spiky one giggles, the long-haired one exhales and coughs
 function npcVoice(n, vol = 1) {

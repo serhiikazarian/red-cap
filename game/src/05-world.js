@@ -151,11 +151,11 @@ function storyGround(F) {
   for (let z = 0; z < G.h; z++)
     for (let x = 0; x < G.w; x++) {
       const r = keep[G.map[z][x]];
-      if (r) keepOut((x + 0.5) * CELL, (z + 0.5) * CELL, r);
+      if (r) keepOut(cellMid(x), cellMid(z), r);
     }
   for (const e of G.enemies) keepOut(e.pos.x, e.pos.z, Math.max(e.r + 0.5, 1.1));
-  if (F.lowHeart) keepOut((F.lowHeart[0] + 0.5) * CELL, (F.lowHeart[1] + 0.5) * CELL, 0.8); // hearts that may come later
-  if (F.roomHeart) keepOut((F.roomHeart[0] + 0.5) * CELL, (F.roomHeart[1] + 0.5) * CELL, 0.8);
+  if (F.lowHeart) keepOut(cellMid(F.lowHeart[0]), cellMid(F.lowHeart[1]), 0.8); // hearts that may come later
+  if (F.roomHeart) keepOut(cellMid(F.roomHeart[0]), cellMid(F.roomHeart[1]), 0.8);
 }
 // is any cell around (x, z) raised? (walls there are built taller)
 function nearRaised(x, z) {
@@ -331,7 +331,7 @@ function avoidProps(e, vx, vz) {
   for (let iz = cz - 1; iz <= cz + 1; iz++)
     for (let ix = cx - 1; ix <= cx + 1; ix++) {
       const pr = pyrAt(ix, iz) ? PYR.foot * Math.SQRT2 : propR(ch(ix, iz));
-      if (pr) avoidOne(e, vx, vz, (ix + 0.5) * CELL, (iz + 0.5) * CELL, pr, ix + iz * 999);
+      if (pr) avoidOne(e, vx, vz, cellMid(ix), cellMid(iz), pr, ix + iz * 999);
     }
   for (let k = 0; k < G.stakes.length; k++) {
     const st = G.stakes[k];
