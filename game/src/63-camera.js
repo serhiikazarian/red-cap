@@ -127,6 +127,7 @@ function updateReticle(dt) {
   ret.classList.toggle('show', !!show);
   ret.classList.toggle('lock', !!a.target);
   ret.classList.toggle('pyr', !!a.target && !!a.target.pyr); // a pyramid: the lock's ring stays white
+  ret.classList.toggle('proof', !!a.target && !a.target.pyr && !!TALKERS[a.target.type].bounce); // pebbles bounce off him: white too
   ret.classList.toggle('reach', !!a.target && !a.target.pyr && yoyoReachFor(a.target, yoyoNextThird() ? 4.5 : 3.8) !== null);
   HUD.wYoyo.classList.toggle('cd', hero.yoyoCd > 0);
   HUD.wSling.classList.toggle('cd', hero.slingCd > 0);

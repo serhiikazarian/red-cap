@@ -349,3 +349,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   only fade (`camThruFloaters` in 04-floors, `seeInside`'s `skipDyn`).
 - The Geezer's stare goes past the easels (too small to hide behind): only walls and pillars hide Red Cap from it, when he
   picks a stare or a blink and when the stare lands (`geezerSees`, `losCover`'s `props`).
+- The crosshair locked on the Grump is white, not yellow (pebbles bounce off him); still red when the yo-yo reaches him
+  (`proof` class on the reticle, from his `bounce` hook).
