@@ -356,3 +356,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   accident, a pebble's blow (0.75); never the one who threw it, never a boss or the caged, and never the last blow: one
   that would tear it leaves it REELIN’ for Red Cap to finish (`strayShots` in 04-floors, `shotHitsTalker`, `STRAY_DMG`).
   Reeling shared with the traps (`leaveReeling`, `REEL` in 20-talkers); the pebble's hit test shared (`touchesTalker`).
+- Spike, hit, shakes out 2 pebbles 20% of the time, 1 70%, none 10% (was always 2; the Hat and Long Hair still give 2):
+  `HIT_PEBBLES`, `hitPebbles` in 41-bystanders.
