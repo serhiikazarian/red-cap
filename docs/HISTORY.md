@@ -291,3 +291,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   splits, the third `cellMid` and the two `G` fields, the fourth the rest of `G`, the cage link, the review's fixes and the
   word lists' colours; the hit-flash check came with the ship.
 - Title label `v1.35`.
+
+## 1.36 (6 Nov 2026)
+- Phones: no more lines sliding across floors and walls. The ink pass now reads depth at high precision (many phone GPUs
+  rounded it into steps that the outlines drew as lines).
+- Jester: no more RETURN TO SENDER word when a fallen face is knocked back at him.
+- The "Esc pauses · M mutes" hint is gone from the bottom of the screen; the weapon labels keep their place.
