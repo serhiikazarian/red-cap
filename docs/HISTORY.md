@@ -314,6 +314,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - A snappier camera (`CAM_EASE`, `CAM_TURN`, `CAM_TILT` in 63-camera): turning with the keys, a stick or the screen's edge
   3.2 rad/s (was 2.4–2.6), a stick's tilt 2.0 (1.6); it keeps up with his height (ease 20, was 12) and the shoulder offset
   (18, was 12), and after a wall pulls back out sooner (0.2 s, was 0.35) and faster (10, was 6).
+- The yo-yo's chain goes on only at a fast pace: the next throw within `YOYO_CHAIN` (0.85 s, press to press; was 1.1 s),
+  else it starts over with a light first throw, so the slow heavy third comes only from three quick throws
+  (`yoyoChained`; a throw at play time 0 no longer counts as never thrown).
 - The rest of this version is a code clean-up, play unchanged:
 - Plain names: 124 cryptic top-level names spelled out across the code and tests (`upd*` → `update*`, `sTone`/`sNoise` →
   `playTone`/`playNoise`, `ch` → `cellAt`, `los` → `lineOfSight`, `post` → `inkPass`, `AU` → `AUDIO`, `EL` → `HUD`, `tmus*` →
