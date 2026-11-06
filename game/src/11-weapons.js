@@ -400,8 +400,7 @@ function pebbleStep(b, dt) {
 function pebbleHitsTalker(b, p) {
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.dormant || e.away || (b.target && b.target.ghost && e === b.target.priest)) continue;
-    const y = p.y - (e.gy || 0);
-    if (Math.hypot(e.pos.x - p.x, e.pos.z - p.z) >= e.r + 0.2 || y <= e.y0 - 0.2 || y >= e.y1 + 0.2) continue;
+    if (!touchesTalker(e, p, 0.2)) continue;
     const T = TALKERS[e.type];
     if (T.bounce) T.bounce(e, p);
     else {

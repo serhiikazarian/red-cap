@@ -70,14 +70,8 @@ function trapBite(m) {
     bloodPool(e.pos.x, e.pos.z, 0.9);
     if (!e.boss || e.hp - 1.5 > 0) damage(e, 1.5, dx / k, dz / k, true);
     else {
-      // a boss down to a sliver, reeling, for Red Cap to finish
-      const left = Math.max(0.02 * e.maxHp, 0.2);
-      e.hp = Math.min(e.hp, left);
-      e.flash = 0.3;
+      leaveReeling(e);
       e.engaged = true;
-      e.stagger = 2.6;
-      e.dazedT = 2.6;
-      floatWord('REELIN’', e.pos.clone().setY(hitHeight(e) + 1.6), HEX.bile, 1.1, true);
       const T = TALKERS[e.type];
       if (T.trapped) T.trapped(e);
     }

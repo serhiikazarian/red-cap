@@ -237,7 +237,7 @@ function grinSpit(e, dist) {
       .clone()
       .setY(hero.pos.y + 1.1)
       .addScaledVector(new THREE.Vector3(hero.vel.x, 0, hero.vel.y), (dist / 10.5) * 0.6);
-  fireball(from, to.sub(from).normalize());
+  fireball(from, to.sub(from).normalize(), e);
   e.st = 'hover';
   e.t = rand(2, 3.2);
 }

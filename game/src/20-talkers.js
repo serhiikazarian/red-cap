@@ -247,6 +247,11 @@ function gone(e) {
   discard(e.root);
   checkClear();
 }
+// is p on talker e: within its reach plus pad, between its feet and its top (pad above and below)
+function touchesTalker(e, p, pad) {
+  const y = p.y - (e.gy || 0);
+  return Math.hypot(e.pos.x - p.x, e.pos.z - p.z) < e.r + pad && y > e.y0 - pad && y < e.y1 + pad;
+}
 // the height a talker is hit and aimed at
 function hitHeight(e) {
   const c = e.fly != null ? e.fly : e.hgt * 0.55;
@@ -276,6 +281,16 @@ function damage(e, n, dx, dz, force, weapon) {
   if (Math.random() < 0.3)
     floatWord(pick(['SH#T!', 'F#CK!', 'SHUT IT', 'STFU', 'F#CK OFF']), e.pos.clone().setY(hitHeight(e) + 1.4 + rand(0, 0.4)), HEX.tie, 0.9);
   if (e.hp <= 0) kill(e);
+}
+// down to a sliver and dazed, REELIN’, for Red Cap to finish (what a trap does to a boss, a stray shot to anyone)
+const REEL = { left: 0.02, leftMin: 0.2, dazed: 2.6 }; // health left: this share of the most, at least leftMin; dazed for s
+const reelLeft = e => Math.max(REEL.left * e.maxHp, REEL.leftMin);
+function leaveReeling(e) {
+  e.hp = Math.min(e.hp, reelLeft(e));
+  e.flash = 0.3;
+  e.stagger = REEL.dazed;
+  e.dazedT = REEL.dazed;
+  floatWord('REELIN’', e.pos.clone().setY(hitHeight(e) + 1.6), HEX.bile, 1.1, true);
 }
 // a heart maybe, by the floor's odds (fewer while Red Cap is well); a boss always leaves a big one
 function dropsDefault(e) {

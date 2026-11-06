@@ -1,12 +1,13 @@
 // Talkers' shots: a Grin's fireball, the Priest's blood (drops and rain), the red orbs, Bruno's insults and embers.
-// kind: 'fire' and 'word' hurt and burst; 'blood' soaks and falls; 'rain' (the Priest's) falls from above.
+// kind: 'fire' and 'word' hurt and burst; 'blood' soaks and falls; 'rain' (the Priest's) falls from above. On a floor with strayShots
+// (floor two) they also hurt the small talkers they hit by accident (shotHitsTalker).
 const shots = [];
-function fireball(from, dir) {
+function fireball(from, dir, by) {
   const s = glowSprite(violetTex, { fog: false });
   s.scale.setScalar(1.2);
   s.position.copy(from);
   scene.add(s);
-  shots.push({ kind: 'fire', s, v: dir.clone().multiplyScalar(10.5), life: 4 });
+  shots.push({ kind: 'fire', s, v: dir.clone().multiplyScalar(10.5), life: 4, by });
   SFX.fireball();
 }
 // a blood drop is a slot in the BLOOD pool (06-fx) with a stand-in for a sprite's fields; none free: it is gone at once
@@ -78,12 +79,14 @@ function emberShot(from, dir) {
 const SHOT_FALL = 9, // m/s² pulling blood and rain down
   SHOT_REACH = { fire: 0.7, word: 0.85 }, // how close to Red Cap a shot hits him (any other kind: SHOT_REACH_ELSE)
   SHOT_REACH_ELSE = 0.55,
+  STRAY_DMG = 0.75, // a floor with strayShots: a talker's shot that hits another (not a boss, nor the one who threw it) does a pebble's blow
+  STRAY_PAD = 0.2, // metres past a talker's reach a stray shot hits it
   FIRE_TRAIL = [0xffb030, 0xff5a1a, COL.bile],
   FIRE_BURST = [0xffb030, 0xff5a1a, COL.ink];
 const falls = b => b.kind === 'blood' || b.kind === 'rain';
 
 // Each frame every shot flies, then walls and props stop it (a pyramid takes it as a blow), blood and rain land (and may leave
-// a pool), and one that reaches Red Cap hurts him (blood soaks him even when the blow itself is not taken). Every test runs
+// a pool), and one that reaches Red Cap hurts him (blood soaks him even when the blow itself is not taken), or a stray one a talker. Every test runs
 // each frame, even for a shot already spent: each may leave its mark, and the dice must roll the same way.
 function updateShots(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {
@@ -94,6 +97,7 @@ function updateShots(dt) {
     if (shotHitsScenery(shot)) dead = true;
     if (shotLands(shot)) dead = true;
     if (!dead && shotHitsHero(shot)) dead = true;
+    if (!dead && G.F.strayShots && shotHitsTalker(shot)) dead = true;
     if (dead) {
       endShot(shot);
       shots.splice(i, 1);
@@ -139,6 +143,19 @@ function shotHitsHero(shot) {
   if (hurtHero(1, p)) spent = true;
   else if (shot.kind === 'fire' && hero.dodgeT <= 0) spent = true;
   return spent;
+}
+// a stray shot: the first small talker in its way takes a pebble's blow, or is left reeling, never torn (bosses, the caged and the
+// thrower are left out)
+function shotHitsTalker(shot) {
+  const p = shot.s.position;
+  for (const e of G.enemies) {
+    if (e === shot.by || e.boss || e.caged || e.dead || e.dying || e.dormant || e.away || !touchesTalker(e, p, STRAY_PAD)) continue;
+    const l = Math.hypot(shot.v.x, shot.v.z) || 1;
+    if (e.hp - STRAY_DMG > reelLeft(e)) damage(e, STRAY_DMG, shot.v.x / l, shot.v.z / l, false, false);
+    else leaveReeling(e); // never the last blow: that is Red Cap's
+    return true;
+  }
+  return false;
 }
 // fire and words burst; a blood drop gives its slot back to the BLOOD pool, a sprite is taken away
 function endShot(shot) {
