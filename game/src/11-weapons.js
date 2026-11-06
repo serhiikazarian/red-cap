@@ -15,25 +15,25 @@ const YOYO_TIME = [
   YOYO_GRACE = 0.15; // what the string looks like it brushes, it hits
 const MIX = { win: 1.2, max: 5, cd: 0.09, pow: 0.03, semi: 2 }; // semi: semitones each step of the chain raises a hit
 const PEBBLE_RANGE = 24; // metres a pebble flies before it drops
-const mixCd = () => 1 - MIX.cd * (hero.mix || 0),
-  mixPow = () => 1 + MIX.pow * (hero.mix || 0),
+const mixCooldown = () => 1 - MIX.cd * (hero.mix || 0),
+  mixPower = () => 1 + MIX.pow * (hero.mix || 0),
   mixPitch = () => (hero.mix && playT - hero.mixAt < MIX.win ? Math.pow(2, (MIX.semi * hero.mix) / 12) : 1);
 const yoyoNextThird = () => hero.combo === 2 && playT - (hero.lastThrow || -9) < 1.1;
 const yoyoStop = y => (hitStop = Math.max(hitStop, y.power > 1 ? 0.09 : 0.055)); // a beat of stillness when it connects
 // reused points (no garbage a frame): the throwing hand, the yo-yo, the string's in-between tips, the middle of a string or band
 const tmpY = new THREE.Vector3(),
-  yyHand = new THREE.Vector3(),
-  yyTip = new THREE.Vector3(),
-  yyStep = new THREE.Vector3(),
-  yyMid = new THREE.Vector3();
-// the yo-yo's tail in the air: a black ink stroke along the last part of its path (YY_TRAIL.k of a throw's time), thick at
+  yoyoHand = new THREE.Vector3(),
+  yoyoTipPoint = new THREE.Vector3(),
+  yoyoStepPoint = new THREE.Vector3(),
+  yoyoMid = new THREE.Vector3();
+// the yo-yo's tail in the air: a black ink stroke along the last part of its path (YOYO_TRAIL.k of a throw's time), thick at
 // the yo-yo and tapering to nothing; it shrinks away once the throw ends
-const YY_TRAIL = { n: 48, k: 0.2, w: 0.075 },
-  yyTrail = (() => {
+const YOYO_TRAIL = { n: 48, k: 0.2, w: 0.075 },
+  yoyoTrail = (() => {
     const g = share(new THREE.BufferGeometry()),
       idx = [];
-    for (let i = 0; i < YY_TRAIL.n - 1; i++) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(YY_TRAIL.n * 6), 3));
+    for (let i = 0; i < YOYO_TRAIL.n - 1; i++) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(YOYO_TRAIL.n * 6), 3));
     g.setIndex(idx);
     g.setDrawRange(0, 0);
     const m = new THREE.Mesh(g, share(new THREE.MeshBasicMaterial({ color: COL.ink, side: THREE.DoubleSide })));
@@ -41,39 +41,39 @@ const YY_TRAIL = { n: 48, k: 0.2, w: 0.075 },
     m.userData = { pts: [], clock: 0, span: 0.1 };
     return m;
   })(),
-  yyA = new THREE.Vector3(),
-  yyB = new THREE.Vector3();
+  trailSide = new THREE.Vector3(),
+  trailToCamera = new THREE.Vector3();
 // each frame: p (the yo-yo, or null between throws) joins the stroke, points older than its span leave, and the ribbon is
 // rebuilt facing the camera
-function yyTrailTick(dt, p) {
-  const u = yyTrail.userData,
+function yoyoTrailTick(dt, p) {
+  const u = yoyoTrail.userData,
     pts = u.pts,
-    P = yyTrail.geometry.attributes.position;
+    P = yoyoTrail.geometry.attributes.position;
   u.clock += dt;
   if (p) pts.push({ x: p.x, y: p.y, z: p.z, t: u.clock });
-  while (pts.length > YY_TRAIL.n || (pts.length && u.clock - pts[0].t > u.span)) pts.shift();
+  while (pts.length > YOYO_TRAIL.n || (pts.length && u.clock - pts[0].t > u.span)) pts.shift();
   const n = pts.length;
   for (let i = 0; i < n; i++) {
     const a = pts[Math.max(0, i - 1)],
       b = pts[Math.min(n - 1, i + 1)],
       q = pts[i];
-    yyA.set(b.x - a.x, b.y - a.y, b.z - a.z); // along the path
-    yyB.set(camera.position.x - q.x, camera.position.y - q.y, camera.position.z - q.z); // to the camera
-    yyA.cross(yyB);
-    const l = yyA.length(),
-      w = (YY_TRAIL.w * (i + 1)) / n; // thin at the tail, full at the yo-yo
-    if (l > 1e-6) yyA.multiplyScalar(w / l);
-    else yyA.set(0, w, 0);
-    P.setXYZ(i * 2, q.x + yyA.x, q.y + yyA.y, q.z + yyA.z);
-    P.setXYZ(i * 2 + 1, q.x - yyA.x, q.y - yyA.y, q.z - yyA.z);
+    trailSide.set(b.x - a.x, b.y - a.y, b.z - a.z); // along the path
+    trailToCamera.set(camera.position.x - q.x, camera.position.y - q.y, camera.position.z - q.z); // to the camera
+    trailSide.cross(trailToCamera);
+    const l = trailSide.length(),
+      w = (YOYO_TRAIL.w * (i + 1)) / n; // thin at the tail, full at the yo-yo
+    if (l > 1e-6) trailSide.multiplyScalar(w / l);
+    else trailSide.set(0, w, 0);
+    P.setXYZ(i * 2, q.x + trailSide.x, q.y + trailSide.y, q.z + trailSide.z);
+    P.setXYZ(i * 2 + 1, q.x - trailSide.x, q.y - trailSide.y, q.z - trailSide.z);
   }
   P.needsUpdate = true;
-  yyTrail.geometry.setDrawRange(0, Math.max(0, n - 1) * 6);
+  yoyoTrail.geometry.setDrawRange(0, Math.max(0, n - 1) * 6);
 }
 const pebbles = [];
 const pebbleGeo = share(new THREE.IcosahedronGeometry(0.13, 0)),
   pebbleMat = share(new THREE.MeshBasicMaterial({ color: COL.smoke }));
-let slingG = null,
+let slingModel = null,
   slingT = 0, // the pull's time left (0.62 s: draw back, release at 0.13 s, the band settles)
   slingFired = true;
 const slingDir = new THREE.Vector3(0, 0, -1);
@@ -117,13 +117,13 @@ function yoyo() {
     cut = hero.yy ? yoyoMesh.position.clone() : null; // the last throw is still coming back: this one starts where it is
   hero.aimT = 1.1;
   mixStep('y');
-  hero.yoyoCd = tm[0] * mixCd();
-  yyTrail.userData.pts.length = 0; // a new throw, a new stroke
-  yyTrail.userData.span = tm[1] * YY_TRAIL.k;
-  hero.yy = { t: 0, dur: tm[1], fx, fz, hit: new Set(), reach: reach ?? base, side: G.yySide, power, cut, mixP: mixPow() };
+  hero.yoyoCd = tm[0] * mixCooldown();
+  yoyoTrail.userData.pts.length = 0; // a new throw, a new stroke
+  yoyoTrail.userData.span = tm[1] * YOYO_TRAIL.k;
+  hero.yy = { t: 0, dur: tm[1], fx, fz, hit: new Set(), reach: reach ?? base, side: G.yySide, power, cut, mixP: mixPower() };
   SFX.yoyo();
   if (third) {
-    sTone({ f: 110, f2: 70, dur: 0.25, type: 'sawtooth', gain: 0.12, filt: [800, 200] });
+    playTone({ f: 110, f2: 70, dur: 0.25, type: 'sawtooth', gain: 0.12, filt: [800, 200] });
     yoyoMesh.scale.setScalar(1.5);
   } else yoyoMesh.scale.setScalar(1);
   hero.flip = fx * Math.cos(cam.yaw) - fz * Math.sin(cam.yaw) >= 0 ? 1 : -1;
@@ -132,23 +132,23 @@ function yoyo() {
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.away) continue;
     const d = Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z);
-    if (d < e.r + 0.9 && (TALKERS[e.type].noCover || los(hero.pos, e.pos))) {
+    if (d < e.r + 0.9 && (TALKERS[e.type].noCover || lineOfSight(hero.pos, e.pos))) {
       hero.yy.hit.add(e);
       damage(e, YOYO_DMG * hero.yy.power * hero.yy.mixP, fx * hero.yy.power, fz * hero.yy.power, false, true);
       yoyoStop(hero.yy);
     }
   }
 }
-function updYoyo(dt) {
+function updateYoyo(dt) {
   const y = hero.yy;
   if (!y) {
-    yyTrailTick(dt, null);
+    yoyoTrailTick(dt, null);
     return;
   }
   y.t += dt;
   const k = y.t / y.dur;
-  const hand = yyHand.set(hero.pos.x + y.fz * 0.25 * hero.flip, 1.05 + hero.pos.y, hero.pos.z - y.fx * 0.25 * hero.flip),
-    p = yoyoTip(y, hand, k, yyTip);
+  const hand = yoyoHand.set(hero.pos.x + y.fz * 0.25 * hero.flip, 1.05 + hero.pos.y, hero.pos.z - y.fx * 0.25 * hero.flip),
+    p = yoyoTip(y, hand, k, yoyoTipPoint);
   if (y.cut && y.t < YOYO_CUT_BLEND) p.lerp(y.cut, 1 - y.t / YOYO_CUT_BLEND);
   burst(p, [COL.tie, COL.bile, COL.paper], y.power > 1 ? 3 : 1, y.power > 1 ? 0.9 : 0.4, y.power > 1 ? 0.26 : 0.2, { g: 0, life: 0.3 });
   // a wall turns it back
@@ -159,10 +159,10 @@ function updYoyo(dt) {
     burst(p, [COL.paper, COL.ink], 5, 3, 0.12);
   }
   yoyoMesh.position.copy(p);
-  yyTrailTick(dt, p);
+  yoyoTrailTick(dt, p);
   yoyoMesh.rotation.y = Math.atan2(y.fx, y.fz);
   yoyoMesh.children.forEach(c => (c.rotation.x += dt * 40));
-  const mid = yyMid.copy(hand).add(p).multiplyScalar(0.5),
+  const mid = yoyoMid.copy(hand).add(p).multiplyScalar(0.5),
     len = hand.distanceTo(p);
   stringMesh.position.copy(mid);
   stringMesh.scale.set(1, Math.max(len, 0.01), 1);
@@ -172,7 +172,7 @@ function updYoyo(dt) {
   // the string is tested at most a twelfth of the swing apart, so a fast throw skips nothing
   y.k0 = y.k0next ?? k;
   y.k0next = null;
-  for (let i = 1; i <= steps; i++) yoyoHits(y, hand, i === steps ? p : yoyoTip(y, hand, k0 + ((k - k0) * i) / steps, yyStep));
+  for (let i = 1; i <= steps; i++) yoyoHits(y, hand, i === steps ? p : yoyoTip(y, hand, k0 + ((k - k0) * i) / steps, yoyoStepPoint));
   if (k >= 1) {
     hero.yy = null;
     yoyoMesh.visible = stringMesh.visible = false;
@@ -187,7 +187,7 @@ function yoyoTip(y, hand, k, out) {
 // the string's point (x, z) is out in the open, reached from the hand, and sees the talker: no blows through a wall or round a
 // corner (the Geezer is left as he was)
 function yoyoClear(hand, x, z, at) {
-  return !solid(...cellOf(x, z)) && los(hand, tmpY.set(x, 0, z)) && los(tmpY, at);
+  return !solid(...cellOf(x, z)) && lineOfSight(hand, tmpY.set(x, 0, z)) && lineOfSight(tmpY, at);
 }
 // the string from hand to p: each talker it brushes is hit once per throw; ghosts, holograms, totems, pyramids, fallen faces
 // and plaques along it too; onlookers only by the yo-yo itself (brushing one with the string is never a strike)
@@ -261,21 +261,21 @@ function buildSling() {
   g.visible = false;
   return g;
 }
-function updSling(dt) {
-  if (!slingG) return;
+function updateSling(dt) {
+  if (!slingModel) return;
   if (slingT <= 0) {
-    slingG.visible = false;
+    slingModel.visible = false;
     return;
   }
   slingT -= dt;
   const el = 0.62 - slingT;
-  const pouch = slingG.userData.pouch;
+  const pouch = slingModel.userData.pouch;
   // held out to the camera's right of Red Cap (never hidden behind him), pointed at the shot
-  slingG.visible = true;
+  slingModel.visible = true;
   const crx = Math.cos(cam.yaw),
     crz = -Math.sin(cam.yaw);
-  slingG.position.set(hero.pos.x + crx * 0.62 + slingDir.x * 0.3, 1.35 + hero.pos.y, hero.pos.z + crz * 0.62 + slingDir.z * 0.3);
-  slingG.rotation.y = Math.atan2(slingDir.x, slingDir.z);
+  slingModel.position.set(hero.pos.x + crx * 0.62 + slingDir.x * 0.3, 1.35 + hero.pos.y, hero.pos.z + crz * 0.62 + slingDir.z * 0.3);
+  slingModel.rotation.y = Math.atan2(slingDir.x, slingDir.z);
   if (el < 0.13)
     pouch.position.z = -0.1 - (el / 0.13) * 0.5; // draw back
   else {
@@ -283,18 +283,18 @@ function updSling(dt) {
     const k = el - 0.13;
     pouch.position.z = 0.06 + Math.sin(k * 40) * 0.12 * Math.exp(-k * 7);
   }
-  slingG.scale.setScalar(1.4 * (slingT < 0.12 ? Math.max(slingT, 0) / 0.12 : 1));
-  slingG.userData.bands.forEach((b, i) => {
-    const tip = slingG.userData.tips[i],
+  slingModel.scale.setScalar(1.4 * (slingT < 0.12 ? Math.max(slingT, 0) / 0.12 : 1));
+  slingModel.userData.bands.forEach((b, i) => {
+    const tip = slingModel.userData.tips[i],
       pp = pouch.position,
-      mid = yyMid.copy(tip).add(pp).multiplyScalar(0.5);
+      mid = yoyoMid.copy(tip).add(pp).multiplyScalar(0.5);
     b.position.copy(mid);
     b.scale.y = Math.max(tip.distanceTo(pp), 0.01);
     b.quaternion.setFromUnitVectors(UP, tmpY.copy(pp).sub(tip).normalize());
   });
 }
 // the pebble count on the weapon buttons
-function updAmmo() {
+function updateAmmo() {
   $('#wSling').textContent = 'Slingshot \u00d7' + hero.ammo;
   $('#bSling').textContent = 'Sling ' + hero.ammo;
 }
@@ -302,7 +302,7 @@ function giveAmmo(n, pos) {
   const add = Math.min(n, hero.maxAmmo - hero.ammo);
   if (add <= 0) return;
   hero.ammo += add;
-  updAmmo();
+  updateAmmo();
   SFX.pickup();
   floatWord('+' + add + ' PEBBLES', pos.clone().setY(2.6), HEX.bile, 0.7);
 }
@@ -310,16 +310,16 @@ function sling() {
   if (state !== 'play' || hero.slingCd > 0 || hero.dodgeT > 0 || hero.stun > 0) return;
   if (hero.ammo <= 0) {
     hero.slingCd = 0.35;
-    sTone({ f: 220, dur: 0.05, type: 'square', gain: 0.08 });
+    playTone({ f: 220, dur: 0.05, type: 'square', gain: 0.08 });
     floatWord('EMPTY', hero.pos.clone().setY(2.6), HEX.smoke, 0.7);
     return;
   }
   hero.ammo--;
-  updAmmo();
+  updateAmmo();
   hero.aimT = 1.4;
   mixStep('s');
-  hero.slingCd = 0.55 * mixCd();
-  hero.slingMixP = mixPow(); // the pebble pulled now carries the chain's power
+  hero.slingCd = 0.55 * mixCooldown();
+  hero.slingMixP = mixPower(); // the pebble pulled now carries the chain's power
   slingT = 0.62;
   slingFired = false;
   const a = aimInfo(true);
@@ -331,14 +331,14 @@ function sling() {
     slingDir.set(dx / d, 0, dz / d);
   } else slingDir.set(a.fx, 0, a.fz);
   hero.flip = slingDir.x * Math.cos(cam.yaw) - slingDir.z * Math.sin(cam.yaw) >= 0 ? 1 : -1;
-  sTone({ f: 140, f2: 240, dur: 0.13, type: 'triangle', gain: 0.1 });
+  playTone({ f: 140, f2: 240, dur: 0.13, type: 'triangle', gain: 0.1 });
 }
 function fireSling() {
   slingFired = true;
   SFX.sling();
-  slingG.updateMatrixWorld(true);
+  slingModel.updateMatrixWorld(true);
   const a = aimInfo(true),
-    from = slingG.localToWorld(slingG.userData.pouch.position.clone()),
+    from = slingModel.localToWorld(slingModel.userData.pouch.position.clone()),
     held = hero.slingTarget;
   if (held && !held.dead && !held.dying && !held.hidden) a.target = held;
   let to;
@@ -353,7 +353,7 @@ function fireSling() {
   burst(from, [COL.paper, COL.bile], 5, 3, 0.1, { g: 0, life: 0.4 });
 }
 // pebbles fly in three steps a frame; walls, the floor, range and anything they meet stop them; the Grump is too thick
-function updPebbles(dt) {
+function updatePebbles(dt) {
   for (let i = pebbles.length - 1; i >= 0; i--) {
     const b = pebbles[i];
     b.life -= dt;

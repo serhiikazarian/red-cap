@@ -3,8 +3,8 @@
 // one screen at a time (null: none); the title's music plays only on the title; the first button takes the focus
 function showOnly(id) {
   ['title', 'card', 'pause', 'dead', 'win', 'catalogue'].forEach(s => ($('#' + s).hidden = s !== id));
-  if (id === 'title' && TMUS.want) tmusStart();
-  else if (id !== 'title') tmusStop();
+  if (id === 'title' && TITLE_MUSIC.want) titleMusicStart();
+  else if (id !== 'title') titleMusicStop();
   menuAt = performance.now();
   requestAnimationFrame(() => {
     const b = menuBtns($('#' + id))[0];
@@ -74,7 +74,7 @@ const CATALOGUE = [
   ['npc_hair', 'Long Hair', 'Onlooker', 'Exhales smoke and opinions.', 'spared']
 ];
 const CAT_KEY = 'redcap.catalogue.v1';
-let catMem = (() => {
+let catalogueSeen = (() => {
     try {
       return JSON.parse(localStorage.getItem(CAT_KEY)) || {};
     } catch {
@@ -94,25 +94,25 @@ let catGroups = [];
 // the catalogue shows as many cards as fit the window, a page at a time
 let catCards = [],
   catPage = 0,
-  catPer = 6,
+  cardsPerPage = 6,
   winPage = 0,
   catPages = [];
-function catSave() {
+function saveCatalogue() {
   try {
-    localStorage.setItem(CAT_KEY, JSON.stringify(catMem));
+    localStorage.setItem(CAT_KEY, JSON.stringify(catalogueSeen));
   } catch {}
 }
-function catOpen(c) {
-  return c[4] === 'ld' ? !!catMem.ld : c[4] === 'spared' ? !!catMem.spared : !!catMem.won;
+function cardUnlocked(c) {
+  return c[4] === 'ld' ? !!catalogueSeen.ld : c[4] === 'spared' ? !!catalogueSeen.spared : !!catalogueSeen.won;
 }
-function catCount() {
-  return CATALOGUE.filter(catOpen).length;
+function unlockedCount() {
+  return CATALOGUE.filter(cardUnlocked).length;
 }
 function openCatalogue(from) {
   catFrom = from;
   catPage = 0;
   catCards = CATALOGUE.map((c, i) => {
-    const open = catOpen(c),
+    const open = cardUnlocked(c),
       r = (((i * 37) % 7) - 3) * 0.4,
       fl = c[2].endsWith('hidden') ? 'Hidden' : '';
     return `<figure class="cat-card${open ? '' : ' locked'}" style="--r:${r}deg"><img src="${ASSETS[c[0]]}" alt="${open ? c[1] : 'Unknown'}">${fl ? `<div class="fl">${fl}</div>` : ''}<div class="nm">${open ? c[1] : '???'}</div>
@@ -123,7 +123,7 @@ function openCatalogue(from) {
     head: `<div class="cat-floor"><b>${f[0]}</b><span>${f[1]}</span></div>`,
     cards: catCards.filter((_, i) => catFloor(CATALOGUE[i]) === k)
   }));
-  const n = catCount();
+  const n = unlockedCount();
   $('#catCount').textContent = `${n} of ${CATALOGUE.length} pages`;
   $('#catNote').textContent = n === CATALOGUE.length ? 'Complete. Every talker silenced, every onlooker spared.' : 'Some pages are still blank.';
   showOnly('catalogue');
@@ -137,9 +137,10 @@ function catLayout() {
     card = grid.children[1];
   const cols = Math.max(1, Math.floor((grid.clientWidth + 12) / (Math.max(148, card.offsetWidth) + 12)));
   const rows = Math.max(1, Math.floor((grid.clientHeight - head.offsetHeight - 12 + 12) / (card.offsetHeight + 14)));
-  catPer = cols * rows;
+  cardsPerPage = cols * rows;
   catPages = [];
-  for (const g of catGroups) for (let i = 0; i < g.cards.length; i += catPer) catPages.push(g.head + g.cards.slice(i, i + catPer).join(''));
+  for (const g of catGroups)
+    for (let i = 0; i < g.cards.length; i += cardsPerPage) catPages.push(g.head + g.cards.slice(i, i + cardsPerPage).join(''));
   catShow(catPage);
 }
 function catShow(p) {
@@ -160,17 +161,17 @@ function winShow(p) {
   pages.forEach((el, i) => (el.hidden = i !== winPage)); // showing a page restarts its little animations
   pagerNav($('#win'), winPage, pages.length);
 }
-function flip(d) {
+function flipPage(d) {
   if (!$('#catalogue').hidden) catShow(catPage + d);
   else if (!$('#win').hidden) winShow(winPage + d);
 }
 function catRecord() {
   // finishing fills the catalogue; how you finished decides which pages (this run's alone: a new finish replaces the old record)
-  catMem = { won: true };
-  if (hero.hasJaw) catMem.ld = true;
-  if (stats.npc.every(v => !v)) catMem.spared = true;
-  catSave();
-  const n = catCount();
+  catalogueSeen = { won: true };
+  if (hero.hasJaw) catalogueSeen.ld = true;
+  if (stats.npc.every(v => !v)) catalogueSeen.spared = true;
+  saveCatalogue();
+  const n = unlockedCount();
   $('#winCat').textContent =
     `Catalogue unlocked: ${n} of ${CATALOGUE.length} pages.` + (stats.npc.every(v => !v) ? ' You never raised a hand to an onlooker.' : '');
   $('#catBtn').hidden = false;

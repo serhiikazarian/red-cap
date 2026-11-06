@@ -1,12 +1,12 @@
 // Decor: braziers, the route lights that guide Red Cap to the exit, clutter along the walls, framed pictures, and each floor's
 // theme: floor one is narcissism and madness (the Geezer's portraits, mirrors, newspapers full of crap), floor two anger and
 // wrath (braziers, scorched floors, furious graffiti). Placement draws from the floor's seeded rng.
-let KIT = null;
+let BRAZIER_KIT = null;
 // geometry and materials shared by every brazier and route light
-function kit() {
+function brazierKit() {
   return (
-    KIT ||
-    (KIT = {
+    BRAZIER_KIT ||
+    (BRAZIER_KIT = {
       iron: share(new THREE.MeshLambertMaterial({ color: 0x241a14 })),
       post: share(new THREE.CylinderGeometry(0.07, 0.1, 0.9, 6)),
       bowl: share(new THREE.CylinderGeometry(0.5, 0.28, 0.45, 8)),
@@ -24,7 +24,7 @@ function kit() {
 }
 // a brazier: an iron bowl of coals on a post, burning (its heat zone goes to G.hot)
 function brazier(fx, y, fz, r) {
-  const K = kit(),
+  const K = brazierKit(),
     g = still(new THREE.Group());
   g.position.set(fx, y, fz);
   G.group.add(g);
@@ -74,8 +74,14 @@ function routeCells(clearOfProps) {
       const nx = x + ax,
         nz = z + az,
         k = key(nx, nz),
-        c1 = c0 + 1 + (clearOfProps && ch(nx, nz) === 'o' ? 6 : 0);
-      if (solid(nx, nz) || ch(nx, nz) === 'g' || !stepOK(x, z, nx, nz) || (clearOfProps && ch(nx, nz) === 'T') || (cost.has(k) && cost.get(k) <= c1))
+        c1 = c0 + 1 + (clearOfProps && cellAt(nx, nz) === 'o' ? 6 : 0);
+      if (
+        solid(nx, nz) ||
+        cellAt(nx, nz) === 'g' ||
+        !canStep(x, z, nx, nz) ||
+        (clearOfProps && cellAt(nx, nz) === 'T') ||
+        (cost.has(k) && cost.get(k) <= c1)
+      )
         continue;
       cost.set(k, c1);
       prev.set(k, [x, z]);
@@ -93,7 +99,7 @@ function routeCells(clearOfProps) {
 }
 // lights only where the way is not obvious: a turn, a fork, the foot of a climb, and the exit
 function guideMarks(cells) {
-  const open = (x, z) => !solid(x, z) && ch(x, z) !== 'g',
+  const open = (x, z) => !solid(x, z) && cellAt(x, z) !== 'g',
     hc = (x, z) => heightAt(cellMid(x), cellMid(z)),
     marks = [];
   let lastI = -9;
@@ -103,7 +109,7 @@ function guideMarks(cells) {
       [nx, nz] = cells[i + 1];
     const turn = x - px !== nx - x || z - pz !== nz - z;
     let exits = 0;
-    for (const [ax, az] of DIRS4) if (open(x + ax, z + az) && stepOK(x, z, x + ax, z + az)) exits++;
+    for (const [ax, az] of DIRS4) if (open(x + ax, z + az) && canStep(x, z, x + ax, z + az)) exits++;
     const climb = Math.abs(hc(nx, nz) - hc(x, z)) > 0.2 && Math.abs(hc(x, z) - hc(px, pz)) < 0.05;
     if ((turn && exits >= 3) || climb || (turn && i - lastI >= 6)) {
       if (i - lastI >= 4) {
@@ -119,7 +125,7 @@ function guidePath(F, rng) {
   const cells = routeCells(true);
   G.pathSet = new Set(cells.map(c => c.join(',')));
   if (cells.length < 3) return;
-  const K = kit(),
+  const K = brazierKit(),
     corridor = F.deco === 'corridor',
     gt = corridor ? glowTex('#fff2b0', 'rgba(232,198,40,.55)') : fireTex;
   if (corridor) OWN.add(gt);
@@ -161,7 +167,7 @@ function guideLamp({ K, corridor, glowM }, px, pz) {
     solid(pix, piz) ||
     wallDist(px, pz) < 0.25 ||
     kindAt(pix, piz) === 2 ||
-    (propR(ch(pix, piz)) && Math.hypot(px - cellMid(pix), pz - cellMid(piz)) < propR(ch(pix, piz)) + 0.3)
+    (propRadius(cellAt(pix, piz)) && Math.hypot(px - cellMid(pix), pz - cellMid(piz)) < propRadius(cellAt(pix, piz)) + 0.3)
   )
     return;
   if (!clearOf(px, pz, 0.3)) return;
@@ -288,9 +294,9 @@ function clutterBarrel(g, rng, M) {
 function wallFaces(rng, prob, fn) {
   for (let z = 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) {
-      if (solid(x, z) || ch(x, z) === 'g') continue;
+      if (solid(x, z) || cellAt(x, z) === 'g') continue;
       for (const [dx, dz] of DIRS4)
-        if (ch(x + dx, z + dz) === '#' && rng() < prob) {
+        if (cellAt(x + dx, z + dz) === '#' && rng() < prob) {
           const n0 = G.group.children.length,
             h = kindAt(x, z) === 1 ? LIFT : 0;
           fn(cellMid(x) + dx * (CELL / 2 - 0.04), cellMid(z) + dz * (CELL / 2 - 0.04), Math.atan2(-dx, -dz), dx, dz);
@@ -304,7 +310,8 @@ function floorSpots(rng, n, fn, r = 0.6) {
     const x = rng() * G.w * CELL,
       z = rng() * G.h * CELL,
       [ix, iz] = cellOf(x, z);
-    if (solid(ix, iz) || ch(ix, iz) === 'g' || ch(ix, iz) === 'o' || ch(ix, iz) === 'T' || kindAt(ix, iz) === 2 || !clearOf(x, z, r)) continue;
+    if (solid(ix, iz) || cellAt(ix, iz) === 'g' || cellAt(ix, iz) === 'o' || cellAt(ix, iz) === 'T' || kindAt(ix, iz) === 2 || !clearOf(x, z, r))
+      continue;
     const n0 = G.group.children.length,
       h = heightAt(x, z);
     fn(x, z);
@@ -536,7 +543,7 @@ function doodleDecals(rng, tint) {
   for (let k = 0; k < 14; k++) {
     const x = (1 + rng() * (G.w - 2)) | 0,
       z = (1 + rng() * (G.h - 2)) | 0;
-    if (solid(x, z) || propR(ch(x, z))) continue;
+    if (solid(x, z) || propRadius(cellAt(x, z))) continue;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1), mat);
     m.rotation.x = -Math.PI / 2;
     m.rotation.z = rng() * TAU;

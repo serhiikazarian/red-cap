@@ -63,15 +63,15 @@ function spawnJaw(x, z) {
 }
 // the plaques glow until hit; the painting shakes awake; the Jester's final mask; the jaw lies laughing until taken, then
 // rides on Red Cap's shoulder
-function updSecrets(dt) {
+function updateSecrets(dt) {
   const now = performance.now() / 1000;
   if (G.plaques) for (const q of G.plaques) if (!q.lit) q.glow.material.opacity = 0.18 + Math.sin(now * 2.5 + q.x) * 0.12;
   if (G.ldWake > 0) {
     G.ldWake -= dt;
     if (animTick) G.ldPainting.g.position.x = 10.5 * CELL + rand(-0.05, 0.05);
-    if (G.ldWake <= 0) ldWakeUp();
+    if (G.ldWake <= 0) livingDyingWakeUp();
   }
-  if (G.finalMask) updFinalMask(dt, now);
+  if (G.finalMask) updateFinalMask(dt, now);
   if (G.jawPickup) jawPickup(dt, now);
   if (hero.hasJaw && hero.jawBuddy) jawBuddy(dt, now);
 }

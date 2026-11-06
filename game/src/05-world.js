@@ -60,21 +60,21 @@ function cellOf(x, z) {
 function cellMid(i) {
   return i * CELL + CELL / 2;
 }
-function ch(ix, iz) {
+function cellAt(ix, iz) {
   if (!G || iz < 0 || iz >= G.h || ix < 0 || ix >= G.w) return '#';
   return G.map[iz][ix];
 }
 function solid(ix, iz) {
-  const c = ch(ix, iz);
+  const c = cellAt(ix, iz);
   return c === '#' || (c === 'g' && G.gateClosed);
 }
 // how far a pillar or prop in a cell reaches from the cell's centre (0: nothing to bump into)
-function propR(c) {
+function propRadius(c) {
   return c === 'T' ? (G && G.F.deco === 'mouth' ? PYR_R : 0.5) : c === 'o' ? (G && G.F.deco === 'mouth' ? 0 : 0.6) : 0;
 }
 // line of sight that also counts pillars and props as cover
 function losCover(a, b, pad = 0.3) {
-  if (!los(a, b)) return false;
+  if (!lineOfSight(a, b)) return false;
   const dx = b.x - a.x,
     dz = b.z - a.z,
     d = Math.hypot(dx, dz),
@@ -84,7 +84,7 @@ function losCover(a, b, pad = 0.3) {
       x = a.x + dx * t,
       z = a.z + dz * t,
       [ix, iz] = cellOf(x, z),
-      pr = propR(ch(ix, iz));
+      pr = propRadius(cellAt(ix, iz));
     if (pr && Math.hypot(x - cellMid(ix), z - cellMid(iz)) < pr + pad) return false;
   }
   return true;
@@ -96,7 +96,7 @@ function kindAt(ix, iz) {
   return G.hk[ix + iz * G.w];
 }
 // the ground's height in a cell at a point (clamped into the cell)
-function cellH(ix, iz, x, z) {
+function cellHeight(ix, iz, x, z) {
   const k = kindAt(ix, iz);
   if (k === 1) return LIFT;
   if (k !== 2) return 0;
@@ -108,10 +108,10 @@ function cellH(ix, iz, x, z) {
 function heightAt(x, z) {
   if (!G || !G.hk) return 0;
   const [ix, iz] = cellOf(x, z);
-  return cellH(ix, iz, x, z);
+  return cellHeight(ix, iz, x, z);
 }
 // can a walker go from one cell to its neighbour (not up or down a drop)?
-function stepOK(ax, az, bx, bz) {
+function canStep(ax, az, bx, bz) {
   const ka = kindAt(ax, az),
     kb = kindAt(bx, bz);
   const rampOK = (rx, rz, ox, oz, ko) => {
@@ -228,7 +228,7 @@ function collide(p, r, y, who) {
     for (let ix = cx - 1; ix <= cx + 1; ix++) {
       const nx0 = clamp(p.x, ix * CELL + 0.001, ix * CELL + CELL - 0.001),
         nz0 = clamp(p.z, iz * CELL + 0.001, iz * CELL + CELL - 0.001);
-      if (solid(ix, iz) || (y != null && G.hk && Math.abs(cellH(ix, iz, nx0, nz0) - y) > 0.6)) {
+      if (solid(ix, iz) || (y != null && G.hk && Math.abs(cellHeight(ix, iz, nx0, nz0) - y) > 0.6)) {
         const nx = clamp(p.x, ix * CELL, ix * CELL + CELL),
           nz = clamp(p.z, iz * CELL, iz * CELL + CELL);
         const dx = p.x - nx,
@@ -258,7 +258,7 @@ function collide(p, r, y, who) {
         }
       } else if (pyrAt(ix, iz)) pyrPush(p, Math.max(r, (who && who.drawnR) || 0), pyrAt(ix, iz));
       else {
-        const pr = propR(ch(ix, iz));
+        const pr = propRadius(cellAt(ix, iz));
         if (pr) {
           const px = cellMid(ix),
             pz = cellMid(iz),
@@ -286,7 +286,7 @@ function collide(p, r, y, who) {
   }
 }
 // a clear straight line between two points (walls only)
-function los(a, b) {
+function lineOfSight(a, b) {
   const dx = b.x - a.x,
     dz = b.z - a.z,
     d = Math.hypot(dx, dz),
@@ -313,7 +313,7 @@ function flowField() {
     for (const [ax, az] of DIRS4) {
       const nx = x + ax,
         nz = z + az;
-      if (solid(nx, nz) || !stepOK(x, z, nx, nz)) continue;
+      if (solid(nx, nz) || !canStep(x, z, nx, nz)) continue;
       const j = nx + nz * G.w;
       if (D[j] > D[i] + 1) {
         D[j] = D[i] + 1;
@@ -330,7 +330,7 @@ function avoidProps(e, vx, vz) {
   AVOID.x = AVOID.z = 0;
   for (let iz = cz - 1; iz <= cz + 1; iz++)
     for (let ix = cx - 1; ix <= cx + 1; ix++) {
-      const pr = pyrAt(ix, iz) ? PYR.foot * Math.SQRT2 : propR(ch(ix, iz));
+      const pr = pyrAt(ix, iz) ? PYR.foot * Math.SQRT2 : propRadius(cellAt(ix, iz));
       if (pr) avoidOne(e, vx, vz, cellMid(ix), cellMid(iz), pr, ix + iz * 999);
     }
   for (let k = 0; k < G.stakes.length; k++) {
@@ -394,7 +394,7 @@ function steerRaw(e, target) {
   for (const [ax, az] of DIRS4) {
     const nx = x + ax,
       nz = z + az;
-    if (solid(nx, nz) || !stepOK(x, z, nx, nz)) continue;
+    if (solid(nx, nz) || !canStep(x, z, nx, nz)) continue;
     const v = G.dist[nx + nz * G.w];
     if (v < best) {
       best = v;

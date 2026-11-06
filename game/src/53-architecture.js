@@ -133,11 +133,11 @@ function addWebs(w, faces) {
 }
 // a web in an inside corner where two wall tops meet, anchors on both, apex hanging between them
 function cornerWebs({ r, pos, uv, used }, w) {
-  const top = (x, z) => (ch(x, z) === '#' ? G.wallTop[x + z * w] : 0),
+  const top = (x, z) => (cellAt(x, z) === '#' ? G.wallTop[x + z * w] : 0),
     H = CELL / 2 - 0.03;
   for (let z = 1; z < G.h - 1; z++)
     for (let x = 1; x < w - 1; x++) {
-      const c = ch(x, z);
+      const c = cellAt(x, z);
       if (c === '#' || c === 'g') continue;
       for (const [a, b] of [
         [1, 1],
@@ -275,8 +275,8 @@ function paintSpots(w, r) {
   const spots = [];
   for (let z = 9; z < G.h - 1; z++)
     for (let x = 1; x < w - 1; x++) {
-      if (ch(x, z) !== '.') continue;
-      for (const [dx, dz] of DIRS4) if (ch(x + dx, z + dz) === '#') spots.push([x, z, dx, dz, r()]);
+      if (cellAt(x, z) !== '.') continue;
+      for (const [dx, dz] of DIRS4) if (cellAt(x + dx, z + dz) === '#') spots.push([x, z, dx, dz, r()]);
     }
   spots.sort((p, q) => p[4] - q[4]);
   return spots;

@@ -57,7 +57,7 @@ function placeBystanders(rng, count) {
     k++;
   }
 }
-function updBystanders(dt) {
+function updateBystanders(dt) {
   const now = performance.now() / 1000;
   // inside Long Hair's smoke, shooters lose Red Cap
   hero.inSmoke = G.npcs.some(n => n.kind === 'npc_hair' && !n.offended && Math.hypot(hero.pos.x - n.pos.x, hero.pos.z - n.pos.z) < 1.8);
@@ -110,15 +110,15 @@ function updBystanders(dt) {
 function npcVoice(n, vol = 1) {
   const g = vol;
   if (n.kind === 'npc_hat') {
-    sTone({ f: 165, f2: 150, dur: 0.17, type: 'triangle', gain: 0.13 * g, filt: [700, 380] });
-    sTone({ f: 178, f2: 160, dur: 0.22, type: 'triangle', gain: 0.13 * g, at: 0.24, filt: [700, 380] });
+    playTone({ f: 165, f2: 150, dur: 0.17, type: 'triangle', gain: 0.13 * g, filt: [700, 380] });
+    playTone({ f: 178, f2: 160, dur: 0.22, type: 'triangle', gain: 0.13 * g, at: 0.24, filt: [700, 380] });
   } else if (n.kind === 'npc_spike') {
     for (let i = 0; i < 4; i++)
-      sTone({ f: 880 + i * 95 + rand(-40, 40), f2: 760, dur: 0.07, type: 'square', gain: 0.035 * g, at: i * 0.085, filt: [2600, 1500] });
+      playTone({ f: 880 + i * 95 + rand(-40, 40), f2: 760, dur: 0.07, type: 'square', gain: 0.035 * g, at: i * 0.085, filt: [2600, 1500] });
   } else {
-    sNoise({ dur: 0.9, f: 900, f2: 380, type: 'lowpass', q: 0.7, gain: 0.11 * g });
-    sNoise({ dur: 0.12, f: 520, q: 2, gain: 0.16 * g, at: 0.95 });
-    sNoise({ dur: 0.1, f: 480, q: 2, gain: 0.12 * g, at: 1.12 });
+    playNoise({ dur: 0.9, f: 900, f2: 380, type: 'lowpass', q: 0.7, gain: 0.11 * g });
+    playNoise({ dur: 0.12, f: 520, q: 2, gain: 0.16 * g, at: 0.95 });
+    playNoise({ dur: 0.1, f: 480, q: 2, gain: 0.12 * g, at: 1.12 });
   }
 }
 // hitting an onlooker shakes three pebbles loose, once; after that they turn their back and never help again
@@ -134,7 +134,7 @@ function hitNpc(p, rad) {
       burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [COL.tie, COL.paper], 10, 3, 0.14);
     }
     if (n.offended) {
-      sTone({ f: 140, dur: 0.08, type: 'square', gain: 0.05 });
+      playTone({ f: 140, dur: 0.08, type: 'square', gain: 0.05 });
       return true;
     }
     n.offended = true;
@@ -142,7 +142,7 @@ function hitNpc(p, rad) {
     stats.npc[floorIdx] = (stats.npc[floorIdx] || 0) + 1;
     n.mat.color.setHex(0x8a8580);
     n.tilt.position.x = 0.1;
-    sTone({ f: 330, f2: 130, dur: 0.35, type: 'sawtooth', gain: 0.07, filt: [900, 300] });
+    playTone({ f: 330, f2: 130, dur: 0.35, type: 'sawtooth', gain: 0.07, filt: [900, 300] });
     npcVoice(n, 0.5);
     burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [COL.paper, COL.smoke, COL.ink], 8, 3, 0.14);
     giveAmmo(2, n.pos);

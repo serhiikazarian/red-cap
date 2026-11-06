@@ -12,19 +12,19 @@ const touchUI = matchMedia('(pointer: coarse)').matches;
 const sortZ = it => (it.object.userData.sortZ !== undefined ? it.object.userData.sortZ - it.object.userData.sortRank * 1e-7 : it.z);
 renderer.setTransparentSort((a, b) => a.groupOrder - b.groupOrder || a.renderOrder - b.renderOrder || sortZ(b) - sortZ(a) || a.id - b.id);
 
-const rt = new THREE.WebGLRenderTarget(4, 4, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
-rt.depthTexture = new THREE.DepthTexture(4, 4);
-rt.depthTexture.type = THREE.UnsignedIntType;
+const sceneTarget = new THREE.WebGLRenderTarget(4, 4, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
+sceneTarget.depthTexture = new THREE.DepthTexture(4, 4);
+sceneTarget.depthTexture.type = THREE.UnsignedIntType;
 // see-through things are also drawn into this half-size mask (56-see-through); the ink pass draws a bold contour where it changes
 const SEE_ZFAR = 64, // metres: a floater's distance is kept in the mask's blue channel as a share of this
   SEE_GZFAR = 24, // metres: a pillar's distance, in the alpha channel
   SOLID_GAP = [0.2, 0.45]; // metres beyond a pillar's near side where its contour fades in
-const seeRT = new THREE.WebGLRenderTarget(4, 4, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
+const seeTarget = new THREE.WebGLRenderTarget(4, 4, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
 
-const post = new THREE.ShaderMaterial({
+const inkPass = new THREE.ShaderMaterial({
   uniforms: {
-    tCol: { value: rt.texture },
-    tDep: { value: rt.depthTexture },
+    tCol: { value: sceneTarget.texture },
+    tDep: { value: sceneTarget.depthTexture },
     px: { value: new THREE.Vector2() },
     cn: { value: camera.near },
     cf: { value: camera.far },
@@ -35,7 +35,7 @@ const post = new THREE.ShaderMaterial({
     time: { value: 0 },
     dpr: { value: 1 },
     grainOff: { value: new THREE.Vector2() },
-    tSee: { value: seeRT.texture },
+    tSee: { value: seeTarget.texture },
     seeBox: { value: new THREE.Vector4(-1, -1, 2, 2) },
     heroBox: { value: new THREE.Vector4(-1, -1, 2, 2) },
     lite: { value: 0 }, // 1: single ink lines (cheaper)
@@ -128,9 +128,9 @@ const post = new THREE.ShaderMaterial({
   depthTest: false,
   depthWrite: false
 });
-const postScene = new THREE.Scene(),
+const inkScene = new THREE.Scene(),
   postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
+inkScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), inkPass));
 
 // a see-through-blended solid thing (it writes no depth): normal colour blending, and it lowers the picture's alpha so the ink pass
 // draws no line of what is behind it across it
@@ -144,7 +144,7 @@ const INK_HIDE = {
   blendDstAlpha: THREE.OneMinusSrcAlphaFactor
 };
 
-// The resolution controller. resScale is the drawing ratio, never above the screen's (resCap). calibrate (60-flow) sets it while a
+// The resolution controller. resScale is the drawing ratio, never above the screen's (resolutionCap). calibrate (60-flow) sets it while a
 // floor loads; then adaptResolution looks at each second of play. A frame is late when it takes 1.4 frames of a 60 Hz screen (or of
 // the screen's own rate, if slower). Over a quarter of a second's frames late: one step down the ladder, thinner smoke first
 // (RES.thin: PUFF_LOW puffs, only while there is that much smoke), then single ink lines, then the ratio, to RES_MIN and on to
@@ -176,15 +176,15 @@ const RES = {
   noThin: 0 // nor full smoke
 };
 let resScale = 1.75;
-function resCap() {
+function resolutionCap() {
   return Math.min(devicePixelRatio || 1, innerWidth < 700 ? 1.5 : 1.75);
 }
 // the lowest step down from ratio cur: RES_MIN first, RES_LOW only from there
-function resFloor(cur) {
+function resolutionFloor(cur) {
   return cur > RES_MIN ? RES_MIN : RES_LOW;
 }
 // a fresh start for a new floor (after calibrate): nothing is held back, and its first two seconds of play are not judged
-function resFresh() {
+function resolutionFresh() {
   Object.assign(RES, { ticks: [], t: 0, thin: false, good: 0, skip: 2, upAt: -99, last: null, wait: RES_WAIT, noLite: 0, noThin: 0 });
   RES.noRes = { above: Infinity, until: 0 };
 }
@@ -211,33 +211,33 @@ function adaptResolution(raw) {
   let n = 0;
   for (let k = ticks.length - 1; k >= 0 && ticks[k] > lateAt; k--) n++;
   const late = n / ticks.length;
-  if (late > LATE_DROP) resDown(late);
-  else if (late <= LATE_OK && ++RES.good >= 3) resUp();
+  if (late > LATE_DROP) resolutionDown(late);
+  else if (late <= LATE_OK && ++RES.good >= 3) resolutionUp();
   else if (late > LATE_OK) RES.good = 0;
 }
-function resDown(late) {
+function resolutionDown(late) {
   RES.good = 0;
   const failed = RES.clock - RES.upAt <= 3 && RES.last; // the step up just taken: undone, and held back twice as long as before
   RES.wait = failed ? Math.min(RES_WAIT_MAX, RES.wait * 2) : RES_WAIT;
   const until = RES.clock + RES.wait,
-    cur = Math.min(resScale, resCap()),
-    step = failed ? RES.last : !RES.thin && puffs.length > PUFF_LOW ? 'thin' : !post.uniforms.lite.value ? 'lite' : cur > RES_LOW ? 'res' : '';
+    cur = Math.min(resScale, resolutionCap()),
+    step = failed ? RES.last : !RES.thin && puffs.length > PUFF_LOW ? 'thin' : !inkPass.uniforms.lite.value ? 'lite' : cur > RES_LOW ? 'res' : '';
   RES.last = null;
   if (step === 'thin') {
     RES.thin = true;
     RES.noThin = until;
   } else if (step === 'lite') {
-    post.uniforms.lite.value = 1;
+    inkPass.uniforms.lite.value = 1;
     RES.noLite = until;
   } else if (step) {
     RES.noRes = { above: cur - 0.01, until };
-    resScale = failed ? RES.from : Math.max(resFloor(cur), cur - (late > 0.6 ? 0.25 : 0.12));
+    resScale = failed ? RES.from : Math.max(resolutionFloor(cur), cur - (late > 0.6 ? 0.25 : 0.12));
     resize();
   }
 }
-function resUp() {
+function resolutionUp() {
   RES.good = 0;
-  const cap = resCap(),
+  const cap = resolutionCap(),
     cur = Math.min(resScale, cap),
     to = Math.min(cap, cur + RES_UP),
     held = RES.clock < RES.noRes.until && to > RES.noRes.above;
@@ -245,9 +245,9 @@ function resUp() {
     [RES.last, RES.from] = ['res', cur];
     resScale = to;
     resize();
-  } else if (post.uniforms.lite.value && RES.clock >= RES.noLite) {
+  } else if (inkPass.uniforms.lite.value && RES.clock >= RES.noLite) {
     RES.last = 'lite';
-    post.uniforms.lite.value = 0;
+    inkPass.uniforms.lite.value = 0;
   } else if (RES.thin && RES.clock >= RES.noThin) {
     RES.last = 'thin';
     RES.thin = false;
@@ -259,17 +259,17 @@ const drawSize = new THREE.Vector2();
 function resize() {
   const w = innerWidth,
     h = innerHeight,
-    dpr = Math.min(resCap(), resScale);
+    dpr = Math.min(resolutionCap(), resScale);
   renderer.getSize(drawSize); // reallocate the canvas only when its size or ratio really changes
   if (drawSize.x !== w || drawSize.y !== h || renderer.getPixelRatio() !== dpr) renderer.setDrawingBufferSize(w, h, dpr);
   const bw = Math.floor(w * dpr),
     bh = Math.floor(h * dpr);
-  rt.setSize(bw, bh);
-  seeRT.setSize(Math.max(1, bw >> 1), Math.max(1, bh >> 1));
-  post.uniforms.spx.value.set(1 / Math.max(1, bw >> 1), 1 / Math.max(1, bh >> 1));
-  post.uniforms.px.value.set(1 / bw, 1 / bh);
-  post.uniforms.dotScale.value = 4.5 * dpr;
-  post.uniforms.dpr.value = dpr;
+  sceneTarget.setSize(bw, bh);
+  seeTarget.setSize(Math.max(1, bw >> 1), Math.max(1, bh >> 1));
+  inkPass.uniforms.spx.value.set(1 / Math.max(1, bw >> 1), 1 / Math.max(1, bh >> 1));
+  inkPass.uniforms.px.value.set(1 / bw, 1 / bh);
+  inkPass.uniforms.dotScale.value = 4.5 * dpr;
+  inkPass.uniforms.dpr.value = dpr;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
@@ -297,21 +297,21 @@ function sortUnits() {
 }
 
 // Red Cap's box on screen (with a margin): the ink pass looks for his soft outline only there
-const HB = new THREE.Vector3();
+const heroCorner = new THREE.Vector3();
 function heroBoxSet() {
-  const b = post.uniforms.heroBox.value;
+  const b = inkPass.uniforms.heroBox.value;
   if (!G || !hero.root || !hero.root.parent) return b.set(-1, -1, -1, -1);
   let x0 = 2,
     y0 = 2,
     x1 = -1,
     y1 = -1;
   for (let k = 0; k < 8; k++) {
-    HB.set(hero.pos.x + (k & 1 ? 1 : -1), hero.pos.y + (k & 2 ? 2.6 : -0.1), hero.pos.z + (k & 4 ? 1 : -1)).project(camera);
-    if (HB.z > 1 || HB.z < -1) return b.set(-1, -1, 2, 2); // behind or too close: everywhere, to be safe
-    x0 = Math.min(x0, HB.x * 0.5 + 0.5);
-    x1 = Math.max(x1, HB.x * 0.5 + 0.5);
-    y0 = Math.min(y0, HB.y * 0.5 + 0.5);
-    y1 = Math.max(y1, HB.y * 0.5 + 0.5);
+    heroCorner.set(hero.pos.x + (k & 1 ? 1 : -1), hero.pos.y + (k & 2 ? 2.6 : -0.1), hero.pos.z + (k & 4 ? 1 : -1)).project(camera);
+    if (heroCorner.z > 1 || heroCorner.z < -1) return b.set(-1, -1, 2, 2); // behind or too close: everywhere, to be safe
+    x0 = Math.min(x0, heroCorner.x * 0.5 + 0.5);
+    x1 = Math.max(x1, heroCorner.x * 0.5 + 0.5);
+    y0 = Math.min(y0, heroCorner.y * 0.5 + 0.5);
+    y1 = Math.max(y1, heroCorner.y * 0.5 + 0.5);
   }
   b.set(x0 - 0.04, y0 - 0.04, x1 + 0.04, y1 + 0.04);
 }
@@ -319,15 +319,15 @@ function heroBoxSet() {
 function render() {
   puffSync();
   sortUnits();
-  post.uniforms.time.value = performance.now() / 1000;
+  inkPass.uniforms.time.value = performance.now() / 1000;
   const g = GRAIN[stillGrain ? 0 : Math.floor(performance.now() / 125) % 4];
-  post.uniforms.grainOff.value.set(g[0], g[1]);
-  if (state !== 'play' && state !== 'frozen') post.uniforms.psy.value = 0;
+  inkPass.uniforms.grainOff.value.set(g[0], g[1]);
+  if (state !== 'play' && state !== 'frozen') inkPass.uniforms.psy.value = 0;
   heroBoxSet();
-  renderer.setRenderTarget(rt);
+  renderer.setRenderTarget(sceneTarget);
   renderer.render(scene, camera);
-  post.uniforms.seeOn.value = SEE.on ? 1 : 0;
+  inkPass.uniforms.seeOn.value = SEE.on ? 1 : 0;
   if (SEE.on) seeMask();
   renderer.setRenderTarget(null);
-  renderer.render(postScene, postCam);
+  renderer.render(inkScene, postCam);
 }

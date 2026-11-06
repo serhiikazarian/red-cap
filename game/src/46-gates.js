@@ -117,12 +117,12 @@ function openGate() {
 // a talker gone: the count, the hidden boss's stages, the door
 function checkClear() {
   if (!G) return;
-  updLeft();
-  ldCheck();
+  updateLeft();
+  livingDyingCheck();
   openDoor();
 }
 // walkable for the trail: open, not a prop's or pyramid's cell
-const trailCell = (x, z) => !solid(x, z) && !propR(ch(x, z)) && !pyrAt(x, z) && ch(x, z) !== 'g';
+const trailCell = (x, z) => !solid(x, z) && !propRadius(cellAt(x, z)) && !pyrAt(x, z) && cellAt(x, z) !== 'g';
 // clear straight line for the trail between two points: no wall or prop, and no ledge (the ground's height changes gently all along)
 function trailClear(a, b) {
   if (!losCover(a, b, 0.45)) return false;
@@ -155,7 +155,7 @@ function trailPath() {
         nz = z + az,
         j = nx + nz * W;
       if (nx < 0 || nz < 0 || nx >= W || nz >= G.h || D[j] >= 0) continue;
-      if (!(trailCell(nx, nz) || (nx === hx && nz === hz)) || !stepOK(x, z, nx, nz)) continue;
+      if (!(trailCell(nx, nz) || (nx === hx && nz === hz)) || !canStep(x, z, nx, nz)) continue;
       D[j] = D[i] + 1;
       q.push(j);
     }
@@ -183,7 +183,7 @@ function trailPath() {
   return out;
 }
 // scraps of torn paper on the floor from Red Cap to the door, laid again whenever he steps into another cell
-function updPaperTrail(dt) {
+function updatePaperTrail(dt) {
   if (!G || !G.portal || !G.portal.open) return;
   const T = G.paperTrail || trailStart();
   T.t += dt;

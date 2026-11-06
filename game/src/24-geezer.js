@@ -33,7 +33,7 @@ function makeGeezer(e, add) {
 // He drifts after Red Cap and stares: his eyes light up (gaze), then flash. Caught in the open, Red Cap is stunned and hurt
 // (less from afar); a stare that misses everything leaves him winded (WHEEZE: hits do double). Close up he lashes with his
 // beard (sweep); hidden from him he blinks to where he can see you. In his second half (p2) everything comes quicker.
-function updGeezer(e, dt, dist, ux, uz, mv) {
+function updateGeezer(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   const now = performance.now() / 1000,
     p2 = e.hp <= e.maxHp / 2;
@@ -47,16 +47,16 @@ function updGeezer(e, dt, dist, ux, uz, mv) {
     s.scale.setScalar(0.5 + glow * 1.6 + (e.flashT > 0 ? 3 : 0));
   });
   // the page swirls as his eyes light up: full within 9 m, gone by 22 m
-  const seenK = (dist <= 9 ? 1 : Math.max(0, 1 - (dist - 9) / 13)) * (los(e.pos, hero.pos) ? 1 : 0.05);
+  const seenK = (dist <= 9 ? 1 : Math.max(0, 1 - (dist - 9) / 13)) * (lineOfSight(e.pos, hero.pos) ? 1 : 0.05);
   G.psyWind = Math.max(G.psyWind, (glow * 0.5 + (e.flashT > 0 ? 0.8 : 0)) * seenK);
-  const step = GEEZER_ST[e.st];
+  const step = GEEZER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, now, p2, seenK);
   if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
 }
-// his states, one step each (updGeezer runs the one he is in)
-const GEEZER_ST = {
+// his states, one step each (updateGeezer runs the one he is in)
+const GEEZER_STATES = {
   idle(e, dt, dist, ux, uz, mv, now, p2, seenK) {
-    if (hero.pos.z > 9 * CELL && los(e.pos, hero.pos)) {
+    if (hero.pos.z > 9 * CELL && lineOfSight(e.pos, hero.pos)) {
       e.st = 'drift';
       e.t = 1.8;
       SFX.growl();
@@ -82,7 +82,7 @@ const GEEZER_ST = {
         // hidden from him (or now and then in his second half): he blinks to where he can see you
         e.st = 'blink';
         e.t = 0.45;
-        sNoise({ dur: 0.4, f: 3000, f2: 300, q: 2, gain: 0.2 });
+        playNoise({ dur: 0.4, f: 3000, f2: 300, q: 2, gain: 0.2 });
       } else if (!losCover(e.pos, hero.pos)) {
         e.t = rand(0.6, 1.2); // no stare at what he cannot see
       } else {
@@ -171,7 +171,7 @@ const GEEZER_ST = {
           x = hero.pos.x + Math.cos(a) * r,
           z = hero.pos.z + Math.sin(a) * r,
           [ix, iz] = cellOf(x, z);
-        if (iz >= 10 && !solid(ix, iz) && !propR(ch(ix, iz)) && los(new THREE.Vector3(x, 0, z), hero.pos)) {
+        if (iz >= 10 && !solid(ix, iz) && !propRadius(cellAt(ix, iz)) && lineOfSight(new THREE.Vector3(x, 0, z), hero.pos)) {
           e.pos.set(x, 0, z);
           break;
         }
@@ -197,7 +197,7 @@ const GEEZER_ST = {
 };
 TALKERS.Y = {
   make: makeGeezer,
-  update: updGeezer,
+  update: updateGeezer,
   bar: e => (e.exhaust > 0 ? ['', false, 'WINDED'] : [e.st === 'gaze' ? 'Eyes lightin’ up — take cover' : '', false]),
   warn: e =>
     e.st === 'gaze'

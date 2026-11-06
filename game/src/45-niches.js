@@ -116,7 +116,7 @@ function holoGone(n) {
   n.holo = null;
 }
 // a niche looked at long enough shows its hologram; looking away, it fades; it flickers and jitters while it shows
-function updNiches(dt) {
+function updateNiches(dt) {
   if (!G.niches.length) return;
   const now = performance.now() / 1000,
     fx = -Math.sin(cam.yaw),
@@ -129,7 +129,7 @@ function updNiches(dt) {
       d = Math.hypot(dx, dz) || 1,
       front = (dx * n.nx + dz * n.nz) / d, // 1: straight in front of it
       aim = (-dx * fx - dz * fz) / d; // 1: the camera looks right at it
-    const looking = d < NICHE_NEAR && front > 0.8 && aim > 0.96 && los(hero.pos, tmpW.set(p.x + n.nx * 0.4, 0, p.z + n.nz * 0.4));
+    const looking = d < NICHE_NEAR && front > 0.8 && aim > 0.96 && lineOfSight(hero.pos, tmpW.set(p.x + n.nx * 0.4, 0, p.z + n.nz * 0.4));
     n.look = looking ? n.look + dt : 0;
     if (looking && n.look >= NICHE_LOOK && !n.holo) holoShow(n);
     if (!n.holo) continue;
@@ -158,7 +158,7 @@ function hitHolo(p, rad) {
       n.look = 0;
       hero.blest = 3;
       floatWord('BLESSED', hero.pos.clone().setY(hero.pos.y + 2.6), HEX.tie, 0.9, true);
-      sNoise({ dur: 0.3, f: 700, f2: 250, type: 'lowpass', gain: 0.2 });
+      playNoise({ dur: 0.3, f: 700, f2: 250, type: 'lowpass', gain: 0.2 });
       return true;
     }
   }

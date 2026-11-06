@@ -10,7 +10,7 @@ function toast(msg, ms) {
   clearTimeout(toastT);
   toastT = setTimeout(() => (t.style.opacity = 0), ms || Math.max(3000, 1200 + msg.length * 45));
 }
-function updLeft() {
+function updateLeft() {
   if (!G) return;
   const n = aliveCount();
   $('#left').innerHTML = `${n ? n + (n === 1 ? ' talker' : ' talkers') + ' left' : 'Floor quiet'}<small>${G.F.num} · ${G.F.name}</small>`;
@@ -36,17 +36,17 @@ function lastCall() {
   el.classList.remove('on');
   void el.offsetWidth; // restart the animation
   el.classList.add('on');
-  const at = AU.at;
-  AU.at = null;
-  sTone({ f: 98, f2: 60, dur: 0.5, type: 'sawtooth', gain: 0.22 });
-  sTone({ f: 73, f2: 45, dur: 0.7, type: 'sawtooth', gain: 0.22, at: 0.22 });
-  sNoise({ dur: 0.9, f: 600, f2: 3200, q: 2, gain: 0.12, at: 0.1 });
-  AU.at = at;
+  const at = AUDIO.at;
+  AUDIO.at = null;
+  playTone({ f: 98, f2: 60, dur: 0.5, type: 'sawtooth', gain: 0.22 });
+  playTone({ f: 73, f2: 45, dur: 0.7, type: 'sawtooth', gain: 0.22, at: 0.22 });
+  playNoise({ dur: 0.9, f: 600, f2: 3200, q: 2, gain: 0.12, at: 0.1 });
+  AUDIO.at = at;
 }
 let bossShown = null,
   bossFill = -1,
   bossWord = null;
-const EL = {
+const HUD = {
   spook: $('#spook'),
   boss: $('#boss'),
   bossName: $('#boss .name'),
@@ -59,18 +59,18 @@ const EL = {
   bSling: $('#bSling'),
   bDodge: $('#bDodge')
 };
-const txt = (el, t) => {
+const setText = (el, t) => {
   if (el.textContent !== t) el.textContent = t;
 };
 function bossBar(e) {
-  const b = EL.boss;
+  const b = HUD.boss;
   if (!e) {
     if (!b.hidden) b.hidden = true;
     bossShown = bossWord = null;
     return;
   }
   if (bossShown !== e) {
-    EL.bossName.textContent = e.name;
+    HUD.bossName.textContent = e.name;
     bossShown = e;
     bossFill = -1;
     bossWord = null;
@@ -79,14 +79,14 @@ function bossBar(e) {
   const fp = Math.max(0, Math.round((e.hp / e.maxHp) * 1000) / 10);
   if (fp !== bossFill) {
     bossFill = fp;
-    EL.bossFill.style.width = fp + '%';
+    HUD.bossFill.style.width = fp + '%';
   }
   // the status under the bar: [text, lit, word]. lit highlights the line; word ("now's your chance": EXPOSED, WINDED…)
   // flashes big mid-screen once as that state begins, and the line stays empty while it lasts
   const T = TALKERS[e.type],
     [text, lit, word = null] = (T && T.bar && T.bar(e)) || ['', false];
-  txt(EL.bossState, text);
-  EL.bossState.classList.toggle('open', lit);
+  setText(HUD.bossState, text);
+  HUD.bossState.classList.toggle('open', lit);
   if (word && word !== bossWord) bigWord(word, HEX.bile, 1, 'Attack him!');
   bossWord = word;
 }
@@ -103,16 +103,16 @@ function warnOf(e) {
 }
 // the Usher's cue: short and sharp, at full loudness wherever he stands (the Geezer has his own wail)
 function warnCue(cue) {
-  const at = AU.at;
-  AU.at = null;
+  const at = AUDIO.at;
+  AUDIO.at = null;
   if (cue[0] === 'B' || cue[0] === 'b') {
-    sTone({ f: 620, f2: 1400, dur: 0.12, type: 'square', gain: 0.07, filt: [1800, 2600] });
-    sTone({ f: 620, f2: 1400, dur: 0.12, type: 'square', gain: 0.07, filt: [1800, 2600], at: 0.14 });
+    playTone({ f: 620, f2: 1400, dur: 0.12, type: 'square', gain: 0.07, filt: [1800, 2600] });
+    playTone({ f: 620, f2: 1400, dur: 0.12, type: 'square', gain: 0.07, filt: [1800, 2600], at: 0.14 });
   }
-  AU.at = at;
+  AUDIO.at = at;
 }
 // up to three markers over the talkers about to strike; off screen they pin to the edge and point at him
-function updWarn() {
+function updateWarn() {
   if (!WARN.length) warnMarkers();
   const W = innerWidth,
     H = innerHeight,

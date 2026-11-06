@@ -6,7 +6,7 @@
 function clearLevel() {
   if (G) {
     scene.remove(G.group);
-    const keep = new Set([hero.root, yoyoMesh, stringMesh, yyTrail]);
+    const keep = new Set([hero.root, yoyoMesh, stringMesh, yoyoTrail]);
     const free = o => {
       if (keep.has(o)) return;
       o.children.forEach(free);
@@ -158,9 +158,9 @@ function newFloor(F, w) {
     papers: null, // floor one's falling newspapers
     drips: null, // floor one's drips
     fogWall: null, // floor three's fog gate while it stands (fogWall)
-    paperTrail: null, // the scraps from Red Cap to the open door (updPaperTrail)
+    paperTrail: null, // the scraps from Red Cap to the open door (updatePaperTrail)
     psyWind: 0, // the Geezer's psychedelic wind on the picture, set again every frame
-    leftN: 0, // talkers left at the last count (updLeft): one left calls the last call
+    leftN: 0, // talkers left at the last count (updateLeft): one left calls the last call
     lastTieT: 0, // how long Red Cap has been on his last tie (an onlooker may shake a heart out of him)
     roomHeartGiven: false, // the floor's heart room has given its heart
     yySide: 1, // the yo-yo's throws alternate sides: the side of the last one
@@ -187,7 +187,7 @@ function newFloor(F, w) {
   SEE.tg = null;
   scene.background = new THREE.Color(F.bg);
   scene.fog = new THREE.Fog(F.fog, F.near, F.far);
-  post.uniforms.far.value = F.far;
+  inkPass.uniforms.far.value = F.far;
   G.group.add(new THREE.AmbientLight(F.amb[0], F.amb[1]));
   G.group.add(new THREE.HemisphereLight(F.hemi[0], F.hemi[1], F.hemi[2]));
   const lamp = new THREE.PointLight(F.lamp[0], F.lamp[1], F.lamp[2], 1.6);
@@ -291,7 +291,7 @@ function tallWall({ F, w, box, rng, mats, cornice, webFaces }, x, z) {
   G.wallTop[x + z * w] = h;
   if (F.deco === 'mouth')
     for (const [a, b] of DIRS4) {
-      const nc = ch(x + a, z + b);
+      const nc = cellAt(x + a, z + b);
       if (nc && nc !== '#') {
         cornice.push([corniceGeo(a ? 0.04 : 0.06), M4(cx + (a * CELL) / 2, h, cz + (b * CELL) / 2, 0, Math.atan2(a, b), 0)]);
         webFaces.push([cx + (a * CELL) / 2, cz + (b * CELL) / 2, a, b, h]);
@@ -322,7 +322,7 @@ function standing(F, x, z, cx, cz, rng) {
 function roomPile(F) {
   const [x0, z0, x1, z1] = F.roomPile,
     cells = [];
-  for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) if (ch(x, z) === '.') cells.push([x, z]);
+  for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) if (cellAt(x, z) === '.') cells.push([x, z]);
   const [cx, cz] = pick(cells);
   pebblePile(...heartRoom((cx + 0.2 + Math.random() * 0.6) * CELL, (cz + 0.2 + Math.random() * 0.6) * CELL));
 }
@@ -411,7 +411,7 @@ function skyDecor(F, w, box) {
 // Red Cap steps onto the new floor: the camera turns to the floor's way, he gets a moment of grace and nothing carries over
 function heroOnFloor(F) {
   hero.root.position.copy(hero.pos);
-  G.group.add(hero.root, yoyoMesh, stringMesh, yyTrail);
+  G.group.add(hero.root, yoyoMesh, stringMesh, yoyoTrail);
   cam.yaw = F.yaw;
   if (F.pitch != null) cam.pitch = F.pitch;
   cam.cur = null;
@@ -434,6 +434,6 @@ function heroOnFloor(F) {
   hero.yy = null;
   yoyoMesh.visible = stringMesh.visible = false;
   drawTies();
-  updLeft();
+  updateLeft();
   bossBar(null);
 }

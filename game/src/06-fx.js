@@ -58,7 +58,7 @@ function burst(pos, colors, n = 14, spd = 5, size = 0.16, opts = {}) {
   PMESH.instanceColor.needsUpdate = true;
   PMESH.instanceMatrix.needsUpdate = true;
 }
-function updParts(dt) {
+function updateParts(dt) {
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i];
     p.life -= dt;
@@ -137,7 +137,7 @@ function floatWord(text, pos, color, scale = 1.2, must, life = 0.9) {
   scene.add(s);
   floaters.push({ s, life, vy: 1.1, scale });
 }
-function updFloaters(dt) {
+function updateFloaters(dt) {
   for (let i = floaters.length - 1; i >= 0; i--) {
     const f = floaters[i];
     f.life -= dt;
@@ -334,7 +334,7 @@ function smokePuff(pos, size, life, rise) {
   const s = { position: pos.clone(), scale: new THREE.Vector3().setScalar(size * 0.6), material: { opacity: 0, rotation: 0 }, visible: true };
   puffs.push({ s, life, max: life, size, rise, rot: rand(-1, 1) });
 }
-function updPuffs(dt) {
+function updatePuffs(dt) {
   for (let i = puffs.length - 1; i >= 0; i--) {
     const p = puffs[i];
     p.life -= p.fast ? dt * 6 : dt;

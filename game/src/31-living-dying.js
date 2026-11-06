@@ -56,8 +56,8 @@ function makeLivingDying(e, add, x, z, part) {
     e.t = rand(1, 2);
   }
 }
-// a piece waiting its turn circles the arena out of reach; the others fight in their own way (LD_PARTS)
-function updLivingDying(e, dt, dist, ux, uz, mv) {
+// a piece waiting its turn circles the arena out of reach; the others fight in their own way (LIVING_DYING_PARTS)
+function updateLivingDying(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   const now = playT;
   e.daze = Math.max(0, e.daze - dt);
@@ -73,26 +73,33 @@ function updLivingDying(e, dt, dist, ux, uz, mv) {
     e.root.position.copy(e.pos);
     return STOP;
   }
-  const part = LD_PARTS[e.part];
+  const part = LIVING_DYING_PARTS[e.part];
   if (part) part(e, dt, dist, ux, uz, mv, now);
   e.tilt.position.y = e.fly;
 }
-const LD_PARTS = { whole: ldWhole, hair: ldHair, eyeL: ldEye, eyeR: ldEye, jaw: ldJaw, skull: ldSkull };
+const LIVING_DYING_PARTS = {
+  whole: livingDyingWhole,
+  hair: livingDyingHair,
+  eyeL: livingDyingEye,
+  eyeR: livingDyingEye,
+  jaw: livingDyingJaw,
+  skull: livingDyingSkull
+};
 
 // the whole head, shaking: it comes apart when its time is up
-function ldWhole(e, dt, dist, ux, uz, mv, now) {
+function livingDyingWhole(e, dt, dist, ux, uz, mv, now) {
   if (animTick) {
     shake(e.tilt, 0.06);
     e.body.scale.setScalar(1 + Math.sin(now * 9) * 0.03);
   }
   e.fly = 2.4 + Math.sin(now * 2) * 0.2;
-  if (e.t <= 0) ldSplit(e);
+  if (e.t <= 0) livingDyingSplit(e);
 }
 
 // the hair sways like a living wig, circles Red Cap, lashes all round when he crowds it (HSSS), snares him from afar (a strand
 // that reels him in until a dodge tears it) or swoops at him and ends up tangled
-function ldHair(e, dt, dist, ux, uz, mv, now) {
-  ldHairSway(e, dt, now);
+function livingDyingHair(e, dt, dist, ux, uz, mv, now) {
+  livingDyingHairSway(e, dt, now);
   if (e.st === 'idle' || e.st === 'circle') {
     e.st = 'circle';
     const side = Math.sin(e.seed) > 0 ? 1 : -1,
@@ -101,7 +108,7 @@ function ldHair(e, dt, dist, ux, uz, mv, now) {
     mv.z = ux * side + uz * want;
     mv.sp = 4.4;
     e.fly = lerp(e.fly, 2.6, 0.05);
-    if (e.t <= 0) ldHairPick(e, dist, ux, uz);
+    if (e.t <= 0) livingDyingHairPick(e, dist, ux, uz);
   } else if (e.st === 'lashWind') {
     if (animTick) shake(e.tilt, 0.07);
     if (e.t <= 0) {
@@ -109,15 +116,15 @@ function ldHair(e, dt, dist, ux, uz, mv, now) {
       e.t = 0.45;
       e.lashHit = false;
       SFX.dodge();
-      sNoise({ dur: 0.4, f: 1500, f2: 400, q: 0.8, gain: 0.25 });
+      playNoise({ dur: 0.4, f: 1500, f2: 400, q: 0.8, gain: 0.25 });
     }
-  } else if (e.st === 'lash') ldHairLash(e, dist, ux, uz);
+  } else if (e.st === 'lash') livingDyingHairLash(e, dist, ux, uz);
   else if (e.st === 'snareWind') {
     if (animTick) shake(e.tilt, 0.05);
     if (e.t <= 0) {
       e.st = 'snare';
       e.t = 0.35;
-      ldHairSnare(e);
+      livingDyingHairSnare(e);
     }
   } else if (e.st === 'snare') {
     if (e.t <= 0) {
@@ -153,7 +160,7 @@ function ldHair(e, dt, dist, ux, uz, mv, now) {
   }
 }
 // every strand sways; they reach out for the lash, pull in and bristle as it winds up; the wig spins
-function ldHairSway(e, dt, now) {
+function livingDyingHairSway(e, dt, now) {
   const H = e.hair;
   H.reach = lerp(H.reach, e.st === 'lash' ? 2.4 : e.st === 'lashWind' ? 0.75 : 1, 1 - Math.exp(-(e.st === 'lash' ? 22 : 6) * dt));
   H.bristle = lerp(H.bristle, e.st === 'lashWind' || e.st === 'snareWind' ? 1 : 0, 1 - Math.exp(-8 * dt));
@@ -165,18 +172,18 @@ function ldHairSway(e, dt, now) {
   H.g.rotation.y += dt * (e.st === 'lash' ? 9 : 0.6);
 }
 // circling, its wait over: lash when Red Cap is close, else snare him from afar (or swoop)
-function ldHairPick(e, dist, ux, uz) {
+function livingDyingHairPick(e, dist, ux, uz) {
   if (dist < 5.5) {
     e.st = 'lashWind';
     e.t = 0.65;
-    sNoise({ dur: 0.6, f: 6000, f2: 2500, q: 1, gain: 0.14 });
+    playNoise({ dur: 0.6, f: 6000, f2: 2500, q: 1, gain: 0.14 });
     floatWord('HSSS', e.pos.clone().setY(4.2), '#d8642a', 0.9); // every strand stands on end
   } else if (dist < 15 && Math.random() < 0.55) {
     e.st = 'snareWind';
     e.t = 0.6;
     e.sx = ux;
     e.sz = uz;
-    sNoise({ dur: 0.5, f: 5000, f2: 9000, q: 4, gain: 0.1 });
+    playNoise({ dur: 0.5, f: 5000, f2: 9000, q: 4, gain: 0.1 });
   } else {
     e.st = 'swoopWind';
     e.t = 0.8;
@@ -187,7 +194,7 @@ function ldHairPick(e, dist, ux, uz) {
   }
 }
 // a full spin with every strand thrown out: dodge it or back off
-function ldHairLash(e, dist, ux, uz) {
+function livingDyingHairLash(e, dist, ux, uz) {
   if (!e.lashHit && dist < 4.6) {
     e.lashHit = true;
     if (hurtHero(1, e.pos)) hero.knock.set(ux * 12, uz * 12);
@@ -207,7 +214,7 @@ function ldHairLash(e, dist, ux, uz) {
   }
 }
 // one long strand whips out along the line; if it finds you, it wraps your legs and starts reeling you in
-function ldHairSnare(e) {
+function livingDyingHairSnare(e) {
   const ex = hero.pos.x - e.pos.x,
     ez = hero.pos.z - e.pos.z,
     along = ex * e.sx + ez * e.sz,
@@ -218,19 +225,19 @@ function ldHairSnare(e) {
     hero.snared = 1.6;
     hero.snareFrom = e;
     floatWord('SNAGGED', hero.pos.clone().setY(hero.pos.y + 2.4), '#d8642a', 0.9, true);
-    sTone({ f: 300, f2: 120, dur: 0.3, type: 'sawtooth', gain: 0.08 });
+    playTone({ f: 300, f2: 120, dur: 0.3, type: 'sawtooth', gain: 0.08 });
   }
 }
 
 // the eyes strafe round Red Cap from opposite sides and fire bursts of red orbs (SEE YOU)
-function ldEye(e, dt, dist, ux, uz, mv, now) {
+function livingDyingEye(e, dt, dist, ux, uz, mv, now) {
   const side = e.part === 'eyeL' ? 1 : -1,
     want = dist > 9 ? 1 : dist < 6 ? -1 : 0;
   mv.x = ux * want - uz * side * 0.9;
   mv.z = uz * want + ux * side * 0.9;
   mv.sp = 3.4;
   e.fly = 2.4 + Math.sin(now * 2 + e.seed) * 0.4;
-  if (e.t <= 0 && !hero.inSmoke && los(e.pos, hero.pos)) {
+  if (e.t <= 0 && !hero.inSmoke && lineOfSight(e.pos, hero.pos)) {
     e.st = 'fire';
     e.t = 2.4;
     e.burst = 3;
@@ -252,7 +259,7 @@ function ldEye(e, dt, dist, ux, uz, mv, now) {
 }
 
 // the jaw hops after Red Cap laughing, chomps up close, and from afar charges (KILL); into a wall it is dazed
-function ldJaw(e, dt, dist, ux, uz, mv, now) {
+function livingDyingJaw(e, dt, dist, ux, uz, mv, now) {
   e.fly = 0.95 + Math.abs(Math.sin(now * 5)) * 0.55;
   if (e.st === 'idle' || e.st === 'hop') {
     e.st = 'hop';
@@ -318,7 +325,7 @@ function ldJaw(e, dt, dist, ux, uz, mv, now) {
 }
 
 // the skull follows slowly and shouts KILL in a fan of words, every third time a ring of red orbs (LIVIN' OR DYIN')
-function ldSkull(e, dt, dist, ux, uz, mv, now) {
+function livingDyingSkull(e, dt, dist, ux, uz, mv, now) {
   e.fly = 2.3 + Math.sin(now * 1.5) * 0.3;
   if (dist > 6) {
     [mv.x, mv.z] = steer(e);
@@ -353,7 +360,7 @@ function ldSkull(e, dt, dist, ux, uz, mv, now) {
 }
 TALKERS.L = {
   make: makeLivingDying,
-  update: updLivingDying,
+  update: updateLivingDying,
   // the whole head, and a piece waiting its turn, cannot be hurt; a dazed piece takes double
   struck: (e, n) => {
     if (e.waiting || e.part === 'whole') {
@@ -368,7 +375,7 @@ TALKERS.L = {
 
 // ----- waking, and the pieces in turn (the secret that wakes it and the reward: 49-secret.js)
 // the painting wakes: the whole head appears, then splits into its pieces, fought in turn (stages)
-function ldWakeUp() {
+function livingDyingWakeUp() {
   const f = G.ldPainting;
   f.pic.material.color.setHex(0xffffff);
   burst(new THREE.Vector3(10.5 * CELL, 2.6, (G.h - 1) * CELL - 0.5), [0xd8642a, 0x3a4a1c, COL.tie, COL.bile, 0x3a5ad8], 40, 7, 0.3);
@@ -380,9 +387,9 @@ function ldWakeUp() {
   floatWord('LIVIN’ OR DYIN’?', w.pos.clone().setY(5.4), HEX.tie, 1.5);
   SFX.boom();
   cam.shake = 0.5;
-  updLeft();
+  updateLeft();
 }
-function ldSplit(w) {
+function livingDyingSplit(w) {
   w.dead = true;
   G.group.remove(w.root);
   SFX.tear();
@@ -395,9 +402,9 @@ function ldSplit(w) {
     e.fly = 3;
     G.ld.parts.push(e);
   }
-  ldNext();
+  livingDyingNext();
 }
-function ldNext() {
+function livingDyingNext() {
   G.ld.stage++;
   const names = G.ld.stages[G.ld.stage];
   if (!names) return;
@@ -416,7 +423,7 @@ function ldNext() {
     }
 }
 // when the stage's pieces are torn, the next ones come; after the skull: the jaw to take, and a big heart
-function ldCheck() {
+function livingDyingCheck() {
   if (!G.ld || G.ld.stage < 0) return;
   const names = G.ld.stages[G.ld.stage];
   if (names && G.ld.parts.filter(e => names.includes(e.part)).every(e => e.dead || e.dying)) {
@@ -425,7 +432,7 @@ function ldCheck() {
       spawnJaw(sk.pos.x, sk.pos.z);
       spawnPickup(sk.pos.x + 2, sk.pos.z, true);
       G.ld.stage = 99;
-    } else ldNext();
+    } else livingDyingNext();
   }
 }
 // one strand of hair: a tube that tapers to a point, with its colour baked in

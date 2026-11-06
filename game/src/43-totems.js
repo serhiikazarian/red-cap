@@ -53,7 +53,7 @@ function hitTotem(p, rad) {
   }
   return false;
 }
-function updTotems(dt) {
+function updateTotems(dt) {
   const J = jester(),
     now = performance.now() / 1000;
   let nag = [];

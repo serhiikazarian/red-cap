@@ -15,8 +15,8 @@ function openSpot(x, z) {
   const [ix, iz] = cellOf(x, z);
   return (
     !solid(ix, iz) &&
-    !propR(ch(ix, iz)) &&
-    ch(ix, iz) !== 'g' &&
+    !propRadius(cellAt(ix, iz)) &&
+    cellAt(ix, iz) !== 'g' &&
     wallDist(x, z) > 0.6 &&
     !G.clutter.some(c => Math.hypot(c.x - x, c.z - z) < c.r + 0.6)
   );
@@ -34,7 +34,7 @@ function heartRoom(x, z, big) {
       const a = (k / n) * TAU,
         px = x + Math.cos(a) * r,
         pz = z + Math.sin(a) * r;
-      if (ok(px, pz) && los(from, { x: px, z: pz })) return [px, pz];
+      if (ok(px, pz) && lineOfSight(from, { x: px, z: pz })) return [px, pz];
     }
   return [x, z];
 }
@@ -60,7 +60,7 @@ function dropHeart(x, z, big) {
     bd = 15;
   for (let iz = 1; iz < G.h - 1; iz++)
     for (let ix = 1; ix < G.w - 1; ix++) {
-      const c = ch(ix, iz),
+      const c = cellAt(ix, iz),
         cx = cellMid(ix),
         cz = cellMid(iz),
         d = Math.hypot(cx - x, cz - z);
@@ -91,7 +91,7 @@ function hideHearts(n, piles = 0) {
     got = [];
   for (let z = 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) {
-      if (ch(x, z) !== '.' || kindAt(x, z) === 2) continue;
+      if (cellAt(x, z) !== '.' || kindAt(x, z) === 2) continue;
       const px = cellMid(x),
         pz = cellMid(z);
       if (!clearOf(px, pz, 0.8) || Math.hypot(px - hero.pos.x, pz - hero.pos.z) < 12) continue;
@@ -174,7 +174,7 @@ function spawnPickup(x, z, big) {
   G.pickups.push({ g, glow, ph: rand(0, 6), by: big ? by - 0.45 : by, big });
 }
 // ties (hearts) bob and are taken when Red Cap needs one; the room heart appears when he is low; pebble piles glow and are taken
-function updPickups(dt) {
+function updatePickups(dt) {
   const now = performance.now() / 1000;
   if (G.F.roomHeart && !G.roomHeartGiven && hero.hp <= 2) {
     const rx = cellMid(G.F.roomHeart[0]),

@@ -172,13 +172,13 @@ function makeGrin(e, add) {
 }
 // hovers at a wary distance once it sees Red Cap (strafing), winds up (HAAA) and spits a fireball where he is going;
 // too close, it bites
-function updGrin(e, dt, dist, ux, uz, mv) {
+function updateGrin(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   if (animTick) e.fly = 2.0 + Math.sin(playT * 2 + e.seed) * 0.35;
   grinWiggle(e);
   e.y0 = e.fly - 0.8;
   e.y1 = e.fly + 0.8;
-  const seen = dist < 22 && !hero.inSmoke && los(e.pos, hero.pos);
+  const seen = dist < 22 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
   if (e.st === 'idle') {
     if (seen || dist < 9) {
       e.st = 'hover';
@@ -320,7 +320,7 @@ function cheshire(e) {
   G.group.add(mo);
   G.grins.push({ m: mo, t: 0, p, s: sc.clone(), yaw: e.yaw || 0 });
 }
-function updGrins(dt) {
+function updateGrins(dt) {
   if (!G.grins.length) return;
   for (let i = G.grins.length - 1; i >= 0; i--) {
     const g = G.grins[i],
@@ -328,7 +328,7 @@ function updGrins(dt) {
     g.t += dt;
     if (g.t >= 1.15 && !g.laughed) {
       g.laughed = true;
-      [0, 0.12, 0.24].forEach((at, k) => sTone({ f: 560 - k * 70, f2: 420 - k * 60, dur: 0.08, type: 'triangle', gain: 0.045, at }));
+      [0, 0.12, 0.24].forEach((at, k) => playTone({ f: 560 - k * 70, f2: 420 - k * 60, dur: 0.08, type: 'triangle', gain: 0.045, at }));
     }
     const target = Math.atan2(camera.position.x - g.p.x, camera.position.z - g.p.z);
     g.yaw += angDiff(g.yaw, target) * (1 - Math.exp(-4 * dt));
@@ -353,7 +353,7 @@ function updGrins(dt) {
 }
 TALKERS.G = {
   make: makeGrin,
-  update: updGrin,
+  update: updateGrin,
   dying: grinDying,
   holo: () => ({ map: TEX.grin_fire, aspect: SHAPES.grin_fire.aspect }), // a niche's hologram of a Grin (a ball): its drawing
   rim: { col: 0xb46cff, a: 0.55 },

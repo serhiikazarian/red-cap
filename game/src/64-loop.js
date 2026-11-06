@@ -30,7 +30,7 @@ function frame(now) {
   if (!G || !worldOn || state === 'title' || state === 'build') {
     // the title has its slideshow; the world waits (and is not drawn while the ink covers the title), and a floor being cut
     // under the ink is not drawn
-    if (warnEdgeOn || WARN.some(w => w.on)) updWarn(); // a warning left up when the floor ended goes
+    if (warnEdgeOn || WARN.some(w => w.on)) updateWarn(); // a warning left up when the floor ended goes
     return;
   }
   if (state === 'play') {
@@ -39,10 +39,10 @@ function frame(now) {
     tickLater(Math.min(raw / 1000, 0.25));
   }
   if (state === 'play' || state === 'dead' || state === 'intro') {
-    updGrins(dt);
-    updParts(dt);
-    updFloaters(dt);
-    updPuffs(dt);
+    updateGrins(dt);
+    updateParts(dt);
+    updateFloaters(dt);
+    updatePuffs(dt);
   }
   if (state === 'play' && !locked && mouse.in && !touchUI) {
     // the mouse at the screen's edge turns the camera
@@ -53,17 +53,17 @@ function frame(now) {
   }
   ambience(dt, now / 1000);
   G.lamp.position.set(hero.pos.x, 2.6, hero.pos.z);
-  updCamera(dt);
-  finFx(Math.min(raw / 1000, 0.05));
+  updateCamera(dt);
+  finaleShock(Math.min(raw / 1000, 0.05));
   camera.updateMatrixWorld();
-  updWarn();
+  updateWarn();
   pyrSort();
   render();
 }
 // a step of play: Red Cap, the flow field, every talker (their sounds come from where they are; the Grump's fill the floor),
 // the floor's features, the Geezer's swirl, the boss bar, the heartbeat
 function playStep(dt) {
-  updHero(dt);
+  updateHero(dt);
   flowT -= dt;
   if (flowT <= 0) {
     flowT = 0.25;
@@ -71,10 +71,10 @@ function playStep(dt) {
   }
   G.psyWind = 0;
   for (const e of G.enemies) {
-    AU.at = TALKERS[e.type].loud ? null : e.pos; // what it sets off sounds from where it is (the Grump's shouting fills the floor)
-    updEnemy(e, dt);
+    AUDIO.at = TALKERS[e.type].loud ? null : e.pos; // what it sets off sounds from where it is (the Grump's shouting fills the floor)
+    updateEnemy(e, dt);
   }
-  AU.at = null;
+  AUDIO.at = null;
   sprayFollow();
   heroSafety();
   G.doorT -= dt;
@@ -82,18 +82,18 @@ function playStep(dt) {
     G.doorT = 0.5;
     openDoor();
   }
-  updPaperTrail(dt);
-  updShots(dt);
-  updSlabs(dt);
-  updTotems(dt);
+  updatePaperTrail(dt);
+  updateShots(dt);
+  updateSlabs(dt);
+  updateTotems(dt);
   pyrGlow();
   pyrTick(dt);
-  updMines(dt);
-  updSecrets(dt);
-  updCages(dt);
-  updCovers(dt);
-  updDebris(dt);
-  post.uniforms.psy.value = Math.min(1, Math.max(G.psyWind, hero.stun > 0 ? hero.stunPsy : 0));
+  updateMines(dt);
+  updateSecrets(dt);
+  updateCages(dt);
+  updateCovers(dt);
+  updateDebris(dt);
+  inkPass.uniforms.psy.value = Math.min(1, Math.max(G.psyWind, hero.stun > 0 ? hero.stunPsy : 0));
   bossBar(bossInFight());
   if (hero.hp <= 2) {
     beatT -= dt;
@@ -110,7 +110,7 @@ function bossInFight() {
   for (const e of G.enemies) {
     if (!e.boss || e.noBar || e.dead || e.dying || e.dormant || e.away || e.waiting || e.caged) continue;
     const d = e.pos.distanceTo(hero.pos);
-    if (!e.engaged && d < 9 && los(e.pos, hero.pos)) e.engaged = true;
+    if (!e.engaged && d < 9 && lineOfSight(e.pos, hero.pos)) e.engaged = true;
     if (e.engaged && d < 26 && d < bd) {
       bd = d;
       boss = e;
@@ -121,7 +121,7 @@ function bossInFight() {
 // the floor's ambient motion: onlookers, animated decor, floating blocks, drifting doodle faces, falling newspapers, brazier
 // sparks, floor two's embers, floor one's drips, the open door's glow
 function ambience(dt, tsec) {
-  updBystanders(dt);
+  updateBystanders(dt);
   for (const f of G.anim) f(dt, tsec);
   if (animTick)
     for (const d of G.deco) {

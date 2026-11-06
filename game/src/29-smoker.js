@@ -30,7 +30,7 @@ function makeSmoker(e, add, x, z, part, type) {
 }
 // A flying head trailing smoke from his cigarette. Once he sees Red Cap he hovers at a distance; now and then he blows a cloud
 // and hides in it (smoke), circling Red Cap under cover, then shows himself (PSST) and flicks an ember from his cigarette.
-function updSmoker(e, dt, dist, ux, uz, mv) {
+function updateSmoker(e, dt, dist, ux, uz, mv) {
   if (e.away) {
     // gone in his own smoke (Brainless only): he comes back near Red Cap when the time is up
     if (e.t > 0) {
@@ -56,16 +56,16 @@ function updSmoker(e, dt, dist, ux, uz, mv) {
     tp.applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
     smokePuff(tp, (e.st === 'smoke' ? rand(1.4, 2.2) : 0.45) * ks * (e.smoky ? 1.5 : 1), (e.st === 'smoke' ? 3 : 1.6) * ks, 0.5);
   }
-  const seen = dist < 20 && !hero.inSmoke && los(e.pos, hero.pos);
-  const step = SMOKER_ST[e.st];
+  const seen = dist < 20 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const step = SMOKER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, seen);
   e.alpha = lerp(e.alpha, e.hidden ? 0.08 : 1, 1 - Math.exp(-6 * dt));
   e.fade.forEach(m => (m.opacity = e.alpha));
   e.shadow.visible = !e.hidden;
   e.tilt.position.y = e.fly;
 }
-// his states, one step each (updSmoker runs the one he is in)
-const SMOKER_ST = {
+// his states, one step each (updateSmoker runs the one he is in)
+const SMOKER_STATES = {
   idle(e, dt, dist, ux, uz, mv, seen) {
     if (seen || dist < 9) {
       e.st = 'hover';
@@ -91,7 +91,7 @@ const SMOKER_ST = {
       for (let k = 0; k < 7 * k2; k++)
         smokePuff(fxAt(e.pos, rand(-1.6, 1.6) * k2, e.fly + rand(-1.2, 0.8), rand(-1.6, 1.6) * k2), rand(2.4, 3.6) * k2, 4.5, 0.12);
       floatWord('*COUGH*', e.pos.clone().setY(e.fly + 1.2), HEX.smoke, 0.8);
-      sNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
+      playNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
     }
   },
   smoke(e, dt, dist, ux, uz, mv, seen) {
@@ -135,7 +135,7 @@ function smokerReturns(e) {
       x = hero.pos.x + Math.cos(a) * r,
       z = hero.pos.z + Math.sin(a) * r,
       [ix, iz] = cellOf(x, z);
-    if (!solid(ix, iz) && los(new THREE.Vector3(x, 0, z), hero.pos)) {
+    if (!solid(ix, iz) && lineOfSight(new THREE.Vector3(x, 0, z), hero.pos)) {
       e.pos.set(x, 0, z);
       break;
     }
@@ -149,18 +149,18 @@ function smokerReturns(e) {
   const k2 = e.smoky || 1;
   for (let k = 0; k < 7 * k2; k++) smokePuff(fxAt(e.pos, rand(-1.4, 1.4) * k2, 2 + rand(-1, 1), rand(-1.4, 1.4) * k2), rand(2, 3.2) * k2, 3.5, 0.1);
   floatWord('MISS ME?', e.pos.clone().setY(3.8), HEX.paper, 1);
-  sNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
+  playNoise({ dur: 0.8, f: 500, f2: 180, type: 'lowpass', gain: 0.3 });
 }
 // Brainless never stops coughing; close by, a fit of it rattles Red Cap for a moment
 function smokerCough(e, dt, dist, ux, uz) {
   e.coughT -= dt;
   if (e.coughT <= 0) {
     e.coughT = rand(2.2, 3.4);
-    sNoise({ dur: 0.35, f: 380, f2: 160, q: 1.5, gain: 0.28 });
-    later(0.26, () => sNoise({ dur: 0.3, f: 340, f2: 150, q: 1.5, gain: 0.22 }));
+    playNoise({ dur: 0.35, f: 380, f2: 160, q: 1.5, gain: 0.28 });
+    later(0.26, () => playNoise({ dur: 0.3, f: 340, f2: 150, q: 1.5, gain: 0.22 }));
     floatWord('*COUGH*', e.pos.clone().setY(e.fly + 2.6), HEX.smoke, 1);
     for (let k = 0; k < 6; k++) smokePuff(fxAt(e.pos, ux * k * 1.2, e.fly - 0.4, uz * k * 1.2), rand(1.8, 2.8), 2.5, 0.2);
-    if (dist < 8.5 && los(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
+    if (dist < 8.5 && lineOfSight(e.pos, hero.pos) && hero.dodgeT <= 0 && hero.stun <= 0 && state === 'play') stunHero(0.5, true);
   }
 }
 // a totem's ring shakes a Smoker out of his smoke
@@ -170,7 +170,7 @@ const smokerHushed = e => {
 };
 TALKERS.S = {
   make: makeSmoker,
-  update: updSmoker,
+  update: updateSmoker,
   hushed: smokerHushed,
   bar: e => [e.hidden ? 'Hidin’ in his smoke' : 'Every hit shakes out pebbles', !e.hidden],
   hurt: e => giveAmmo(Math.random() < 0.5 ? 2 : 3, e.pos), // every hit shakes pebbles out of him
@@ -182,7 +182,7 @@ TALKERS.S = {
 };
 TALKERS.W = {
   make: makeSmoker,
-  update: updSmoker,
+  update: updateSmoker,
   hushed: smokerHushed,
   totemDaze: 1.8,
   bar: e => [e.lives > 1 ? 'Will slip away ' + (e.lives - 1) + ' more time' + (e.lives > 2 ? 's' : '') : 'Last breath', e.lives <= 1],

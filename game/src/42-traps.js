@@ -48,9 +48,9 @@ function trapClose(m, c) {
 }
 function trapBite(m) {
   SFX.tink();
-  sTone({ f: 520, f2: 120, dur: 0.16, type: 'square', gain: 0.16 });
-  sTone({ f: 60, f2: 40, dur: 0.3, type: 'sawtooth', gain: 0.14, filt: [400, 120] });
-  sNoise({ dur: 0.12, f: 3200, q: 2, gain: 0.26 });
+  playTone({ f: 520, f2: 120, dur: 0.16, type: 'square', gain: 0.16 });
+  playTone({ f: 60, f2: 40, dur: 0.3, type: 'sawtooth', gain: 0.14, filt: [400, 120] });
+  playNoise({ dur: 0.12, f: 3200, q: 2, gain: 0.26 });
   cam.shake = Math.max(cam.shake, 0.3);
   const at = new THREE.Vector3(m.x, 0.5, m.z);
   burst(at, [0x3a3430, COL.paper, COL.ink], 10, 5, 0.14);
@@ -83,7 +83,7 @@ function trapBite(m) {
     }
   }
 }
-function updMines(dt) {
+function updateMines(dt) {
   for (const m of G.mines) {
     m.t -= dt;
     if (m.st === 'armed') {

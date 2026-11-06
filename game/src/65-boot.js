@@ -5,7 +5,7 @@
 const TITLE_MIN = 1000; // ms "Cuttin’ paper…" stays on the title at least
 async function titleWarm() {
   if (state !== 'title') return;
-  renderer.compile(postScene, postCam);
+  renderer.compile(inkScene, postCam);
   renderer.compile(scene, camera);
   floorBuilt(0); // not drawn: the title covers the world, and Start builds floor one again with its own dice
   for (const t of Object.values(TEX)) {
@@ -42,8 +42,8 @@ async function titleWarm() {
   fogNoiseTex = makeFogNoise();
   poolInit();
   scene.add(buildHero());
-  slingG = buildSling();
-  scene.add(slingG);
+  slingModel = buildSling();
+  scene.add(slingModel);
   scene.matrixAutoUpdate = false;
   hero.parts.mats.forEach(m => {
     m.transparent = true;
@@ -54,7 +54,7 @@ async function titleWarm() {
   sb.disabled = false;
   sb.textContent = 'Start';
   if (!$('#title').hidden) sb.focus({ preventScroll: true }); // the title opened while it was still a label
-  $('#catBtn').hidden = !catMem.won;
+  $('#catBtn').hidden = !catalogueSeen.won;
   requestAnimationFrame(frame);
 })().catch(err => {
   $('#loading').textContent = 'Could not load: ' + err.message;

@@ -37,12 +37,12 @@ addEventListener('mousemove', e => {
 });
 canvas.addEventListener('mousedown', e => {
   if (state === 'intro') {
-    auInit();
+    initAudio();
     beginFloor();
     return;
   }
   if (state !== 'play') return;
-  auInit();
+  initAudio();
   if (!locked) lockPointer();
   e.button === 2 ? sling() : yoyo();
 });
@@ -56,7 +56,7 @@ function godMode() {
   hero.hp = hero.maxHp;
   hero.ammo = hero.maxAmmo;
   drawTies();
-  updAmmo();
+  updateAmmo();
   if (floorIdx + 1 < FLOORS.length) nextFloor();
   else win();
 }
@@ -72,7 +72,7 @@ addEventListener('keydown', e => {
   if (menuKey(e)) return;
   if ((e.code === 'ArrowRight' || e.code === 'ArrowLeft') && (!$('#catalogue').hidden || !$('#win').hidden)) {
     e.preventDefault();
-    flip(e.code === 'ArrowRight' ? 1 : -1);
+    flipPage(e.code === 'ArrowRight' ? 1 : -1);
     return;
   }
   if (state === 'intro') {
@@ -89,7 +89,7 @@ addEventListener('keydown', e => {
     if (e.code === 'Escape' || e.code === 'KeyP') pause(true);
     else if (!locked) lockPointer();
   } else if (state === 'pause' && e.code === 'KeyP') pause(false);
-  if (e.code === 'KeyM') setMute(!AU.muted);
+  if (e.code === 'KeyM') setMute(!AUDIO.muted);
 });
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('blur', () => {
@@ -114,7 +114,7 @@ function touchStick() {
     sx = 0,
     sy = 0;
   sz.addEventListener('pointerdown', e => {
-    auInit();
+    initAudio();
     sid = e.pointerId;
     sx = e.clientX;
     sy = e.clientY;
@@ -196,7 +196,7 @@ touchControls();
 // ----- a game controller: left stick moves, right stick looks, RT yo-yo, LT slingshot, A / B dodge, Start pauses; it also
 // walks the menus
 const PAD = { prev: [], move: { x: 0, y: 0 }, on: false, navT: 0, sel: null, active: false };
-const padDZ = v => (Math.abs(v) < 0.2 ? 0 : (v - Math.sign(v) * 0.2) / 0.8); // a dead zone so a resting stick does not drift
+const padDeadZone = v => (Math.abs(v) < 0.2 ? 0 : (v - Math.sign(v) * 0.2) / 0.8); // a dead zone so a resting stick does not drift
 function padButtons() {
   // the buttons on whichever page is showing, in reading order
   const scr = ['title', 'card', 'pause', 'dead', 'win', 'catalogue'].map(id => $('#' + id)).find(el => !el.hidden);
@@ -243,7 +243,7 @@ function pollPad(dt) {
   }
   const B = i => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.5)),
     hit = i => B(i) && !PAD.prev[i],
-    ax = i => padDZ(gp.axes[i] || 0);
+    ax = i => padDeadZone(gp.axes[i] || 0);
   let mx = ax(0),
     my = ax(1);
   if (B(12)) my -= 1;
@@ -254,11 +254,11 @@ function pollPad(dt) {
   if (state === 'play') padPlay(B, hit, ax, mx, my, dt);
   else if (state === 'intro') {
     if (hit(0) || hit(1) || hit(9)) {
-      auInit();
+      initAudio();
       beginFloor();
     }
   } else if (state !== 'leave' && state !== 'build') padMenu(gp, hit, mx, my, dt);
-  if (hit(8)) setMute(!AU.muted);
+  if (hit(8)) setMute(!AUDIO.muted);
   PAD.prev = gp.buttons.map((_, i) => B(i));
 }
 // in play: move, look, yo-yo (held, it keeps throwing as the cooldown allows), slingshot, dodge, pause
@@ -269,11 +269,11 @@ function padPlay(B, hit, ax, mx, my, dt) {
   cam.yaw -= ax(2) * 2.6 * dt;
   cam.pitch = clamp(cam.pitch + ax(3) * 1.6 * dt, -0.22, 0.8);
   if (B(7) || B(5) || B(2)) {
-    auInit();
+    initAudio();
     yoyo();
   } // held, it keeps throwing as the cooldown allows, like a held key
   if (hit(6) || hit(4) || hit(3)) {
-    auInit();
+    initAudio();
     sling();
   }
   if (hit(1) || hit(0)) dodge();
@@ -298,10 +298,10 @@ function padMenu(gp, hit, mx, my, dt) {
   } else if (!nav) PAD.navT = 0;
   if (PAD.active) padMark(bs);
   if (hit(0) && PAD.sel) {
-    auInit();
+    initAudio();
     PAD.sel.click();
-  } else if (hit(4)) flip(-1);
-  else if (hit(5)) flip(1);
+  } else if (hit(4)) flipPage(-1);
+  else if (hit(5)) flipPage(1);
   else if (hit(1) || hit(9)) {
     if (state === 'pause') pause(false);
     else if (!$('#catalogue').hidden) $('#catBack').click();
@@ -315,9 +315,9 @@ addEventListener('gamepaddisconnected', () => {
 // ----- the screens' buttons
 $('#startBtn').addEventListener('click', () => startGame(true));
 $('#musicBtn').addEventListener('click', () => {
-  auInit();
-  tmusWant(!TMUS.want);
-  TMUS.want ? tmusStart() : tmusStop();
+  initAudio();
+  titleMusicWant(!TITLE_MUSIC.want);
+  TITLE_MUSIC.want ? titleMusicStart() : titleMusicStop();
 });
 $('#resumeBtn').addEventListener('click', () => pause(false));
 $('#quitBtn').addEventListener('click', toTitle);
@@ -338,5 +338,5 @@ $('#againBtn').addEventListener('click', () => startGame(true));
 $('#winCatBtn').addEventListener('click', () => openCatalogue('win'));
 $('#catBtn').addEventListener('click', () => openCatalogue('title'));
 $('#catBack').addEventListener('click', () => showOnly(catFrom));
-document.querySelectorAll('.pager .pprev').forEach(b => b.addEventListener('click', () => flip(-1)));
-document.querySelectorAll('.pager .pnext').forEach(b => b.addEventListener('click', () => flip(1)));
+document.querySelectorAll('.pager .pprev').forEach(b => b.addEventListener('click', () => flipPage(-1)));
+document.querySelectorAll('.pager .pnext').forEach(b => b.addEventListener('click', () => flipPage(1)));

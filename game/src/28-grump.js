@@ -50,7 +50,7 @@ function wallStrip(px, n) {
 // no wall anywhere (the loading screen's stand-in ring); made on first use, after the boot's own drawing
 let WAVE_OPEN = null;
 const waveOpen = () => WAVE_OPEN || (WAVE_OPEN = wallStrip(new Uint8Array([255, 255, 255, 255]), 1));
-// how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (los):
+// how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (lineOfSight):
 // WAVE_WALL_N directions round him, the angle of each as the shader reads it (atan of z over x), softened across neighbours
 function waveWalls(x, z) {
   const d = [],
@@ -76,7 +76,7 @@ function waveWalls(x, z) {
   return wallStrip(px, WAVE_WALL_N);
 }
 // He never moves: he catches his breath (pause), inflates (GRRR) and shouts four rings in a row.
-function updGrump(e, dt, dist, ux, uz, mv) {
+function updateGrump(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   const near = dist < 33;
   if (!e.wearOn && (e.engaged || dist < 16)) e.wearOn = true; // from here on, shouting wears the blocks down
@@ -117,7 +117,7 @@ function updGrump(e, dt, dist, ux, uz, mv) {
       }
     } else if (animTick) e.body.scale.lerp(GRUMP_SWELL, 0.4);
   }
-  updWaves(e, dt, dist, ux, uz);
+  updateWaves(e, dt, dist, ux, uz);
   if (dist < e.r + hero.r) {
     // pushed back out of his bulk on your own side, never through the gate wall behind him
     const nx = e.pos.x + ux * (e.r + hero.r),
@@ -133,7 +133,7 @@ function updGrump(e, dt, dist, ux, uz, mv) {
 }
 // the rings roll out: past GRUMP_REACH they fade and do nothing; each one that reaches Red Cap hurts by how much gets through
 // (two hearts up close in the open, one further back; nothing behind a whole block; a worn block leaks)
-function updWaves(e, dt, dist, ux, uz) {
+function updateWaves(e, dt, dist, ux, uz) {
   for (let i = e.waves.length - 1; i >= 0; i--) {
     const w = e.waves[i];
     WAVE_T.value = performance.now() / 1000;
@@ -151,7 +151,7 @@ function updWaves(e, dt, dist, ux, uz) {
         through = grumpThrough(e, open);
       if (hero.dodgeT > 0 || hero.dodgeIF > 0 || through <= 0) {
         w.hit = true; // a dodge timed right slips through; a whole block soaks it
-        if (through <= 0 && !(hero.dodgeT > 0 || hero.dodgeIF > 0) && los(e.pos, hero.pos) && performance.now() - (e.muffledAt || 0) > 1500) {
+        if (through <= 0 && !(hero.dodgeT > 0 || hero.dodgeIF > 0) && lineOfSight(e.pos, hero.pos) && performance.now() - (e.muffledAt || 0) > 1500) {
           e.muffledAt = performance.now();
           bigWord('MUFFLED', HEX.paper, 1 / 1.7);
         }
@@ -179,7 +179,7 @@ function updWaves(e, dt, dist, ux, uz) {
 }
 TALKERS.U = {
   make: makeGrump,
-  update: updGrump,
+  update: updateGrump,
   bar: e => [e.st === 'pause' ? 'Catchin’ breath' : 'Shoutin’', e.st === 'pause'],
   hurt: e => e.st === 'pause' && (e.t = Math.min(e.t, 0.5)), // hit while he catches his breath and he shouts again sooner
   stagger: 0.12,
@@ -205,7 +205,7 @@ TALKERS.U = {
 // the hearts a ring carries to Red Cap: 0 behind a sound block, rising as the block wears, the full amount (open) in the open.
 // A block shelters him when it stands between them and he is pressed up behind it (GRUMP_SHADE); a wall is total cover.
 function grumpThrough(e, open) {
-  if (!los(e.pos, hero.pos)) return 0;
+  if (!lineOfSight(e.pos, hero.pos)) return 0;
   const dx = hero.pos.x - e.pos.x,
     dz = hero.pos.z - e.pos.z,
     d = Math.hypot(dx, dz) || 1,
@@ -215,7 +215,7 @@ function grumpThrough(e, open) {
   let best = open;
   for (let iz = hz - 2; iz <= hz + 2; iz++)
     for (let ix = hx - 2; ix <= hx + 2; ix++) {
-      const pr = propR(ch(ix, iz));
+      const pr = propRadius(cellAt(ix, iz));
       if (!pr) continue;
       const px = cellMid(ix),
         pz = cellMid(iz),
@@ -240,7 +240,7 @@ function grumpWear(e, w) {
     const b = G.props[k];
     if (b.hp <= 0 || w.blk.has(k)) continue;
     const dd = Math.hypot(b.x - e.pos.x, b.z - e.pos.z);
-    if (Math.abs(dd - w.r) > 0.6 || !los(e.pos, tmpW.set(b.x, 0, b.z))) continue;
+    if (Math.abs(dd - w.r) > 0.6 || !lineOfSight(e.pos, tmpW.set(b.x, 0, b.z))) continue;
     w.blk.add(k);
     b.flashT = 3; // it flashes either way: at first only to show what shouting does to a block
     if (e.wearOn) b.hp -= 0.0224; // about nine bursts of shouting from whole to spent
@@ -274,12 +274,12 @@ function grumpWear(e, w) {
       delete G.props[k];
       burst(FX_AT.set(b.x, 1, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 24, 6, 0.26);
       for (let p = 0; p < 6; p++) smokePuff(FX_AT.set(b.x + rand(-0.8, 0.8), rand(0.4, 1.8), b.z + rand(-0.8, 0.8)), rand(1.2, 2), 0.9, 0.6);
-      sNoise({ dur: 0.45, f: 900, f2: 200, q: 0.8, gain: 0.3 });
+      playNoise({ dur: 0.45, f: 900, f2: 200, q: 0.8, gain: 0.3 });
     }
   }
 }
 // a block hit by a ring pulses dim brown for a few seconds
-function updCovers(dt) {
+function updateCovers(dt) {
   if (!G.props) return;
   const now = performance.now() / 1000;
   for (const k in G.props) {
@@ -321,9 +321,9 @@ function shedBox(b, it, e) {
     t: 0.75
   });
   burst(m.position.clone(), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 8, 3, 0.16);
-  sNoise({ dur: 0.18, f: 700, f2: 250, q: 1, gain: 0.18 });
+  playNoise({ dur: 0.18, f: 700, f2: 250, q: 1, gain: 0.18 });
 }
-function updDebris(dt) {
+function updateDebris(dt) {
   for (let i = coverDebris.length - 1; i >= 0; i--) {
     const c = coverDebris[i];
     c.t -= dt;
@@ -422,7 +422,7 @@ function waveShade(w) {
     const dx = b.x - c.x,
       dz = b.z - c.z,
       dd = Math.hypot(dx, dz);
-    if (dd < 1.2 || !los(c, tmpW.set(b.x, 0, b.z))) continue;
+    if (dd < 1.2 || !lineOfSight(c, tmpW.set(b.x, 0, b.z))) continue;
     sh[n++].set(Math.atan2(dz, dx), Math.asin(Math.min(1, GRUMP_SHADE.w / dd)), dd, st);
   }
   for (; n < WAVE_SH_N; n++) sh[n].set(0, 0, 0, 0);
@@ -441,6 +441,6 @@ function emitWave(e) {
   e.waves.push(w);
   waveShade(w);
   SFX.wah();
-  sTone({ f: 70, f2: 45, dur: 0.5, type: 'sawtooth', gain: 0.18, filt: [500, 200] });
+  playTone({ f: 70, f2: 45, dur: 0.5, type: 'sawtooth', gain: 0.18, filt: [500, 200] });
   if (e.waveCount === 3) floatWord(pick(['BLAH', 'STOP', 'SHUT UP', 'GRR']), e.pos.clone().setY(8.8), HEX.ink, 1.8);
 }

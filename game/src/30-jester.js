@@ -66,7 +66,7 @@ function setMasked(e, on) {
 // boomerang (CATCH; not while Red Cap holds the Laughing Jaw), drop masks from the sky (faces), laugh with the mask lifted,
 // or wind up and charge (HUSH); a charge into a wall stuns him, unmasked. r is how far the fight has gone (0 at full health,
 // 1 at none): everything quickens, he hops aside and feints; from half health (p2) more of everything.
-function updJester(e, dt, dist, ux, uz, mv) {
+function updateJester(e, dt, dist, ux, uz, mv) {
   const p2 = e.hp <= e.maxHp / 2,
     r = clamp(1 - e.hp / e.maxHp, 0, 1),
     tq = 1 - 0.45 * r;
@@ -84,7 +84,7 @@ function updJester(e, dt, dist, ux, uz, mv) {
   const mg = e.maskG;
   if (e.mBoom) maskFlight(e, dt, tq);
   if (animTick) maskPose(e, mg);
-  const step = JESTER_ST[e.st];
+  const step = JESTER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, p2, r, tq, mg);
   if (e.st !== 'stun' && e.st !== 'charge' && dist < e.r + hero.r + 0.15) hurtHero(1, e.pos);
 }
@@ -114,7 +114,7 @@ function maskPose(e, mg) {
   mg.rotation.z = lerp(mg.rotation.z, e.st === 'laugh' ? 0.5 : e.st === 'stun' ? 1.1 : 0, 0.45);
 }
 // his states, one step each (p2: the second half of the fight; r: how worn down he is, 0..1; tq: his rests, shorter as he tires)
-const JESTER_ST = {
+const JESTER_STATES = {
   walk(e, dt, dist, ux, uz, mv, p2, r, tq, mg) {
     faceCam(e, dt);
     const v = steer(e),
@@ -292,7 +292,7 @@ const JESTER_ST = {
     if (animTick) e.tilt.rotation.z = Math.sin(performance.now() / 120) * 0.05;
   }
 };
-JESTER_ST.idle = JESTER_ST.walk;
+JESTER_STATES.idle = JESTER_STATES.walk;
 // the thrown mask flies out and back in a loop, bending toward Red Cap on the way out; it takes two hearts; caught again, it
 // goes back on
 function maskFlight(e, dt, tq) {
@@ -337,7 +337,7 @@ function jesterSkip(e, ux, uz, r, reWind) {
   e.t = 0.22 + 0.1 * r;
   e.skipCd = 1.1;
   e.reWind = reWind;
-  sNoise({ dur: 0.18, f: 900, f2: 2600, q: 1, gain: 0.14 });
+  playNoise({ dur: 0.18, f: 900, f2: 2600, q: 1, gain: 0.14 });
   if (!reWind && Math.random() < 0.5) floatWord(pick(['HOP', 'TA-DA', 'WHEE']), e.pos.clone().setY(4.2), HEX.bile, 0.8);
 }
 // the Jester in his fight (null before and after)
@@ -386,7 +386,7 @@ function kickFace(p, rad) {
   }
   return false;
 }
-// torn at last: slow motion, a flash, the shock ring over the page (finFx), SILENCE; then his mask, huge, waits to be taken
+// torn at last: slow motion, a flash, the shock ring over the page (finaleShock), SILENCE; then his mask, huge, waits to be taken
 function finale(J) {
   slowT = 1.2;
   G.finalFx = { t: 0 };
@@ -397,8 +397,8 @@ function finale(J) {
   setTimeout(() => f.classList.remove('on'), 140); // screen time, not later(): a flash must always clear
   SFX.boom();
   SFX.tear();
-  sTone({ f: 55, f2: 28, dur: 2.4, type: 'sawtooth', gain: 0.22, filt: [700, 70] });
-  sNoise({ dur: 1.8, f: 2600, f2: 180, q: 0.8, gain: 0.26 });
+  playTone({ f: 55, f2: 28, dur: 2.4, type: 'sawtooth', gain: 0.22, filt: [700, 70] });
+  playNoise({ dur: 1.8, f: 2600, f2: 180, q: 0.8, gain: 0.26 });
   for (let k = 0; k < 4; k++) burst(J.pos.clone().setY(0.8 + k * 0.8), [COL.paper, COL.ink, COL.tie, COL.bile, 0x9a9e98], 40, 10, 0.34);
   for (let k = 0; k < 10; k++) {
     const a = (k / 10) * TAU;
@@ -415,9 +415,9 @@ function finale(J) {
   later(2.2, () => G.finalAt && spawnFinalMask(G.finalAt.x, G.finalAt.z));
 }
 // the shock ring runs on real time (the world is in slow motion meanwhile), centred where he stood on screen
-function finFx(rdt) {
+function finaleShock(rdt) {
   const f = G && G.finalFx,
-    u = post.uniforms;
+    u = inkPass.uniforms;
   if (!f || f.t > FIN_LEN || !G.finalAt) {
     u.fin.value = 0;
     return;
@@ -453,10 +453,10 @@ function spawnFinalMask(x, z) {
   ring.position.set(x, 0.05, z);
   G.group.add(ring);
   G.finalMask = { m, glow, ring, x, z };
-  sTone({ f: 220, f2: 440, dur: 1.6, type: 'triangle', gain: 0.08, a: 0.3 });
+  playTone({ f: 220, f2: 440, dur: 1.6, type: 'triangle', gain: 0.08, a: 0.3 });
 }
 // the huge mask after the finale turns and glows; taking it is the last thing Red Cap does
-function updFinalMask(dt, now) {
+function updateFinalMask(dt, now) {
   const f = G.finalMask;
   f.m.rotation.y += dt * 0.9;
   f.m.position.y = 1.1 + Math.sin(now * 1.6) * 0.25;
@@ -515,7 +515,7 @@ function dropFaces(n) {
   }
   jesterLaugh(jester());
 }
-function updSlabs(dt) {
+function updateSlabs(dt) {
   for (let i = slabs.length - 1; i >= 0; i--) {
     const s = slabs[i];
     s.t -= dt;
@@ -572,7 +572,7 @@ function updSlabs(dt) {
 }
 TALKERS.M = {
   make: makeJester,
-  update: updJester,
+  update: updateJester,
   totemProof: true,
   bar: e => (e.masked ? ['Masked — immune', false] : ['', false, 'UNMASKED']),
   struck: jesterBlow,
@@ -617,7 +617,7 @@ function jesterBlow(e, n, weapon, force) {
   SFX.tink();
   cam.shake = Math.max(cam.shake, 0.45);
   slowT = 0.5;
-  sTone({ f: 70, f2: 40, dur: 1.2, type: 'sawtooth', gain: 0.16, filt: [500, 90] });
+  playTone({ f: 70, f2: 40, dur: 1.2, type: 'sawtooth', gain: 0.16, filt: [500, 90] });
   burst(e.pos.clone().setY(3), [0x9a9e98, COL.paper, COL.bile], 30, 7, 0.26);
   return null;
 }

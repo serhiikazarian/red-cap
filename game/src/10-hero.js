@@ -1,4 +1,4 @@
-// Red Cap: his paper body, getting hurt, aiming, the dodge, and moving him every frame (updHero).
+// Red Cap: his paper body, getting hurt, aiming, the dodge, and moving him every frame (updateHero).
 // His weapons are in 11-weapons.js. The state object `hero` is declared with the world state (05-world.js).
 let yoyoMesh, stringMesh;
 // Red Cap and his yo-yo
@@ -98,20 +98,20 @@ function stunHero(t, light, psy) {
   }
   cam.shake = 0.5;
   bigWord('FRENZY', '#b48cff');
-  sTone({ f: 300, f2: 120, dur: 1.2, type: 'sawtooth', gain: 0.1, filt: [1200, 300] });
+  playTone({ f: 300, f2: 120, dur: 1.2, type: 'sawtooth', gain: 0.1, filt: [1200, 300] });
 }
 // a blow from `from` (a position): whole hearts only, one or two; then a second of grace. pierce ignores the grace.
 // Returns whether it landed. His own sounds are never quieted by the distance of whoever hit him.
 function hurtHero(dmg, from, pierce) {
-  const at = AU.at;
-  AU.at = null;
+  const at = AUDIO.at;
+  AUDIO.at = null;
   try {
-    return hurtHero0(dmg, from, pierce);
+    return takeBlow(dmg, from, pierce);
   } finally {
-    AU.at = at;
+    AUDIO.at = at;
   }
 }
-function hurtHero0(dmg, from, pierce) {
+function takeBlow(dmg, from, pierce) {
   if ((hero.iframe > 0 && !pierce) || hero.dodgeT > 0 || hero.dodgeIF > 0 || state !== 'play') return false;
   dmg = clamp(Math.ceil(dmg), 1, 2);
   // a boss that lands a blow is in the fight (its bar shows)
@@ -125,7 +125,7 @@ function hurtHero0(dmg, from, pierce) {
   hero.parts.mats.forEach((m, i) => {
     if (i !== 1) m.color.setHex(0xcfdcf0);
   });
-  sTone({ f: 950, f2: 260, dur: 0.3, type: 'sine', gain: 0.09 });
+  playTone({ f: 950, f2: 260, dur: 0.3, type: 'sine', gain: 0.09 });
   const dx = hero.pos.x - from.x,
     dz = hero.pos.z - from.z,
     d = Math.hypot(dx, dz) || 1;
@@ -145,7 +145,7 @@ function soak() {
   hero.wet = Math.min(3, (hero.wet || 0) + 0.35);
   if (!was) {
     floatWord('BLESSED', hero.pos.clone().setY(hero.pos.y + 2.6), HEX.tie, 0.9, true);
-    sNoise({ dur: 0.3, f: 700, f2: 250, type: 'lowpass', gain: 0.2 });
+    playNoise({ dur: 0.3, f: 700, f2: 250, type: 'lowpass', gain: 0.2 });
   }
   if (!G.wetHint) {
     G.wetHint = true;
@@ -167,7 +167,7 @@ function aimInfo(pyr) {
     if (d > 26 || d < 0.5) continue;
     const a = Math.acos(clamp((dx * fx + dz * fz) / d, -1, 1));
     const sc = a + d * 0.012; // in front first, then close
-    if (a < 0.42 && sc < bestS && los(hero.pos, e.pos)) {
+    if (a < 0.42 && sc < bestS && lineOfSight(hero.pos, e.pos)) {
       bestS = sc;
       best = e;
     }
@@ -180,7 +180,7 @@ function aimInfo(pyr) {
         if (gd > 22 || gd < 0.5) return;
         const ga = Math.acos(clamp((gx * fx + gz * fz) / gd, -1, 1)),
           gs = ga + gd * 0.012 - 0.03;
-        if (ga < 0.42 && gs < bestS && los(hero.pos, at)) {
+        if (ga < 0.42 && gs < bestS && lineOfSight(hero.pos, at)) {
           bestS = gs;
           best = tgt;
         }
@@ -195,7 +195,7 @@ function aimInfo(pyr) {
     if (d > 26 || d < 0.5) continue;
     const a = Math.acos(clamp((dx * fx + dz * fz) / d, -1, 1)),
       sc = a + d * 0.012 + 0.08;
-    if (a < 0.42 && sc < bestS && los(hero.pos, q.tgt.pos)) {
+    if (a < 0.42 && sc < bestS && lineOfSight(hero.pos, q.tgt.pos)) {
       bestS = sc;
       best = q.tgt;
     }
@@ -212,7 +212,7 @@ function afterimage() {
   scene.add(s);
   trail.push({ s, life: 0.26 });
 }
-function updTrail(dt) {
+function updateTrail(dt) {
   for (let i = trail.length - 1; i >= 0; i--) {
     const t = trail[i];
     t.life -= dt;
@@ -253,7 +253,7 @@ function dodge() {
 function heroSafety() {
   const [ix, iz] = cellOf(hero.pos.x, hero.pos.z),
     out = ix < 0 || iz < 0 || ix >= G.w || iz >= G.h || !isFinite(hero.pos.x) || !isFinite(hero.pos.z);
-  const jumped = hero.safe && hero.pos.distanceTo(hero.safe) > 1 && !los(hero.safe, hero.pos); // passed through a wall in one step
+  const jumped = hero.safe && hero.pos.distanceTo(hero.safe) > 1 && !lineOfSight(hero.safe, hero.pos); // passed through a wall in one step
   if (out || solid(ix, iz) || jumped) {
     if (hero.safe) {
       hero.pos.copy(hero.safe);
@@ -263,7 +263,7 @@ function heroSafety() {
   } else (hero.safe = hero.safe || new THREE.Vector3()).copy(hero.pos);
 }
 // every frame of play: timers, input, what slows him, moving with collisions, his stop-motion pose, his weapons, fire, pickups
-function updHero(dt) {
+function updateHero(dt) {
   heroTimers(dt);
   const [ix, iz] = heroInput(dt);
   const fx = -Math.sin(cam.yaw),
@@ -292,13 +292,13 @@ function updHero(dt) {
       SFX.step();
     }
   }
-  updYoyo(dt);
-  updPebbles(dt);
-  updSling(dt);
-  updTrail(dt);
-  updNiches(dt);
+  updateYoyo(dt);
+  updatePebbles(dt);
+  updateSling(dt);
+  updateTrail(dt);
+  updateNiches(dt);
   heroHeat(dt);
-  updPickups(dt);
+  updatePickups(dt);
   if (G.portal && G.portal.open && Math.hypot(G.portal.x - hero.pos.x, G.portal.z - hero.pos.z) < 1.3) nextFloor();
 }
 function heroTimers(dt) {
@@ -339,7 +339,7 @@ function heroConditions(dt) {
   const so = Math.round(Math.min(1, hero.spook / 1.6) * 80) / 100;
   if (so !== hero.spookShown) {
     hero.spookShown = so;
-    EL.spook.style.opacity = so;
+    HUD.spook.style.opacity = so;
   }
   hero.held = Math.max(0, (hero.held || 0) - dt);
   hero.snared = Math.max(0, (hero.snared || 0) - dt);
@@ -439,13 +439,13 @@ function heroPose(moving, rx, rz) {
 function heroHeat(dt) {
   let nearFire = 0;
   for (const f of G.hot)
-    if (Math.hypot(hero.pos.x - f.x, hero.pos.z - f.z) < f.r && (!f.see || los(f, hero.pos))) nearFire = Math.max(nearFire, f.k || 1);
+    if (Math.hypot(hero.pos.x - f.x, hero.pos.z - f.z) < f.r && (!f.see || lineOfSight(f, hero.pos))) nearFire = Math.max(nearFire, f.k || 1);
   if (nearFire) {
     hero.heat = (hero.heat || 0) + dt * nearFire;
     if (hero.heat > 0.45 && !hero.heatWarned) {
       hero.heatWarned = true;
       bigWord('HOT', HEX.hot);
-      sNoise({ dur: 0.4, f: 2500, q: 1, gain: 0.12 });
+      playNoise({ dur: 0.4, f: 2500, q: 1, gain: 0.12 });
     }
     if (Math.random() < dt * 20) burst(hero.pos.clone().setY(hero.pos.y + 0.3), [COL.hot, COL.bile], 1, 1, 0.14, { g: -4, life: 0.5 });
     if (hero.heat > 1.1) {

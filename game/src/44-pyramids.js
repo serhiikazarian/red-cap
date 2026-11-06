@@ -2,7 +2,7 @@
 // pool of light, and a tie half-seen inside. Three blows shatter one, Red Cap's or the talkers' (it screams at the first two); it leaves a heart, but one
 // or two hold a bomb and one or two are empty (48-bombs.js). Walkers keep out of its square foot; sight lines and shots meet its two-piece shape (pyrParts).
 const PYR_H = 2.3, // metres from its foot to its tip (its foot is 1.4 m square: Red Cap passes one in a corridor)
-  PYR_R = 0.25 * PYR_H, // its body's half-width at mid-height: the round part sight lines and pebbles are stopped by (propR)
+  PYR_R = 0.25 * PYR_H, // its body's half-width at mid-height: the round part sight lines and pebbles are stopped by (propRadius)
   PYR_PAD = 0.05, // metres beyond its square foot that Red Cap and the talkers are kept (collide, pyrPush)
   PYR_GLOW = [0.75, 0.12, 0.08], // its core and scratches' glow (the emissive colour on pyr_glow), breathing (pyrGlow)
   PYR_LIFT = 0.7, // its model's colours this far towards white, so the painting shows
@@ -278,16 +278,16 @@ function pyrGlow() {
 // a pyramid's scream (n = 1, 2: the blows before it shatters): voices moaning out of tune through a dark vowel closing from "aah"
 // to "ooh", torn by distortion, with a breath under it and a cave's echo; the second louder, longer, higher, with a shriek on top
 function pyrScream(n) {
-  if (!AU.ctx) return;
-  const c = AU.ctx,
+  if (!AUDIO.ctx) return;
+  const c = AUDIO.ctx,
     t = c.currentTime,
     two = n >= 2,
     dur = two ? 1.6 : 1.15,
     f0 = two ? 128 : 98,
-    vol = (two ? 0.3 : 0.24) * auK(AU.at);
+    vol = (two ? 0.3 : 0.24) * distanceGain(AUDIO.at);
   if (vol < 0.002) return;
   screamVoices(c, t, two, dur, f0, screamBus(c, t, two, dur, vol));
-  sNoise({ dur: dur * 0.9, f: 1400, f2: 500, q: 1.4, gain: two ? 0.09 : 0.07, a: 0.08 }); // the breath under it
+  playNoise({ dur: dur * 0.9, f: 1400, f2: 500, q: 1.4, gain: two ? 0.09 : 0.07, a: 0.08 }); // the breath under it
 }
 // the scream's way out: its envelope, distortion, a closing low-pass and a stone vault's echo; returns its input
 function screamBus(c, t, two, dur, vol) {
@@ -303,10 +303,10 @@ function screamBus(c, t, two, dur, vol) {
   lp.type = 'lowpass';
   lp.frequency.setValueAtTime(two ? 3200 : 2200, t);
   lp.frequency.linearRampToValueAtTime(700, t + dur);
-  env(g, t, 0.09, vol, dur);
+  envelope(g, t, 0.09, vol, dur);
   g.connect(sh);
   sh.connect(lp);
-  lp.connect(AU.master);
+  lp.connect(AUDIO.master);
   dl.delayTime.value = 0.17; // the echo off a stone vault
   fb.gain.value = 0.38;
   wet.gain.value = 0.45;
@@ -314,7 +314,7 @@ function screamBus(c, t, two, dur, vol) {
   dl.connect(fb);
   fb.connect(dl);
   dl.connect(wet);
-  wet.connect(AU.master);
+  wet.connect(AUDIO.master);
   return g;
 }
 // the voices, out of tune, with a vibrato, each through three vowel formants closing from "aah" to "ooh"; the second scream
@@ -377,13 +377,13 @@ function hitPyr(p, rad, volley) {
     q.cd = 0.25;
     q.hp--;
     q.shake = 0.35;
-    const at = AU.at;
-    AU.at = tmpW.set(q.x, 0, q.z);
+    const at = AUDIO.at;
+    AUDIO.at = tmpW.set(q.x, 0, q.z);
     if (q.hp > 0) {
       pyrScream(PYR_HP - q.hp);
-      sNoise({ dur: 0.2, f: 1600, f2: 500, q: 2, gain: 0.22, at: 0.01 });
+      playNoise({ dur: 0.2, f: 1600, f2: 500, q: 2, gain: 0.22, at: 0.01 });
     }
-    AU.at = at;
+    AUDIO.at = at;
     burst(new THREE.Vector3(q.x, q.y + 1.2, q.z), [0x5a1210, COL.cap, 0x2a2a2a, COL.bile], 10, 4, 0.16);
     cam.shake = Math.max(cam.shake, 0.14);
     if (q.hp > 0) floatWord(q.hp === 1 ? 'AAAH!' : 'EEK!', new THREE.Vector3(q.x, q.y + PYR_H + 0.8, q.z), HEX.bile, 0.9);
@@ -395,14 +395,14 @@ function hitPyr(p, rad, volley) {
 // shattered: it bursts into shards and dust, leaves the floor (and every see-through and collision list) for good, and its tie falls
 function pyrShatter(k, q) {
   // the crash: a thud, a burst of breaking, cracks after it and shards tinkling down
-  const at = AU.at;
-  AU.at = tmpW.set(q.x, 0, q.z);
-  sTone({ f: 110, f2: 38, dur: 0.45, gain: 0.4 });
-  sNoise({ dur: 0.55, f: 3800, f2: 900, q: 0.7, gain: 0.4 });
-  sNoise({ dur: 0.35, f: 7000, f2: 3000, q: 1.2, gain: 0.22, at: 0.02 });
-  for (let i = 0; i < 4; i++) sNoise({ dur: 0.07, f: rand(1800, 4200), q: 3, gain: 0.18, at: 0.08 + i * rand(0.05, 0.09) });
-  for (let i = 0; i < 9; i++) sTone({ f: rand(2600, 5600), dur: rand(0.05, 0.12), type: 'triangle', gain: 0.05, at: 0.12 + Math.random() * 0.55 });
-  AU.at = at;
+  const at = AUDIO.at;
+  AUDIO.at = tmpW.set(q.x, 0, q.z);
+  playTone({ f: 110, f2: 38, dur: 0.45, gain: 0.4 });
+  playNoise({ dur: 0.55, f: 3800, f2: 900, q: 0.7, gain: 0.4 });
+  playNoise({ dur: 0.35, f: 7000, f2: 3000, q: 1.2, gain: 0.22, at: 0.02 });
+  for (let i = 0; i < 4; i++) playNoise({ dur: 0.07, f: rand(1800, 4200), q: 3, gain: 0.18, at: 0.08 + i * rand(0.05, 0.09) });
+  for (let i = 0; i < 9; i++) playTone({ f: rand(2600, 5600), dur: rand(0.05, 0.12), type: 'triangle', gain: 0.05, at: 0.12 + Math.random() * 0.55 });
+  AUDIO.at = at;
   cam.shake = Math.max(cam.shake, 0.35);
   for (let i = 0; i < 4; i++)
     burst(new THREE.Vector3(q.x, q.y + 0.3 + i * 0.5, q.z), [0x5a1210, COL.cap, 0x2a2a2a, COL.paper, COL.bile], 22, 7, 0.26, { g: 14 });
@@ -463,7 +463,7 @@ function pyrTick(dt) {
 // a pyramid draws its ink rim right after itself, in the main picture only (not in the see-through mask)
 function pyrRim(r, scene, cam) {
   const q = this.userData.pyrQ;
-  if (!q || !q.rim || cam !== camera || r.getRenderTarget() !== rt) return;
+  if (!q || !q.rim || cam !== camera || r.getRenderTarget() !== sceneTarget) return;
   const m = q.rim;
   m.updateMatrixWorld();
   m.modelViewMatrix.multiplyMatrices(cam.matrixWorldInverse, m.matrixWorld);
@@ -541,7 +541,7 @@ function pyrOut(q, x, y, z) {
 }
 // does the segment a + t (b - a), t in 0..tMax (in the pyramid's own space), pass through piece q? Its six sides cut the line
 // down to what lies inside all of them.
-const pyrF = new Float64Array(12);
+const pyrCrossPlanes = new Float64Array(12);
 function pyrCross(a, b, q, tMax) {
   const dx = b.x - a.x,
     dy = b.y - a.y,
@@ -553,12 +553,12 @@ function pyrCross(a, b, q, tMax) {
     c = q.b0 + q.k * q.y0,
     ky = q.k * a.y,
     kd = q.k * dy;
-  pyrF.set([q.y0 - a.y, -dy, a.y - q.y1, dy, au + ky - c, du + kd, ky - au - c, kd - du, av + ky - c, dv + kd, ky - av - c, kd - dv]);
+  pyrCrossPlanes.set([q.y0 - a.y, -dy, a.y - q.y1, dy, au + ky - c, du + kd, ky - au - c, kd - du, av + ky - c, dv + kd, ky - av - c, kd - dv]);
   let t0 = 0,
     t1 = tMax;
   for (let i = 0; i < 12; i += 2) {
-    const f = pyrF[i],
-      d = pyrF[i + 1]; // a side: f + t d <= 0 inside
+    const f = pyrCrossPlanes[i],
+      d = pyrCrossPlanes[i + 1]; // a side: f + t d <= 0 inside
     if (Math.abs(d) < 1e-9) {
       if (f > 0) return false;
     } else if (d > 0) t1 = Math.min(t1, -f / d);

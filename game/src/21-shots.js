@@ -34,7 +34,7 @@ function redOrb(from, dir) {
   s.position.copy(from);
   scene.add(s);
   shots.push({ kind: 'fire', s, v: dir.clone().multiplyScalar(9), life: 3.5 });
-  sTone({ f: 700, f2: 300, dur: 0.15, type: 'square', gain: 0.05 });
+  playTone({ f: 700, f2: 300, dur: 0.15, type: 'square', gain: 0.05 });
 }
 function insultShot(from, dir, word, color) {
   const s = new THREE.Sprite(
@@ -58,10 +58,10 @@ function hitWord(p, rad) {
   for (const b of shots) {
     if (!b.parry || b.life <= 0 || Math.abs(b.s.position.y - p.y) > 0.6 || Math.hypot(b.s.position.x - p.x, b.s.position.z - p.z) > rad + 0.8)
       continue;
-    b.life = 0; // updShots bursts it and takes it away
+    b.life = 0; // updateShots bursts it and takes it away
     hit = true;
     burst(b.s.position.clone(), [COL.hot, COL.paper, COL.ink], 14, 5, 0.18);
-    sNoise({ dur: 0.18, f: 3200, f2: 1200, q: 2, gain: 0.22 });
+    playNoise({ dur: 0.18, f: 3200, f2: 1200, q: 2, gain: 0.22 });
     SFX.tink();
   }
   return hit;
@@ -72,12 +72,12 @@ function emberShot(from, dir) {
   s.position.copy(from);
   scene.add(s);
   shots.push({ kind: 'fire', s, v: dir.multiplyScalar(13), life: 3 });
-  sTone({ f: 900, f2: 300, dur: 0.15, type: 'triangle', gain: 0.1 });
+  playTone({ f: 900, f2: 300, dur: 0.15, type: 'triangle', gain: 0.1 });
 }
 
 // shots fly; walls and props stop them, and a pyramid takes one as a blow; blood and rain fall and may leave a pool; one that reaches Red Cap hurts him
 // (blood soaks him even when the blow itself is not taken)
-function updShots(dt) {
+function updateShots(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {
     const b = shots[i];
     b.life -= dt;
@@ -91,7 +91,7 @@ function updShots(dt) {
       [ix, iz] = cellOf(p.x, p.z);
     if (solid(ix, iz)) dead = true;
     else {
-      const pr = propR(ch(ix, iz));
+      const pr = propRadius(cellAt(ix, iz));
       if (pr && p.y < 3.2 && Math.hypot(p.x - cellMid(ix), p.z - cellMid(iz)) < pr + 0.15) {
         dead = true;
         if (b.kind !== 'rain') hitPyr(p, 0.15, b.volley); /* a pyramid takes it as a blow (the rain strikes once as it lands) */

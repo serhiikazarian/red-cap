@@ -20,7 +20,7 @@ function openSpots(rng, n, gap) {
     out = [];
   for (let z = 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++)
-      if (!solid(x, z) && ch(x, z) !== 'g' && kindAt(x, z) === 0 && clearOf(cellMid(x), cellMid(z), 1.5)) cand.push([cellMid(x), cellMid(z)]);
+      if (!solid(x, z) && cellAt(x, z) !== 'g' && kindAt(x, z) === 0 && clearOf(cellMid(x), cellMid(z), 1.5)) cand.push([cellMid(x), cellMid(z)]);
   for (let t = 0; t < n * 40 && out.length < n && cand.length; t++) {
     const c = cand[(rng() * cand.length) | 0];
     if (!out.some(o => Math.hypot(o[0] - c[0], o[1] - c[1]) < gap)) out.push(c);
@@ -509,7 +509,7 @@ function blockCritters(rng) {
           nx = c.x + (dx / d) * v,
           nz = c.z + (dz / d) * v,
           [ix, iz] = cellOf(nx, nz);
-        if (!solid(ix, iz) && ch(ix, iz) !== 'g' && !propR(ch(ix, iz)) && iz >= 9 && critterRoom(nx, nz)) {
+        if (!solid(ix, iz) && cellAt(ix, iz) !== 'g' && !propRadius(cellAt(ix, iz)) && iz >= 9 && critterRoom(nx, nz)) {
           c.x = nx;
           c.z = nz;
         } else c.t = 0;

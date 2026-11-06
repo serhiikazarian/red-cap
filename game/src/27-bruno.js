@@ -77,11 +77,11 @@ function makeBruno(e, add, x, z) {
 }
 // out of his stake he walks after Red Cap shouting insults (three at a time, from his mouth); close, he flares (MADONE!) and
 // his fire bursts out to BRUNO_FLARE; touching him burns two hearts; never through a wall
-function updBruno(e, dt, dist, ux, uz, mv) {
+function updateBruno(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   const now = performance.now() / 1000;
   brunoFire(e, dt, now);
-  const seen = dist < 18 && !hero.inSmoke && los(e.pos, hero.pos);
+  const seen = dist < 18 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
   if (e.st === 'idle') {
     if (seen || dist < 10) {
       e.st = 'walk';
@@ -111,7 +111,7 @@ function updBruno(e, dt, dist, ux, uz, mv) {
     if (e.t <= 0) brunoInsults(e, ux, uz);
   }
   e.flareCd -= dt;
-  if (dist < e.aura && los(e.pos, hero.pos)) hurtHero(2, e.pos);
+  if (dist < e.aura && lineOfSight(e.pos, hero.pos)) hurtHero(2, e.pos);
 }
 // walking after Red Cap (no closer than 3.4 m); close and cooled down, the flare's wind-up; seen, an insult's
 function brunoWalk(e, dist, seen, mv) {
@@ -125,7 +125,7 @@ function brunoWalk(e, dist, seen, mv) {
     e.flareCd = 4.5;
     SFX.growl();
     floatWord('MADONE!', e.pos.clone().setY(3.8), HEX.hot, 1.3, true);
-    sNoise({ dur: 0.7, f: 900, f2: 400, q: 3, gain: 0.2 });
+    playNoise({ dur: 0.7, f: 900, f2: 400, q: 3, gain: 0.2 });
   } else if (seen && e.t <= 0 && e.stagger <= 0) {
     e.st = 'wind';
     e.t = 0.55;
@@ -176,7 +176,7 @@ function brunoFire(e, dt, now) {
         fz = Math.sin(a) * u.r,
         lick = 0.75 + 0.25 * Math.sin(now * 7 + u.ph) + Math.random() * 0.15;
       tmpW.set(e.pos.x + fx, 0, e.pos.z + fz);
-      f.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && los(e.pos, tmpW);
+      f.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && lineOfSight(e.pos, tmpW);
       f.position.set(fx, (u.h * lick) / 2, fz);
       f.scale.set(u.h * 0.62 * (0.85 + Math.random() * 0.3), u.h * lick, 1);
       f.material.opacity = 0.9;
@@ -187,7 +187,7 @@ function brunoFire(e, dt, now) {
     const a = rand(0, TAU),
       r = Math.sqrt(Math.random()) * BRUNO_SCORCH;
     tmpW.set(e.pos.x + Math.cos(a) * r, 0, e.pos.z + Math.sin(a) * r);
-    if (los(e.pos, tmpW))
+    if (lineOfSight(e.pos, tmpW))
       burst(tmpW.clone().setY(e.pos.y + rand(0.1, 0.6)), [COL.hot, COL.bile, COL.tie, 0xfff2a0], 1, 1.6, 0.24, { g: -5, life: 0.9 });
   }
   e.hot.x = e.pos.x;
@@ -210,7 +210,7 @@ function brunoFire(e, dt, now) {
   if (animTick)
     for (const seg of e.fireRing.children) {
       tmpW.set(e.pos.x + Math.cos(seg.userData.a) * BRUNO_SCORCH, 0, e.pos.z - Math.sin(seg.userData.a) * BRUNO_SCORCH);
-      seg.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && los(e.pos, tmpW);
+      seg.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && lineOfSight(e.pos, tmpW);
     }
   if (Math.random() < dt * 50)
     burst(fxAt(e.pos, rand(-1, 1), rand(0.1, 1.2), rand(-1, 1)), [COL.hot, COL.bile, COL.tie], 1, 2, 0.28, {
@@ -220,7 +220,7 @@ function brunoFire(e, dt, now) {
 }
 TALKERS.Z = {
   make: makeBruno,
-  update: updBruno,
+  update: updateBruno,
   bar: e => [e.st === 'flareWind' ? 'Flarin’ — back off' : '', false],
   rim: { col: 0xffb35a },
   torn: e => e.fireRing && G.group.remove(e.fireRing),
