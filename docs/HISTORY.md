@@ -351,7 +351,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   (`geezerSees`, `losCover`'s `props`). Behind an easel he still blinks round it now and then, just to spook.
 - The crosshair locked on the Grump is white, not yellow (pebbles bounce off him); still red when the yo-yo reaches him
   (`proof` class on the reticle, from his `bounce` hook).
-- Title label `v1.40`.
 - Floor two: the talkers' shots (a Grin's fireball, the Priest's blood; not Bruno's insults) hurt a small talker they hit by
   accident, a pebble's blow (0.75); never the one who threw it, never a boss or the caged, and never the last blow: one
   that would tear it leaves it REELIN’ for Red Cap to finish (`strayShots` in 04-floors, `shotHitsTalker`, `STRAY_DMG`).
@@ -361,3 +360,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Hints rewritten by Serj: the Jester's "Immune when masked. Ring a totem.", the hidden boss's jaw "The jaw starts hoppin’.",
   the Geezer's "Avoid Geezer’s gaze."
 - "The Grump" is now just "Grump": his health bar, the gallery card and the end screen's list.
+- The Jester: no BACK ON when his mask goes back on; his second half starts with NOT / FUNNY (on two lines, letters spaced
+  out: `spacedWord`; was ENOUGH). A floating word may set its own line break with `\n` (`wordTex`).
+- Replays and pictures remade (the camera's wall wait changed floor three's, the stray shots the Priest fight's).
+- Docs synced: `CLAUDE.md` (floor two's stray shots), `docs/ARCHITECTURE.md` (floor fields `camThruFloaters` and `strayShots`,
+  `losCover`'s `props`, reeling and stray shots, the crosshair's colours, `\n` in a word, the not-verified list).
+- Title label `v1.40`.

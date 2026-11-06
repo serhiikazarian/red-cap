@@ -54,13 +54,10 @@ function jesterLaugh(J) {
 function setMasked(e, on) {
   if (e.masked === on) return;
   e.masked = on;
-  if (on) {
-    floatWord('BACK ON', e.pos.clone().setY(4.3), HEX.paper, 0.8);
-  } else {
-    SFX.unmask();
-    jesterLaugh(e);
-    floatWord('HA HA HA', e.pos.clone().setY(4.4), HEX.bile, 1.1);
-  }
+  if (on) return; // the mask goes back on without a word
+  SFX.unmask();
+  jesterLaugh(e);
+  floatWord('HA HA HA', e.pos.clone().setY(4.4), HEX.bile, 1.1);
 }
 // Dormant until Red Cap comes through the gate. Then he walks after him, weaving, and picks an action: throw the mask like a
 // boomerang (CATCH; not while Red Cap holds the Laughing Jaw), drop masks from the sky (faces), laugh with the mask lifted,
@@ -76,7 +73,7 @@ function updateJester(e, dt, dist, ux, uz, mv) {
   }
   if (p2 && !e.p2) {
     e.p2 = true;
-    floatWord('ENOUGH', e.pos.clone().setY(4.4), HEX.tie, 1.3);
+    floatWord(spacedWord('NOT\nFUNNY'), e.pos.clone().setY(4.4), HEX.tie, 1.3); // two lines, letters spaced: the T ran into the F
     e.st = 'walk';
     e.t = 0.8;
     setMasked(e, true);
