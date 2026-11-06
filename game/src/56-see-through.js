@@ -74,29 +74,12 @@ function seeThru(o, dyn, how) {
 }
 // after instanceProps, before baking: what each thing is drawn with, and its shapes
 function seePrep() {
-  const box = new THREE.Box3(),
-    v = new THREE.Vector3();
   // floor one's floaters (glasses, golden spirals, boxes) fade without a contour
   for (const d of G.deco) if (!d.m.userData.seeId) seeThru(d.m, true, G.F.deco === 'corridor' ? 'plain' : undefined);
   G.group.updateMatrixWorld(true);
   for (const c of G.see) {
     if (c.solid === 'pyramid') {
-      // its own shape (pyrParts) in its own space, for the camera's keep-off and every reason to fade; x, z, r: the circle round its foot
-      const M = c.o.matrixWorld,
-        e = M.elements;
-      c.items = [];
-      c.w = [
-        {
-          pyr: true,
-          parts: PYR.parts,
-          inv: new THREE.Matrix4().copy(M).invert(),
-          x: e[12],
-          z: e[14],
-          y0: e[13],
-          y1: e[13] + PYR_H,
-          r: PYR.parts[0].b0 * Math.SQRT2
-        }
-      ];
+      seePyrShape(c);
       continue;
     }
     c.items = c.o.userData.boxes || [];
@@ -105,54 +88,77 @@ function seePrep() {
       c.items = [inst.inst];
       c.inst = true;
     }
-    if (!c.dyn) {
-      box.makeEmpty();
-      if (c.items.length)
-        for (const it of c.items) {
-          it.owner.updateMatrix();
-          tmpM.multiplyMatrices(it.owner.matrix, it.local);
-          for (let k = 0; k < 8; k++) box.expandByPoint(v.set(k & 1 ? 0.5 : -0.5, k & 2 ? 0.5 : -0.5, k & 4 ? 0.5 : -0.5).applyMatrix4(tmpM));
-        }
-      else box.setFromObject(c.o);
-      if (box.isEmpty()) {
-        c.off = true;
-        continue;
-      }
-      c.w = [
-        {
-          cap: true,
-          x: (box.min.x + box.max.x) / 2,
-          z: (box.min.z + box.max.z) / 2,
-          r: Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2,
-          y0: box.min.y,
-          y1: box.max.y
-        }
-      ];
-      // an onlooker steps aside and back: its column goes with it (it never fades, so it has to be where it really stands)
-      if (c.hard && !isStill(c.o))
-        c.at = [c.w[0].x - c.o.position.x, c.w[0].z - c.o.position.z, box.min.y - c.o.position.y, box.max.y - c.o.position.y];
-    } else {
-      // moving: spheres in the thing's own space, one per part (a part bigger than 3 m across is left to the others, if there are others)
-      const M = c.o.parent ? c.o.matrixWorld : (c.o.updateMatrix(), c.o.matrix),
-        inv = new THREE.Matrix4().copy(M).invert(),
-        list = [];
-      const add = (g, mw) => {
-        if (!g.boundingSphere) g.computeBoundingSphere();
-        const sp = g.boundingSphere.clone().applyMatrix4(mw).applyMatrix4(inv);
-        list.push(sp);
-      };
-      if (c.inst) {
-        c.w = [{ box: true, m: new THREE.Matrix4(), inv: new THREE.Matrix4(), sc: new THREE.Vector3() }];
-        continue;
-      }
-      if (c.o.userData.seeSph) list.push(...c.o.userData.seeSph.map(sp => sp.clone()));
-      else c.o.traverse(m => m.isMesh && add(m.geometry, m.matrixWorld));
-      const sc = M.getMaxScaleOnAxis(),
-        small = list.filter(sp => sp.radius * sc <= 3);
-      c.sph = small.length ? small : list;
-      c.w = c.sph.map(() => ({ c: new THREE.Vector3(), r: 0 }));
-    }
+    if (!c.dyn) seeColumn(c);
+    else seeSpheres(c);
   }
+}
+// a pyramid: its own shape (pyrParts) in its own space, for the camera's keep-off and every reason to fade; x, z, r: the circle
+// round its foot
+function seePyrShape(c) {
+  const M = c.o.matrixWorld,
+    e = M.elements;
+  c.items = [];
+  c.w = [
+    {
+      pyr: true,
+      parts: PYR.parts,
+      inv: new THREE.Matrix4().copy(M).invert(),
+      x: e[12],
+      z: e[14],
+      y0: e[13],
+      y1: e[13] + PYR_H,
+      r: PYR.parts[0].b0 * Math.SQRT2
+    }
+  ];
+}
+// a still thing: one upright column round its boxes (or the whole object); nothing there: off
+function seeColumn(c) {
+  const box = new THREE.Box3(),
+    v = new THREE.Vector3();
+  if (c.items.length)
+    for (const it of c.items) {
+      it.owner.updateMatrix();
+      tmpM.multiplyMatrices(it.owner.matrix, it.local);
+      for (let k = 0; k < 8; k++) box.expandByPoint(v.set(k & 1 ? 0.5 : -0.5, k & 2 ? 0.5 : -0.5, k & 4 ? 0.5 : -0.5).applyMatrix4(tmpM));
+    }
+  else box.setFromObject(c.o);
+  if (box.isEmpty()) {
+    c.off = true;
+    return;
+  }
+  c.w = [
+    {
+      cap: true,
+      x: (box.min.x + box.max.x) / 2,
+      z: (box.min.z + box.max.z) / 2,
+      r: Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2,
+      y0: box.min.y,
+      y1: box.max.y
+    }
+  ];
+  // an onlooker steps aside and back: its column goes with it (it never fades, so it has to be where it really stands)
+  if (c.hard && !isStill(c.o)) c.at = [c.w[0].x - c.o.position.x, c.w[0].z - c.o.position.z, box.min.y - c.o.position.y, box.max.y - c.o.position.y];
+}
+// moving: spheres in the thing's own space, one per part (a part bigger than 3 m across is left to the others, if there are others)
+function seeSpheres(c) {
+  const M = c.o.parent ? c.o.matrixWorld : (c.o.updateMatrix(), c.o.matrix),
+    inv = new THREE.Matrix4().copy(M).invert(),
+    list = [];
+  const add = (g, mw) => {
+    if (!g.boundingSphere) g.computeBoundingSphere();
+    const sp = g.boundingSphere.clone().applyMatrix4(mw).applyMatrix4(inv);
+    list.push(sp);
+  };
+  if (c.inst) {
+    c.w = [{ box: true, m: new THREE.Matrix4(), inv: new THREE.Matrix4(), sc: new THREE.Vector3() }];
+    return;
+  }
+  if (c.o.userData.seeSph) list.push(...c.o.userData.seeSph.map(sp => sp.clone()));
+  else c.o.traverse(m => m.isMesh && add(m.geometry, m.matrixWorld));
+  const sc = M.getMaxScaleOnAxis(),
+    small = list.filter(sp => sp.radius * sc <= 3);
+  c.sph = small.length ? small : list;
+  c.w = c.sph.map(() => ({ c: new THREE.Vector3(), r: 0 }));
 }
 
 // how far p stands from the thing's foot, across the ground: a pillar's round foot, a pyramid's square one

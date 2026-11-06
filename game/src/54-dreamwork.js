@@ -301,8 +301,17 @@ function corridorSpirals(rng) {
     g.userData.seeSph = sph; // its see-through shapes: one per board (the whole spiral is too big to be one)
   }
 }
-// Floor 2: fractal shards, thorn trees, chairs hanging in chains, stairs to burning doors
+// Floor 2: fractal shards, the wall-top sculptures, niches, thorn trees, chairs hanging in chains, stairs to burning doors
 function dreamMouth(rng, fw, fh) {
+  mouthShards(rng);
+  mouthCrowns();
+  mouthNiches();
+  thornTrees(rng);
+  hangingChairs(rng);
+  burningStairs(rng);
+}
+// dark red fractal shards turning slowly high over the open floor
+function mouthShards(rng) {
   const shardM = new THREE.MeshPhongMaterial({ color: 0x6a1410, emissive: 0x2a0404, flatShading: true, shininess: 10 });
   for (const [x, z] of openSpots(rng, 3, 16)) {
     const g = new THREE.Mesh(sierpinski(3), shardM),
@@ -312,7 +321,9 @@ function dreamMouth(rng, fw, fh) {
     G.group.add(g);
     G.deco.push({ m: g, spin: 0.12 + rng() * 0.1, bob: rng() * 6, y });
   }
-  // the sculptures on the wall tops (dmtCrown), turning slowly, each the other way from the last; their own random numbers
+}
+// the sculptures on the wall tops (dmtCrown), turning slowly, each the other way from the last; their own random numbers
+function mouthCrowns() {
   const crownM = new THREE.MeshLambertMaterial({ vertexColors: true }),
     crng = mulberry(4242);
   wallTops(crng, 9, 8).forEach(([x, z], k) => {
@@ -326,7 +337,9 @@ function dreamMouth(rng, fw, fh) {
     G.group.add(m);
     G.deco.push({ m, spin: (k % 2 ? -1 : 1) * (0.12 + crng() * 0.1), bob: 0, y });
   });
-  // floor two's walls broken up: arched niches here and there, dark, with a violet glow low inside (archNiche)
+}
+// floor two's walls broken up: arched niches here and there, dark, with a violet glow low inside (archNiche)
+function mouthNiches() {
   const nrng = mulberry(777);
   wallFaces(nrng, 0.16, (x, z, yaw) => {
     const y = 0.55 + nrng() * 0.5;
@@ -337,6 +350,9 @@ function dreamMouth(rng, fw, fh) {
     G.group.add(m);
     G.niches.push({ m, nx: Math.sin(yaw), nz: Math.cos(yaw), look: 0 }); // read after wallFaces lifts it
   });
+}
+// bare black thorn trees on the wall tops
+function thornTrees(rng) {
   const thornM = new THREE.MeshLambertMaterial({ color: 0x1a0d0a, emissive: 0x1a0302 });
   for (const [x, z] of wallTops(rng, 6, 9)) {
     const m = still(new THREE.Mesh(treeGeo(rng, 4, 2.4, 0.2), thornM));
@@ -345,6 +361,9 @@ function dreamMouth(rng, fw, fh) {
     m.scale.setScalar(0.9 + rng() * 0.7);
     G.group.add(m);
   }
+}
+// chairs hanging in a chain, each smaller than the one above, swaying and turning
+function hangingChairs(rng) {
   const chairM = new THREE.MeshLambertMaterial({ color: 0x2a1a14, emissive: 0x100404 });
   for (const [x, z] of openSpots(rng, 3, 12)) {
     const list = [];
@@ -365,6 +384,9 @@ function dreamMouth(rng, fw, fh) {
       g.rotation.y += dt * 0.1;
     });
   }
+}
+// iron stairs on the wall tops climbing to a burning doorway
+function burningStairs(rng) {
   const ironM = new THREE.MeshLambertMaterial({ color: 0x1e1612 });
   for (const [x, z] of wallTops(rng, 2, 18)) {
     const list = [],

@@ -18,30 +18,9 @@ function fogWall(row) {
     cz = (row + 0.5) * CELL,
     H = 7;
   const U = { time: { value: 0 }, fade: { value: 1 }, len: { value: W } };
-  const mk = (lay, cut = 0) =>
-    new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: cut > 0,
-      side: THREE.DoubleSide,
-      uniforms: { ...U, nz: { value: fogNoiseTex }, lay: { value: lay }, cut: { value: cut } },
-      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
-      fragmentShader: `uniform float time, fade, len, lay, cut; varying vec2 vUv;
-      uniform sampler2D nz;
-      float fbm(vec2 p){ return texture2D(nz, p / 16.).r * .9375; } // the same four-octave sum, baked into a tiling texture 16 noise cells wide
-      void main(){
-        vec2 p = vec2(vUv.x * len / 4., vUv.y * 2.);
-        float n = fbm(p + vec2(time * .08, -time * .05)) * .6 + fbm(p * 1.9 - vec2(time * .05, time * .11)) * .4;
-        float top = 1.; if (lay < .5) top = .42 + .6 * fbm(vec2(vUv.x * len / 5. + time * .04, time * .05));
-        float dense = lay > .5 ? 1. - smoothstep(.1, 1., abs(vUv.y - .5) * 2.) : 1. - smoothstep(top - .14, top + .04, vUv.y); // a billowing top edge
-        float w = smoothstep(.35, .75, n); // the swirls, picked out light on dark
-        float a = clamp((.86 + w * .3) * dense, 0., 1.) * fade * (lay > .5 ? .85 : 1.);
-        if (a < max(.02, cut)) discard; // the dense core also hides what is behind it from the ink outlines
-        gl_FragColor = vec4(mix(vec3(.5, .52, .57), vec3(.92, .93, .95), w), a); // cold, against the warm paper haze
-      }`
-    });
-  const mat = mk(0),
-    low = mk(1),
-    core = mk(0, 0.6);
+  const mat = fogMat(U, 0),
+    low = fogMat(U, 1),
+    core = fogMat(U, 0, 0.6);
   const g = new THREE.Group();
   G.group.add(g);
   for (const dz of [0, 1]) {
@@ -57,6 +36,35 @@ function fogWall(row) {
     g.add(m);
     return m;
   });
+  const puffs = fogPuffs(g, x0, W, cz);
+  G.fogWall = { g, mat, puffs, fade: 1, going: false };
+  G.anim.push((dt, t) => fogTick(dt, t, U, bank, puffs));
+}
+// a fog layer's material (lay 1: the bank on the floor); cut > 0: the dense core, which writes depth so it hides what is behind it
+function fogMat(U, lay, cut = 0) {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: cut > 0,
+    side: THREE.DoubleSide,
+    uniforms: { ...U, nz: { value: fogNoiseTex }, lay: { value: lay }, cut: { value: cut } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+    fragmentShader: `uniform float time, fade, len, lay, cut; varying vec2 vUv;
+    uniform sampler2D nz;
+    float fbm(vec2 p){ return texture2D(nz, p / 16.).r * .9375; } // the same four-octave sum, baked into a tiling texture 16 noise cells wide
+    void main(){
+      vec2 p = vec2(vUv.x * len / 4., vUv.y * 2.);
+      float n = fbm(p + vec2(time * .08, -time * .05)) * .6 + fbm(p * 1.9 - vec2(time * .05, time * .11)) * .4;
+      float top = 1.; if (lay < .5) top = .42 + .6 * fbm(vec2(vUv.x * len / 5. + time * .04, time * .05));
+      float dense = lay > .5 ? 1. - smoothstep(.1, 1., abs(vUv.y - .5) * 2.) : 1. - smoothstep(top - .14, top + .04, vUv.y); // a billowing top edge
+      float w = smoothstep(.35, .75, n); // the swirls, picked out light on dark
+      float a = clamp((.86 + w * .3) * dense, 0., 1.) * fade * (lay > .5 ? .85 : 1.);
+      if (a < max(.02, cut)) discard; // the dense core also hides what is behind it from the ink outlines
+      gl_FragColor = vec4(mix(vec3(.5, .52, .57), vec3(.92, .93, .95), w), a); // cold, against the warm paper haze
+    }`
+  });
+}
+// 14 puffs of smoke drifting through the fog
+function fogPuffs(g, x0, W, cz) {
   const puffs = [];
   for (let k = 0; k < 14; k++) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0.3, color: 0xb8c0cc }));
@@ -67,27 +75,28 @@ function fogWall(row) {
     g.add(sp);
     puffs.push(sp);
   }
-  G.fogWall = { g, mat, puffs, fade: 1, going: false };
-  G.anim.push((dt, t) => {
-    const f = G.fogWall;
-    if (!f) return;
-    U.time.value = t;
-    bank[1].visible = resScale >= RES_MIN;
-    if (f.going) {
-      f.fade = Math.max(0, f.fade - dt / 2.2);
-      U.fade.value = f.fade;
-      if (f.fade <= 0) {
-        discard(g);
-        G.fogWall = null;
-        return;
-      }
+  return puffs;
+}
+// every frame: the fog churns; once going, it fades out and is gone
+function fogTick(dt, t, U, bank, puffs) {
+  const f = G.fogWall;
+  if (!f) return;
+  U.time.value = t;
+  bank[1].visible = resScale >= RES_MIN;
+  if (f.going) {
+    f.fade = Math.max(0, f.fade - dt / 2.2);
+    U.fade.value = f.fade;
+    if (f.fade <= 0) {
+      discard(f.g);
+      G.fogWall = null;
+      return;
     }
-    for (const p of puffs) {
-      const u = p.userData;
-      p.position.x = u.x + Math.sin(t * 0.3 + u.ph) * 1.2;
-      p.material.opacity = (0.28 + Math.sin(t * 0.7 + u.ph) * 0.1) * f.fade;
-    }
-  });
+  }
+  for (const p of puffs) {
+    const u = p.userData;
+    p.position.x = u.x + Math.sin(t * 0.3 + u.ph) * 1.2;
+    p.material.opacity = (0.28 + Math.sin(t * 0.7 + u.ph) * 0.1) * f.fade;
+  }
 }
 // the Grump beaten: the gate sinks, the fog thins away, the way to the Jester opens
 function openGate() {
@@ -176,64 +185,12 @@ function trailPath() {
 // scraps of torn paper on the floor from Red Cap to the door, laid again whenever he steps into another cell
 function updPaperTrail(dt) {
   if (!G || !G.portal || !G.portal.open) return;
-  let T = G.paperTrail;
-  if (!T) {
-    if (!TRAIL_GEO) {
-      // a scrap of torn paper edged in ink: a jagged shape over a larger dark one (vertex colours: the material's colour tints the paper)
-      const scrap = (grow, shade) => {
-        const sh = new THREE.Shape(),
-          n = 11;
-        for (let k = 0; k < n; k++) {
-          const a = (k / n) * TAU,
-            r = ((k % 2 ? 0.26 : 0.36) * (0.85 + ((k * 37) % 10) / 30) + grow) * TRAIL_SIZE;
-          if (k) sh.lineTo(Math.cos(a) * r * 1.35, Math.sin(a) * r);
-          else sh.moveTo(Math.cos(a) * r * 1.35, Math.sin(a) * r);
-        }
-        const g = new THREE.ShapeGeometry(sh);
-        g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(shade), 3));
-        return g;
-      };
-      TRAIL_GEO = share(
-        mergeGeos([
-          [scrap(0.07, 0.06), M4(0, 0, 0, -Math.PI / 2, 0, 0, 1, 1, 1)],
-          [scrap(0, 1), M4(0, 0.012, 0, -Math.PI / 2, 0, 0, 1, 1, 1)]
-        ])
-      );
-    }
-    const im = new THREE.InstancedMesh(
-      TRAIL_GEO,
-      new THREE.MeshBasicMaterial({ color: G.F.words, vertexColors: true, side: THREE.DoubleSide }),
-      TRAIL_N
-    );
-    im.count = 0;
-    im.frustumCulled = false;
-    G.group.add(im);
-    T = G.paperTrail = { im, pts: [], t: 0, cell: '', shown: -1 };
-  }
+  const T = G.paperTrail || trailStart();
   T.t += dt;
   const cell = cellOf(hero.pos.x, hero.pos.z).join();
   if (cell !== T.cell) {
-    // laid from the door, so the scraps on the same way stay put
     T.cell = cell;
-    const path = trailPath();
-    T.pts = [];
-    if (path) {
-      path.reverse();
-      for (let i = 0, carry = 1.4; i < path.length - 1 && T.pts.length < TRAIL_N; i++) {
-        const a = path[i],
-          b = path[i + 1],
-          len = Math.hypot(b.x - a.x, b.z - a.z);
-        let u = carry;
-        for (; u < len && T.pts.length < TRAIL_N; u += TRAIL_STEP) {
-          const x = a.x + ((b.x - a.x) * u) / len,
-            z = a.z + ((b.z - a.z) * u) / len;
-          if (Math.hypot(x - hero.pos.x, z - hero.pos.z) < 1.6) break;
-          T.pts.push({ x, z, yaw: Math.atan2(b.x - a.x, b.z - a.z), r: ((((x * 7.3 + z * 3.1) % 1) + 1) % 1) * 0.9 - 0.45 });
-        }
-        carry = u - len;
-      }
-      T.pts.reverse(); // nearest Red Cap first
-    }
+    T.pts = trailLay();
     T.shown = -1;
   }
   // the scraps come out from Red Cap towards the door over the first 2 s, then lie still
@@ -250,6 +207,62 @@ function updPaperTrail(dt) {
   }
   T.im.count = shown;
   T.im.instanceMatrix.needsUpdate = true;
+}
+// the trail's instanced scraps, tinted the floor's word colour (the shape is made once: trailGeo)
+function trailStart() {
+  if (!TRAIL_GEO) TRAIL_GEO = share(trailGeo());
+  const im = new THREE.InstancedMesh(
+    TRAIL_GEO,
+    new THREE.MeshBasicMaterial({ color: G.F.words, vertexColors: true, side: THREE.DoubleSide }),
+    TRAIL_N
+  );
+  im.count = 0;
+  im.frustumCulled = false;
+  G.group.add(im);
+  return (G.paperTrail = { im, pts: [], t: 0, cell: '', shown: -1 });
+}
+// a scrap of torn paper edged in ink: a jagged shape over a larger dark one (vertex colours: the material's colour tints the paper)
+function trailGeo() {
+  const scrap = (grow, shade) => {
+    const sh = new THREE.Shape(),
+      n = 11;
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * TAU,
+        r = ((k % 2 ? 0.26 : 0.36) * (0.85 + ((k * 37) % 10) / 30) + grow) * TRAIL_SIZE;
+      if (k) sh.lineTo(Math.cos(a) * r * 1.35, Math.sin(a) * r);
+      else sh.moveTo(Math.cos(a) * r * 1.35, Math.sin(a) * r);
+    }
+    const g = new THREE.ShapeGeometry(sh);
+    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(shade), 3));
+    return g;
+  };
+  return mergeGeos([
+    [scrap(0.07, 0.06), M4(0, 0, 0, -Math.PI / 2, 0, 0, 1, 1, 1)],
+    [scrap(0, 1), M4(0, 0.012, 0, -Math.PI / 2, 0, 0, 1, 1, 1)]
+  ]);
+}
+// the scraps' places, laid from the door so the ones on the same way stay put, up to TRAIL_N, nearest Red Cap first
+function trailLay() {
+  const path = trailPath();
+  const pts = [];
+  if (path) {
+    path.reverse();
+    for (let i = 0, carry = 1.4; i < path.length - 1 && pts.length < TRAIL_N; i++) {
+      const a = path[i],
+        b = path[i + 1],
+        len = Math.hypot(b.x - a.x, b.z - a.z);
+      let u = carry;
+      for (; u < len && pts.length < TRAIL_N; u += TRAIL_STEP) {
+        const x = a.x + ((b.x - a.x) * u) / len,
+          z = a.z + ((b.z - a.z) * u) / len;
+        if (Math.hypot(x - hero.pos.x, z - hero.pos.z) < 1.6) break;
+        pts.push({ x, z, yaw: Math.atan2(b.x - a.x, b.z - a.z), r: ((((x * 7.3 + z * 3.1) % 1) + 1) % 1) * 0.9 - 0.45 });
+      }
+      carry = u - len;
+    }
+    pts.reverse(); // nearest Red Cap first
+  }
+  return pts;
 }
 // the exit door: a black frame round a red hole, hidden until the floor is clear
 function buildDoor(cx, cz) {

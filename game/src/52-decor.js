@@ -120,45 +120,15 @@ function guidePath(F, rng) {
   G.pathSet = new Set(cells.map(c => c.join(',')));
   if (cells.length < 3) return;
   const K = kit(),
-    corridor = F.deco === 'corridor';
-  const gt = corridor ? glowTex('#fff2b0', 'rgba(232,198,40,.55)') : fireTex;
+    corridor = F.deco === 'corridor',
+    gt = corridor ? glowTex('#fff2b0', 'rgba(232,198,40,.55)') : fireTex;
   if (corridor) OWN.add(gt);
-  const glowM = new THREE.SpriteMaterial({ map: gt, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 });
-  const light = (px, pz) => {
-    const [pix, piz] = cellOf(px, pz);
-    if (
-      solid(pix, piz) ||
-      wallDist(px, pz) < 0.25 ||
-      kindAt(pix, piz) === 2 ||
-      (propR(ch(pix, piz)) && Math.hypot(px - (pix + 0.5) * CELL, pz - (piz + 0.5) * CELL) < propR(ch(pix, piz)) + 0.3)
-    )
-      return;
-    if (!clearOf(px, pz, 0.3)) return;
-    keepOut(px, pz, 0.4);
-    const g = still(new THREE.Group());
-    g.position.set(px, heightAt(px, pz), pz);
-    G.group.add(g);
-    if (corridor) {
-      const b = new THREE.Mesh(K.foot, K.brass);
-      b.position.y = 0.07;
-      g.add(b);
-      const l = new THREE.Mesh(K.lid, K.lidM);
-      l.position.y = 0.16;
-      g.add(l);
-    } else {
-      const st = new THREE.Mesh(K.stake, K.iron);
-      st.position.y = 0.45;
-      g.add(st);
-      const t = new THREE.Mesh(K.tip, K.tipM);
-      t.position.y = 0.98;
-      g.add(t);
-      G.hot.push({ x: px, z: pz, r: 0.45 });
-    }
-    const sp = new THREE.Sprite(glowM);
-    sp.position.y = corridor ? 0.3 : 1.05;
-    sp.scale.setScalar(corridor ? 0.7 : 0.65);
-    g.add(sp);
-  };
+  const L = {
+      K,
+      corridor,
+      glowM: new THREE.SpriteMaterial({ map: gt, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 })
+    },
+    light = (px, pz) => guideLamp(L, px, pz);
   for (const i of guideMarks(cells)) {
     // a pair of lights on the doorway out of the marked cell, pointing the way
     const [ax, az] = cells[i],
@@ -183,15 +153,54 @@ function guidePath(F, rng) {
     else if (wallDist(px, pz) > 0.5 && clearOf(px, pz, 0.5)) brazier(px, heightAt(px, pz), pz, 0.9);
   }
 }
-// clutter along the walls: newspaper stacks and chairs on the first floor, rubble and stakes on the second
+// one route light at (px, pz), unless it would stand in a wall, a pit, a prop or clutter: a brass footlight on the first floor,
+// a stake with a burning tip (hot to touch) on the second
+function guideLamp({ K, corridor, glowM }, px, pz) {
+  const [pix, piz] = cellOf(px, pz);
+  if (
+    solid(pix, piz) ||
+    wallDist(px, pz) < 0.25 ||
+    kindAt(pix, piz) === 2 ||
+    (propR(ch(pix, piz)) && Math.hypot(px - (pix + 0.5) * CELL, pz - (piz + 0.5) * CELL) < propR(ch(pix, piz)) + 0.3)
+  )
+    return;
+  if (!clearOf(px, pz, 0.3)) return;
+  keepOut(px, pz, 0.4);
+  const g = still(new THREE.Group());
+  g.position.set(px, heightAt(px, pz), pz);
+  G.group.add(g);
+  if (corridor) {
+    const b = new THREE.Mesh(K.foot, K.brass);
+    b.position.y = 0.07;
+    g.add(b);
+    const l = new THREE.Mesh(K.lid, K.lidM);
+    l.position.y = 0.16;
+    g.add(l);
+  } else {
+    const st = new THREE.Mesh(K.stake, K.iron);
+    st.position.y = 0.45;
+    g.add(st);
+    const t = new THREE.Mesh(K.tip, K.tipM);
+    t.position.y = 0.98;
+    g.add(t);
+    G.hot.push({ x: px, z: pz, r: 0.45 });
+  }
+  const sp = new THREE.Sprite(glowM);
+  sp.position.y = corridor ? 0.3 : 1.05;
+  sp.scale.setScalar(corridor ? 0.7 : 0.65);
+  g.add(sp);
+}
+// clutter along the walls: newspaper stacks and chairs on the first floor, rubble, stakes and barrels on the second
 function clutter(F, rng) {
   G.clutter = [];
-  const paperMats = ['t_column', 't_crapwords', 't_textbox', 't_scribble'].map(t => new THREE.MeshLambertMaterial({ map: TEX[t] }));
-  const side = new THREE.MeshLambertMaterial({ color: 0xd8d0c0 }),
-    wood = new THREE.MeshLambertMaterial({ color: 0x4a3524 });
-  const rubbleM = new THREE.MeshPhongMaterial({ color: 0x5a2a20, flatShading: true, shininess: 0 }),
-    iron = new THREE.MeshLambertMaterial({ color: 0x1e1612 }),
-    barrelM = new THREE.MeshLambertMaterial({ map: TEX.t_ember, color: 0x7a5a4a });
+  const M = {
+    paper: ['t_column', 't_crapwords', 't_textbox', 't_scribble'].map(t => new THREE.MeshLambertMaterial({ map: TEX[t] })),
+    side: new THREE.MeshLambertMaterial({ color: 0xd8d0c0 }),
+    wood: new THREE.MeshLambertMaterial({ color: 0x4a3524 }),
+    rubble: new THREE.MeshPhongMaterial({ color: 0x5a2a20, flatShading: true, shininess: 0 }),
+    iron: new THREE.MeshLambertMaterial({ color: 0x1e1612 }),
+    barrel: new THREE.MeshLambertMaterial({ map: TEX.t_ember, color: 0x7a5a4a })
+  };
   wallFaces(rng, 0.34, (x, z, yaw, dx, dz) => {
     const ix = Math.floor((x - dx * 0.1) / CELL),
       iz = Math.floor((z - dz * 0.1) / CELL);
@@ -205,69 +214,75 @@ function clutter(F, rng) {
     g.rotation.y = yaw + (rng() - 0.5) * 0.6;
     G.group.add(g);
     const pick3 = rng();
-    if (F.deco === 'corridor') {
-      if (pick3 < 0.55) {
-        let y = 0;
-        const n = 2 + ((rng() * 4) | 0);
-        for (let k = 0; k < n; k++) {
-          const h = 0.1 + rng() * 0.14;
-          const b = new THREE.Mesh(new THREE.BoxGeometry(0.62, h, 0.46), [side, side, paperMats[(rng() * 4) | 0], side, side, side]);
-          b.position.set((rng() - 0.5) * 0.08, y + h / 2, (rng() - 0.5) * 0.08);
-          b.rotation.y = (rng() - 0.5) * 0.3;
-          g.add(b);
-          y += h;
-        }
-      } else {
-        // a chair, sometimes knocked over
-        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.5), wood);
-        seat.position.y = 0.48;
-        g.add(seat);
-        for (const [lx, lz] of [
-          [-0.21, -0.21],
-          [0.21, -0.21],
-          [-0.21, 0.21],
-          [0.21, 0.21]
-        ]) {
-          const l = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.48, 0.05), wood);
-          l.position.set(lx, 0.24, lz);
-          g.add(l);
-        }
-        const back = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.05), wood);
-        back.position.set(0, 0.78, -0.23);
-        g.add(back);
-        if (rng() < 0.35) {
-          g.rotation.z = Math.PI / 2;
-          g.position.y = 0.25;
-        }
-      }
-    } else {
-      if (pick3 < 0.5) {
-        for (let k = 0; k < 4 + ((rng() * 3) | 0); k++) {
-          const r = 0.14 + rng() * 0.22,
-            b = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), rubbleM);
-          b.position.set((rng() - 0.5) * 0.8, r * 0.6, (rng() - 0.5) * 0.6);
-          b.rotation.set(rng() * 3, rng() * 3, 0);
-          g.add(b);
-        }
-      } else if (pick3 < 0.8) {
-        for (let k = 0; k < 3; k++) {
-          const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.05, 1.4 + rng() * 0.6, 5), iron);
-          st.position.set((rng() - 0.5) * 0.6, 0.7, (rng() - 0.5) * 0.4);
-          st.rotation.set((rng() - 0.5) * 0.6, 0, (rng() - 0.5) * 0.6);
-          g.add(st);
-        }
-      } else {
-        const br = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.3, 0.85, 10), barrelM);
-        br.position.y = 0.42;
-        g.add(br);
-        if (rng() < 0.5) {
-          br.rotation.z = Math.PI / 2;
-          br.position.y = 0.32;
-        }
-      }
-    }
+    if (F.deco === 'corridor') (pick3 < 0.55 ? paperStack : clutterChair)(g, rng, M);
+    else (pick3 < 0.5 ? rubbleHeap : pick3 < 0.8 ? stakeBundle : clutterBarrel)(g, rng, M);
     G.clutter.push({ x: px, z: pz, r: 0.38 });
   });
+}
+// 2-5 bundles of newspaper, printed on top
+function paperStack(g, rng, M) {
+  let y = 0;
+  const n = 2 + ((rng() * 4) | 0);
+  for (let k = 0; k < n; k++) {
+    const h = 0.1 + rng() * 0.14;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.62, h, 0.46), [M.side, M.side, M.paper[(rng() * 4) | 0], M.side, M.side, M.side]);
+    b.position.set((rng() - 0.5) * 0.08, y + h / 2, (rng() - 0.5) * 0.08);
+    b.rotation.y = (rng() - 0.5) * 0.3;
+    g.add(b);
+    y += h;
+  }
+}
+// a chair, sometimes knocked over
+function clutterChair(g, rng, M) {
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.5), M.wood);
+  seat.position.y = 0.48;
+  g.add(seat);
+  for (const [lx, lz] of [
+    [-0.21, -0.21],
+    [0.21, -0.21],
+    [-0.21, 0.21],
+    [0.21, 0.21]
+  ]) {
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.48, 0.05), M.wood);
+    l.position.set(lx, 0.24, lz);
+    g.add(l);
+  }
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.05), M.wood);
+  back.position.set(0, 0.78, -0.23);
+  g.add(back);
+  if (rng() < 0.35) {
+    g.rotation.z = Math.PI / 2;
+    g.position.y = 0.25;
+  }
+}
+// 4-6 lumps of rubble
+function rubbleHeap(g, rng, M) {
+  for (let k = 0; k < 4 + ((rng() * 3) | 0); k++) {
+    const r = 0.14 + rng() * 0.22,
+      b = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), M.rubble);
+    b.position.set((rng() - 0.5) * 0.8, r * 0.6, (rng() - 0.5) * 0.6);
+    b.rotation.set(rng() * 3, rng() * 3, 0);
+    g.add(b);
+  }
+}
+// three iron stakes leaning every way
+function stakeBundle(g, rng, M) {
+  for (let k = 0; k < 3; k++) {
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.05, 1.4 + rng() * 0.6, 5), M.iron);
+    st.position.set((rng() - 0.5) * 0.6, 0.7, (rng() - 0.5) * 0.4);
+    st.rotation.set((rng() - 0.5) * 0.6, 0, (rng() - 0.5) * 0.6);
+    g.add(st);
+  }
+}
+// a smouldering barrel, sometimes on its side
+function clutterBarrel(g, rng, M) {
+  const br = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.3, 0.85, 10), M.barrel);
+  br.position.y = 0.42;
+  g.add(br);
+  if (rng() < 0.5) {
+    br.rotation.z = Math.PI / 2;
+    br.position.y = 0.32;
+  }
 }
 // calls fn(x, z, yaw, dx, dz) for wall faces beside open floor, each with chance prob (lifted with raised ground)
 function wallFaces(rng, prob, fn) {
