@@ -488,7 +488,7 @@ function win() {
     ['grin', 'Grins'],
     ['priest', 'Priest'],
     ['bruno', 'Bruno'],
-    ['grump', 'The Grump'],
+    ['grump', 'Grump'],
     ['smoker', 'Smokers'],
     ...secret,
     ['jester_mask', 'The Jester']

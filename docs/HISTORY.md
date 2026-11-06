@@ -352,3 +352,12 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - The crosshair locked on the Grump is white, not yellow (pebbles bounce off him); still red when the yo-yo reaches him
   (`proof` class on the reticle, from his `bounce` hook).
 - Title label `v1.40`.
+- Floor two: the talkers' shots (a Grin's fireball, the Priest's blood; not Bruno's insults) hurt a small talker they hit by
+  accident, a pebble's blow (0.75); never the one who threw it, never a boss or the caged, and never the last blow: one
+  that would tear it leaves it REELIN’ for Red Cap to finish (`strayShots` in 04-floors, `shotHitsTalker`, `STRAY_DMG`).
+  Reeling shared with the traps (`leaveReeling`, `REEL` in 20-talkers); the pebble's hit test shared (`touchesTalker`).
+- Spike, hit, shakes out 2 pebbles 20% of the time, 1 70%, none 10% (was always 2; the Hat and Long Hair still give 2):
+  `HIT_PEBBLES`, `hitPebbles` in 41-bystanders.
+- Hints rewritten by Serj: the Jester's "Immune when masked. Ring a totem.", the hidden boss's jaw "The jaw starts hoppin’.",
+  the Geezer's "Avoid Geezer’s gaze."
+- "The Grump" is now just "Grump": his health bar, the gallery card and the end screen's list.
