@@ -125,7 +125,7 @@ function hurtHero0(dmg, from, pierce) {
   cam.hurt = 0.34;
   SFX.hurt();
   $('#hurt').style.opacity = 1;
-  setTimeout(() => ($('#hurt').style.opacity = 0), 160);
+  setTimeout(() => ($('#hurt').style.opacity = 0), 160); // screen time, not later(): later() stops on death and would leave it red
   burst(hero.pos.clone().setY(hero.pos.y + 1.2), [COL.cap, 0x7a1d14, 0x3a6fb5], 10, 4, 0.14);
   drawTies();
   if (hero.hp <= 0) die();

@@ -395,7 +395,7 @@ function finale(J) {
   cam.hurt = 0.34;
   const f = $('#flash');
   f.classList.add('on');
-  setTimeout(() => f.classList.remove('on'), 140);
+  setTimeout(() => f.classList.remove('on'), 140); // screen time, not later(): a flash must always clear
   SFX.boom();
   SFX.tear();
   sTone({ f: 55, f2: 28, dur: 2.4, type: 'sawtooth', gain: 0.22, filt: [700, 70] });
