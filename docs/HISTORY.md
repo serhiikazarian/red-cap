@@ -335,8 +335,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Title label `v1.38`.
 
 ## 1.39 (6 Nov 2026)
-- The ending plays on a clean screen: from the Jester's final blow there is no 1 TALKER LEFT call (even with the hidden
-  boss still about: `updateLeft` checks `G.finalFx`), and taking his mask clears whatever words and hint are showing
-  (`quietScreen`, 07-hud).
+- The ending plays on a clean screen: from the Jester's final blow there is no 1 TALKER LEFT call, whoever is still
+  counted (most often Brainless the Second away in his smoke, unseen but counted; or the hidden boss, if woken):
+  `updateLeft` checks `G.finalFx`. Taking his mask clears whatever words and hint are showing (`quietScreen`, 07-hud).
 - Tidy: the hair's lash state points straight at `livingDyingHairLash` (it only passed the call on).
 - Title label `v1.39`.
