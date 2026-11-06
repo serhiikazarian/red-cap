@@ -3,7 +3,8 @@
 // (the Geezer's swirl, the finale's shock ring, contours of see-through things).
 const canvas = $('#view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-const scene = new THREE.Scene();
+const scene = new THREE.Scene(),
+  wordScene = new THREE.Scene(); // floating words (06-fx): drawn over the finished page, never cut by the ink pass's lines nor darkened
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 160);
 const touchUI = matchMedia('(pointer: coarse)').matches;
 
@@ -332,4 +333,9 @@ function render() {
   if (SEE.on) seeMask();
   renderer.setRenderTarget(null);
   renderer.render(inkScene, postCam);
+  if (wordScene.children.length) {
+    renderer.autoClear = false;
+    renderer.render(wordScene, camera);
+    renderer.autoClear = true;
+  }
 }
