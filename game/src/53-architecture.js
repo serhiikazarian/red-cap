@@ -246,23 +246,9 @@ const PAINT = { hung: 4, easels: 3, gap: 9 };
 function addPaintings(w) {
   const r = mulberry(5150 + w),
     used = [],
-    art = new THREE.MeshLambertMaterial({ map: TEX.beard_painting }),
-    wood = new THREE.MeshLambertMaterial({ color: 0x2a1d14 }),
-    spots = [];
-  for (let z = 9; z < G.h - 1; z++)
-    for (let x = 1; x < w - 1; x++) {
-      if (ch(x, z) !== '.') continue;
-      for (const [dx, dz] of DIRS4) if (ch(x + dx, z + dz) === '#') spots.push([x, z, dx, dz, r()]);
-    }
-  spots.sort((p, q) => p[4] - q[4]);
-  const far = (px, pz) => !used.some(([ux, uz]) => Math.hypot(ux - px, uz - pz) < PAINT.gap);
-  const canvas = (g, cw, chh) => {
-    const back = new THREE.Mesh(BOX, wood); // the stretcher behind the canvas
-    back.scale.set(cw + 0.08, chh + 0.08, 0.06);
-    back.position.z = -0.035;
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(cw, chh), art);
-    g.add(back, face);
-  };
+    M = { art: new THREE.MeshLambertMaterial({ map: TEX.beard_painting }), wood: new THREE.MeshLambertMaterial({ color: 0x2a1d14 }) },
+    spots = paintSpots(w, r),
+    far = (px, pz) => !used.some(([ux, uz]) => Math.hypot(ux - px, uz - pz) < PAINT.gap);
   let hung = 0,
     easels = 0;
   for (const [x, z, dx, dz] of spots) {
@@ -270,11 +256,7 @@ function addPaintings(w) {
       fx = x * CELL + CELL / 2 + dx * (CELL / 2 - 0.05),
       fz = z * CELL + CELL / 2 + dz * (CELL / 2 - 0.05);
     if (hung < PAINT.hung && base >= 2.4 && far(fx, fz)) {
-      const g = new THREE.Group();
-      canvas(g, 1.05, 1.4);
-      g.position.set(fx, 1.6, fz);
-      g.rotation.y = Math.atan2(-dx, -dz);
-      G.group.add(still(g));
+      hangPainting(M, fx, fz, dx, dz);
       used.push([fx, fz]);
       hung++;
       continue;
@@ -282,32 +264,63 @@ function addPaintings(w) {
     const ex = x * CELL + CELL / 2 + dx * 0.55,
       ez = z * CELL + CELL / 2 + dz * 0.55;
     if (easels < PAINT.easels && far(ex, ez)) {
-      const g = new THREE.Group(),
-        art3 = new THREE.Group();
-      for (const [lx, lz, rx] of [
-        [-0.42, 0.12, 0],
-        [0.42, 0.12, 0],
-        [0, -0.38, 0.3]
-      ]) {
-        const leg = new THREE.Mesh(BOX, wood); // two front legs leaning back, one behind
-        leg.scale.set(0.06, 2.05, 0.06);
-        leg.position.set(lx, 1.0, lz);
-        leg.rotation.x = rx || -0.12;
-        g.add(leg);
-      }
-      const shelf = new THREE.Mesh(BOX, wood);
-      shelf.scale.set(1.05, 0.06, 0.16);
-      shelf.position.set(0, 0.72, 0.16);
-      g.add(shelf);
-      canvas(art3, 0.9, 1.2);
-      art3.position.set(0, 1.35, 0.14);
-      art3.rotation.x = -0.12;
-      g.add(art3);
-      g.position.set(ex, 0, ez);
-      g.rotation.y = Math.atan2(-dx, -dz) + (r() - 0.5) * 0.5;
-      G.group.add(still(g));
+      paintEasel(M, r, ex, ez, dx, dz);
       used.push([ex, ez]);
       easels++;
     }
   }
+}
+// every open cell's side against a wall, past the Jester's chamber, in a seeded shuffle: [x, z, dx, dz, key]
+function paintSpots(w, r) {
+  const spots = [];
+  for (let z = 9; z < G.h - 1; z++)
+    for (let x = 1; x < w - 1; x++) {
+      if (ch(x, z) !== '.') continue;
+      for (const [dx, dz] of DIRS4) if (ch(x + dx, z + dz) === '#') spots.push([x, z, dx, dz, r()]);
+    }
+  spots.sort((p, q) => p[4] - q[4]);
+  return spots;
+}
+// the canvas on its stretcher, cw by chh, facing +z
+function paintCanvas(g, cw, chh, { art, wood }) {
+  const back = new THREE.Mesh(BOX, wood); // the stretcher behind the canvas
+  back.scale.set(cw + 0.08, chh + 0.08, 0.06);
+  back.position.z = -0.035;
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(cw, chh), art);
+  g.add(back, face);
+}
+// hung on a wall face
+function hangPainting(M, fx, fz, dx, dz) {
+  const g = new THREE.Group();
+  paintCanvas(g, 1.05, 1.4, M);
+  g.position.set(fx, 1.6, fz);
+  g.rotation.y = Math.atan2(-dx, -dz);
+  G.group.add(still(g));
+}
+// on an easel in the open cell, facing away from the wall: two front legs leaning back, one behind, a shelf
+function paintEasel(M, r, ex, ez, dx, dz) {
+  const g = new THREE.Group(),
+    art3 = new THREE.Group();
+  for (const [lx, lz, rx] of [
+    [-0.42, 0.12, 0],
+    [0.42, 0.12, 0],
+    [0, -0.38, 0.3]
+  ]) {
+    const leg = new THREE.Mesh(BOX, M.wood); // two front legs leaning back, one behind
+    leg.scale.set(0.06, 2.05, 0.06);
+    leg.position.set(lx, 1.0, lz);
+    leg.rotation.x = rx || -0.12;
+    g.add(leg);
+  }
+  const shelf = new THREE.Mesh(BOX, M.wood);
+  shelf.scale.set(1.05, 0.06, 0.16);
+  shelf.position.set(0, 0.72, 0.16);
+  g.add(shelf);
+  paintCanvas(art3, 0.9, 1.2, M);
+  art3.position.set(0, 1.35, 0.14);
+  art3.rotation.x = -0.12;
+  g.add(art3);
+  g.position.set(ex, 0, ez);
+  g.rotation.y = Math.atan2(-dx, -dz) + (r() - 0.5) * 0.5;
+  G.group.add(still(g));
 }

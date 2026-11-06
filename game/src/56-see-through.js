@@ -370,24 +370,11 @@ function seeSolid(c, dt, cp, fo) {
 function seeTick(dt) {
   SEE.on = SEE.gr = SEE.dyn = false;
   if (!G || !G.see.length) return;
-  // what the camera must see: Red Cap (chest and head), the locked target, any boss in the fight
-  const fo = [seeA.set(hero.pos.x, hero.pos.y + 0.9, hero.pos.z).clone(), seeA.set(hero.pos.x, hero.pos.y + 1.6, hero.pos.z).clone()];
-  if (SEE.tg && !SEE.tg.dead) fo.push(new THREE.Vector3(SEE.tg.pos.x, hitHeight(SEE.tg), SEE.tg.pos.z));
-  for (const e of G.enemies)
-    if (e.boss && e !== SEE.tg && !e.dead && !e.dying && !e.hidden && !e.dormant && !e.waiting && e.pos.distanceTo(hero.pos) < 24)
-      fo.push(new THREE.Vector3(e.pos.x, hitHeight(e), e.pos.z));
-  const cp = camera.position;
+  const fo = seeFocus(),
+    cp = camera.position;
   for (const c of G.see) {
     if (c.off || c.hard) continue;
-    let want = 1;
-    if (c.solid) want = seeSolid(c, dt, cp, fo);
-    else if (!c.gone && c.near)
-      for (const s of c.w) {
-        // right in front of the lens (or brushing it), it would fill the screen
-        if (seeIn(cp, s, 0.8)) want = SEE_A;
-        else for (const f of fo) if (seeCross(cp, f, s)) want = SEE_A;
-        if (want < 1) break;
-      }
+    const want = seeWant(c, dt, cp, fo);
     // in over ~0.15 s, back over ~0.3 s; a pillar or pyramid over SOLID_T
     c.a =
       want < c.a
@@ -396,52 +383,80 @@ function seeTick(dt) {
     if (c.a < 0.999 && !c.on) seeOn(c, true);
     else if (c.a >= 0.999 && c.on) seeOn(c, false);
     if (!c.on) continue;
-    if (c.solid && c.line) {
-      // a pillar's contour: only while it hides Red Cap, as strong as it has faded; in the mask only while there is one
-      c.lvl = (c.g * (1 - c.a)) / (1 - SEE_A);
-      const ln = c.lvl > 0.01;
-      if (ln !== c.ln)
-        for (const o of seeDrawn(c)) {
-          if (ln) o.layers.enable(1);
-          else o.layers.disable(1);
-        }
-      c.ln = ln;
-    }
+    if (c.solid && c.line) seeLine(c);
     if (c.ln) {
       SEE.on = true;
       if (c.dyn) SEE.dyn = true;
       else SEE.gr = true;
     }
-    const tall = c.solid ? Math.min(1, (c.w[0].y1 - c.w[0].y0) / 7) : 1; // a pillar or pyramid's height against a 7 m pillar (SOLID_FOOT)
-    let foot = 1e9; // the thing's lowest point
-    for (const s of c.w) foot = Math.min(foot, s.box ? s.m.elements[13] - 0.5 * s.sc.y : s.cap || s.pyr ? s.y0 : s.c.y - s.r);
-    const fade = mm => {
-      const u = mm.userData.seeU;
-      u.seeA.value = c.a;
-      // a pillar or pyramid keeps a solid foot; anything else fades evenly (the gradient sits below it)
-      u.seeY0.value = foot + (c.solid ? SOLID_FOOT[0] * tall : -2);
-      u.seeY1.value = foot + (c.solid ? SOLID_FOOT[1] * tall : -1);
-    };
-    for (const m of c.meshes)
-      for (const mm of Array.isArray(m.material) ? m.material : [m.material]) {
-        const o = mm === m.material ? m.userData.seeOrig : m.userData.seeOrig[m.material.indexOf(mm)];
-        mm.opacity = o.opacity;
-        fade(mm);
-        mm.visible = o.visible;
-        if (o.color) mm.color.copy(o.color);
-        if (o.emissive) mm.emissive.copy(o.emissive);
-      }
-    for (const it of c.items)
-      if (it.see) {
-        it.owner.updateMatrix();
-        it.see.matrix.multiplyMatrices(it.owner.matrix, it.local);
-        it.see.matrixWorldNeedsUpdate = true; // its parent (G.group) is frozen, so nothing else would carry the new place into its world matrix
-        fade(it.seeMat);
-        if (it.im.instanceColor) it.im.getColorAt(it.idx, seeCol);
-        else seeCol.set(1, 1, 1);
-        it.seeMat.color.copy(it.im.material.color).multiply(seeCol);
-      }
+    seeApply(c);
   }
+}
+// what the camera must see: Red Cap (chest and head), the locked target, any boss in the fight
+function seeFocus() {
+  const fo = [seeA.set(hero.pos.x, hero.pos.y + 0.9, hero.pos.z).clone(), seeA.set(hero.pos.x, hero.pos.y + 1.6, hero.pos.z).clone()];
+  if (SEE.tg && !SEE.tg.dead) fo.push(new THREE.Vector3(SEE.tg.pos.x, hitHeight(SEE.tg), SEE.tg.pos.z));
+  for (const e of G.enemies)
+    if (e.boss && e !== SEE.tg && !e.dead && !e.dying && !e.hidden && !e.dormant && !e.waiting && e.pos.distanceTo(hero.pos) < 24)
+      fo.push(new THREE.Vector3(e.pos.x, hitHeight(e), e.pos.z));
+  return fo;
+}
+// how see-through a thing should be now: a pillar or pyramid by its own rules (seeSolid); anything else when it is right in front
+// of the lens or between the camera and something it must see
+function seeWant(c, dt, cp, fo) {
+  let want = 1;
+  if (c.solid) want = seeSolid(c, dt, cp, fo);
+  else if (!c.gone && c.near)
+    for (const s of c.w) {
+      // right in front of the lens (or brushing it), it would fill the screen
+      if (seeIn(cp, s, 0.8)) want = SEE_A;
+      else for (const f of fo) if (seeCross(cp, f, s)) want = SEE_A;
+      if (want < 1) break;
+    }
+  return want;
+}
+// a pillar's contour: only while it hides Red Cap, as strong as it has faded; in the mask only while there is one
+function seeLine(c) {
+  c.lvl = (c.g * (1 - c.a)) / (1 - SEE_A);
+  const ln = c.lvl > 0.01;
+  if (ln !== c.ln)
+    for (const o of seeDrawn(c)) {
+      if (ln) o.layers.enable(1);
+      else o.layers.disable(1);
+    }
+  c.ln = ln;
+}
+// the fade on every material and instanced part of a thing
+function seeApply(c) {
+  const tall = c.solid ? Math.min(1, (c.w[0].y1 - c.w[0].y0) / 7) : 1; // a pillar or pyramid's height against a 7 m pillar (SOLID_FOOT)
+  let foot = 1e9; // the thing's lowest point
+  for (const s of c.w) foot = Math.min(foot, s.box ? s.m.elements[13] - 0.5 * s.sc.y : s.cap || s.pyr ? s.y0 : s.c.y - s.r);
+  const fade = mm => {
+    const u = mm.userData.seeU;
+    u.seeA.value = c.a;
+    // a pillar or pyramid keeps a solid foot; anything else fades evenly (the gradient sits below it)
+    u.seeY0.value = foot + (c.solid ? SOLID_FOOT[0] * tall : -2);
+    u.seeY1.value = foot + (c.solid ? SOLID_FOOT[1] * tall : -1);
+  };
+  for (const m of c.meshes)
+    for (const mm of Array.isArray(m.material) ? m.material : [m.material]) {
+      const o = mm === m.material ? m.userData.seeOrig : m.userData.seeOrig[m.material.indexOf(mm)];
+      mm.opacity = o.opacity;
+      fade(mm);
+      mm.visible = o.visible;
+      if (o.color) mm.color.copy(o.color);
+      if (o.emissive) mm.emissive.copy(o.emissive);
+    }
+  for (const it of c.items)
+    if (it.see) {
+      it.owner.updateMatrix();
+      it.see.matrix.multiplyMatrices(it.owner.matrix, it.local);
+      it.see.matrixWorldNeedsUpdate = true; // its parent (G.group) is frozen, so nothing else would carry the new place into its world matrix
+      fade(it.seeMat);
+      if (it.im.instanceColor) it.im.getColorAt(it.idx, seeCol);
+      else seeCol.set(1, 1, 1);
+      it.seeMat.color.copy(it.im.material.color).multiply(seeCol);
+    }
 }
 // the mask: only the see-through things, white on black, at half size
 // the screen box (uv) the faded things' mask can reach, widened by the contour samples' reach; the ink pass looks only inside it

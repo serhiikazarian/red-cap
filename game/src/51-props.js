@@ -71,77 +71,82 @@ function buildProp(F, cx, cz, rng) {
   const g = new THREE.Group();
   g.position.set(cx, 0, cz);
   g.rotation.y = rng() * TAU;
-  if (F.deco === 'corridor') {
-    // an easel holding a painting
-    const wood = new THREE.MeshLambertMaterial({ color: 0x4a3524 });
-    [
-      [-0.5, 0.25, -0.12],
-      [0.5, 0.25, -0.12],
-      [0, -0.45, 0.2]
-    ].forEach(([x, z, r]) => {
-      const l = new THREE.Mesh(new THREE.BoxGeometry(0.07, 2.4, 0.07), wood);
-      l.position.set(x * 0.9, 1.15, z);
-      l.rotation.x = r;
-      l.rotation.z = -x * 0.18;
-      g.add(l);
-    });
-    const canvasM = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 0.05), [
-      wood,
-      wood,
-      wood,
-      wood,
-      new THREE.MeshLambertMaterial({ map: TEX.t_canvas }),
-      wood
-    ]);
-    canvasM.position.set(0, 1.55, 0.12);
-    canvasM.rotation.x = -0.12;
-    g.add(canvasM);
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.16), wood);
-    shelf.position.set(0, 1.1, 0.12);
-    g.add(shelf);
-    still(g);
-  } else if (F.deco === 'mouth') {
-    // a bear trap: two toothed jaws lying open on an iron plate
-    const K = trapKit(),
-      base = new THREE.Mesh(K.base, K.iron),
-      fixed = still(new THREE.Group());
-    base.position.y = 0.04;
-    fixed.add(base);
-    fixed.position.copy(g.position);
-    fixed.rotation.y = g.rotation.y;
-    G.group.add(fixed);
-    const pan = new THREE.Mesh(K.pan, K.rust);
-    pan.position.y = 0.09;
-    fixed.add(pan);
-    fixed.add(new THREE.Mesh(K.extras, K.iron));
-    const jaws = [1, -1].map(sd => {
-      const j = new THREE.Group();
-      j.add(new THREE.Mesh(K.jawRing, K.iron), new THREE.Mesh(K.jawTeeth, K.teeth));
-      j.scale.z = sd;
-      j.position.y = 0.09;
-      g.add(j);
-      return j;
-    });
-    const bp = bloodPool(cx + rand(-0.4, 0.4), cz + rand(-0.4, 0.4), 1.5);
-    if (bp && kindAt(...cellOf(cx, cz)) === 1) bp.position.y -= LIFT; // the raised cell lifts it with the rest
-    G.mines.push({ g, jaws, x: cx, z: cz, st: 'armed', t: 0, beep: 0, c: 0 });
-  } else {
-    // stacked pastel blocks
-    const cols = ['t_blue', 't_lime', 't_orange', 't_ochre', 't_brown'];
-    let y = 0;
-    for (let k = 0; k < 3; k++) {
-      const s = 1.3 - k * 0.25,
-        m = new THREE.Mesh(new THREE.BoxGeometry(s, s * 0.8, s), new THREE.MeshLambertMaterial({ map: TEX[cols[(rng() * cols.length) | 0]] }));
-      m.position.set((rng() - 0.5) * 0.2, y + s * 0.4, (rng() - 0.5) * 0.2);
-      m.rotation.y = rng();
-      g.add(m);
-      y += s * 0.8;
-    }
-    G.blockProps.push(g);
-  }
+  if (F.deco === 'corridor') propEasel(g);
+  else if (F.deco === 'mouth') propTrap(g, cx, cz);
+  else propBlocks(g, rng);
   const iz = cellOf(cx, cz)[1];
   // a bear trap lies flat; an easel and the Grump's sound blocks never fade; the Jester chamber's stacks fade without a contour
   if (F.deco !== 'mouth') G.group.add(seeThru(g, false, F.deco === 'corridor' || iz > 8 ? 'hard' : 'plain'));
   else G.group.add(g);
   if (F.deco === 'blocks' && iz > 8) (G.props ??= {})[cellOf(cx, cz)[0] + ',' + iz] = { g, x: cx, z: cz, hp: 1, flashT: 0, tint: 1 };
+}
+// floor one: an easel holding a painting
+function propEasel(g) {
+  const wood = new THREE.MeshLambertMaterial({ color: 0x4a3524 });
+  [
+    [-0.5, 0.25, -0.12],
+    [0.5, 0.25, -0.12],
+    [0, -0.45, 0.2]
+  ].forEach(([x, z, r]) => {
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.07, 2.4, 0.07), wood);
+    l.position.set(x * 0.9, 1.15, z);
+    l.rotation.x = r;
+    l.rotation.z = -x * 0.18;
+    g.add(l);
+  });
+  const canvasM = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 0.05), [
+    wood,
+    wood,
+    wood,
+    wood,
+    new THREE.MeshLambertMaterial({ map: TEX.t_canvas }),
+    wood
+  ]);
+  canvasM.position.set(0, 1.55, 0.12);
+  canvasM.rotation.x = -0.12;
+  g.add(canvasM);
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.16), wood);
+  shelf.position.set(0, 1.1, 0.12);
+  g.add(shelf);
+  still(g);
+}
+// floor two: a bear trap, two toothed jaws lying open on an iron plate (the plate is baked; the jaws snap shut: G.mines)
+function propTrap(g, cx, cz) {
+  const K = trapKit(),
+    base = new THREE.Mesh(K.base, K.iron),
+    fixed = still(new THREE.Group());
+  base.position.y = 0.04;
+  fixed.add(base);
+  fixed.position.copy(g.position);
+  fixed.rotation.y = g.rotation.y;
+  G.group.add(fixed);
+  const pan = new THREE.Mesh(K.pan, K.rust);
+  pan.position.y = 0.09;
+  fixed.add(pan);
+  fixed.add(new THREE.Mesh(K.extras, K.iron));
+  const jaws = [1, -1].map(sd => {
+    const j = new THREE.Group();
+    j.add(new THREE.Mesh(K.jawRing, K.iron), new THREE.Mesh(K.jawTeeth, K.teeth));
+    j.scale.z = sd;
+    j.position.y = 0.09;
+    g.add(j);
+    return j;
+  });
+  const bp = bloodPool(cx + rand(-0.4, 0.4), cz + rand(-0.4, 0.4), 1.5);
+  if (bp && kindAt(...cellOf(cx, cz)) === 1) bp.position.y -= LIFT; // the raised cell lifts it with the rest
+  G.mines.push({ g, jaws, x: cx, z: cz, st: 'armed', t: 0, beep: 0, c: 0 });
+}
+// floor three: three pastel blocks stacked, each smaller
+function propBlocks(g, rng) {
+  const cols = ['t_blue', 't_lime', 't_orange', 't_ochre', 't_brown'];
+  let y = 0;
+  for (let k = 0; k < 3; k++) {
+    const s = 1.3 - k * 0.25,
+      m = new THREE.Mesh(new THREE.BoxGeometry(s, s * 0.8, s), new THREE.MeshLambertMaterial({ map: TEX[cols[(rng() * cols.length) | 0]] }));
+    m.position.set((rng() - 0.5) * 0.2, y + s * 0.4, (rng() - 0.5) * 0.2);
+    m.rotation.y = rng();
+    g.add(m);
+    y += s * 0.8;
+  }
+  G.blockProps.push(g);
 }
