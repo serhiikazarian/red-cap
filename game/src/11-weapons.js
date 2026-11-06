@@ -353,55 +353,59 @@ function fireSling() {
   burst(from, [COL.paper, COL.bile], 5, 3, 0.1, { g: 0, life: 0.4 });
 }
 // pebbles fly in three steps a frame; walls, the floor, range and anything they meet stop them; the Grump is too thick
+const PEBBLE_STEPS = 3;
 function updatePebbles(dt) {
   for (let i = pebbles.length - 1; i >= 0; i--) {
     const b = pebbles[i];
     b.life -= dt;
     let dead = b.life <= 0;
-    if (b.target && !b.target.dead && !b.target.dying && !b.target.hidden) {
-      // a little homing, so a fair shot lands (strong on a ghost)
-      const want = tmpV.set(b.target.pos.x, hitHeight(b.target), b.target.pos.z).sub(b.m.position).normalize().multiplyScalar(26);
-      b.v.lerp(want, 1 - Math.exp(-(b.target.ghost ? 14 : 5) * dt));
-    }
-    const steps = 3;
-    for (let s = 0; s < steps && !dead; s++) {
-      b.m.position.addScaledVector(b.v, dt / steps);
-      b.went = (b.went || 0) + (b.v.length() * dt) / steps;
-      if (b.went > PEBBLE_RANGE) {
-        dead = true;
-        burst(b.m.position, [COL.smoke, COL.paper], 3, 2, 0.1);
-        break;
-      }
-      const p = b.m.position;
-      const [ix, iz] = cellOf(p.x, p.z);
-      if (solid(ix, iz) || p.y < 0) {
-        dead = true;
-        burst(p, [COL.smoke, COL.paper], 4, 3, 0.1);
-        break;
-      }
-      if (hitGhost(p, 0.15) || hitHolo(p, 0.1) || hitTotem(p, 0.1) || hitPyr(p, 0.1) || kickFace(p, 0.2) || hitPlaque(p, 0.1) || hitNpc(p, 0.1)) {
-        dead = true;
-        break;
-      }
-      for (const e of G.enemies) {
-        if (e.dead || e.dying || e.dormant || e.away || (b.target && b.target.ghost && e === b.target.priest)) continue; // a shot meant for a ghost flies past the Priest
-        if (Math.hypot(e.pos.x - p.x, e.pos.z - p.z) < e.r + 0.2 && p.y - (e.gy || 0) > e.y0 - 0.2 && p.y - (e.gy || 0) < e.y1 + 0.2) {
-          dead = true;
-          const T = TALKERS[e.type];
-          if (T.bounce) {
-            T.bounce(e, p);
-            break;
-          }
-          const l = Math.hypot(b.v.x, b.v.z) || 1;
-          damage(e, (e.pebbleDmg || PEBBLE_DMG) * (b.pw || 1), b.v.x / l, b.v.z / l, false, true);
-          break;
-        }
-      }
-    }
+    pebbleHoming(b, dt);
+    for (let s = 0; s < PEBBLE_STEPS && !dead; s++) dead = pebbleStep(b, dt);
     b.m.rotation.x += dt * 20;
     if (dead) {
       G.group.remove(b.m);
       pebbles.splice(i, 1);
     }
   }
+}
+// a little homing on its target, so a fair shot lands (strong on a ghost)
+function pebbleHoming(b, dt) {
+  const t = b.target;
+  if (!t || t.dead || t.dying || t.hidden) return;
+  const want = tmpV.set(t.pos.x, hitHeight(t), t.pos.z).sub(b.m.position).normalize().multiplyScalar(26);
+  b.v.lerp(want, 1 - Math.exp(-(t.ghost ? 14 : 5) * dt));
+}
+// one of a frame's PEBBLE_STEPS moves; true when it stops (past its range, in a wall or the floor, or on something it hit)
+function pebbleStep(b, dt) {
+  b.m.position.addScaledVector(b.v, dt / PEBBLE_STEPS);
+  b.went = (b.went || 0) + (b.v.length() * dt) / PEBBLE_STEPS;
+  const p = b.m.position;
+  if (b.went > PEBBLE_RANGE) {
+    burst(p, [COL.smoke, COL.paper], 3, 2, 0.1);
+    return true;
+  }
+  const [ix, iz] = cellOf(p.x, p.z);
+  if (solid(ix, iz) || p.y < 0) {
+    burst(p, [COL.smoke, COL.paper], 4, 3, 0.1);
+    return true;
+  }
+  if (hitGhost(p, 0.15) || hitHolo(p, 0.1) || hitTotem(p, 0.1) || hitPyr(p, 0.1) || kickFace(p, 0.2) || hitPlaque(p, 0.1) || hitNpc(p, 0.1))
+    return true;
+  return pebbleHitsTalker(b, p);
+}
+// the first talker it meets takes it (or bounces it off: its bounce hook); a shot meant for a ghost flies past the Priest
+function pebbleHitsTalker(b, p) {
+  for (const e of G.enemies) {
+    if (e.dead || e.dying || e.dormant || e.away || (b.target && b.target.ghost && e === b.target.priest)) continue;
+    const y = p.y - (e.gy || 0);
+    if (Math.hypot(e.pos.x - p.x, e.pos.z - p.z) >= e.r + 0.2 || y <= e.y0 - 0.2 || y >= e.y1 + 0.2) continue;
+    const T = TALKERS[e.type];
+    if (T.bounce) T.bounce(e, p);
+    else {
+      const l = Math.hypot(b.v.x, b.v.z) || 1;
+      damage(e, (e.pebbleDmg || PEBBLE_DMG) * (b.pw || 1), b.v.x / l, b.v.z / l, false, true);
+    }
+    return true;
+  }
+  return false;
 }

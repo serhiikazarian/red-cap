@@ -83,62 +83,76 @@ function trapBite(m) {
     }
   }
 }
+const SNAP = { first: 0.07, second: 0.29 }; // s into the snap of each bite
+// how shut the jaws are k s into the snap: shut at the first bite, back open to 0.45 by 0.22 s, shut again at the second
+function snapShut(k) {
+  if (k < SNAP.first) return k / SNAP.first;
+  if (k < 0.22) return 1 - ((k - SNAP.first) / 0.15) * 0.55;
+  if (k < SNAP.second) return 0.45 + ((k - 0.22) / 0.07) * 0.55;
+  return 1;
+}
+// each state's step (m.t counts down in every state); a state moves on by naming the next one
+const MINE_STATES = {
+  // anything on foot near the pan sets it off
+  armed(m) {
+    const near =
+      Math.hypot(hero.pos.x - m.x, hero.pos.z - m.z) < 1.5 ||
+      G.enemies.some(e => !e.dead && !e.dying && e.fly == null && !e.still && Math.hypot(e.pos.x - m.x, e.pos.z - m.z) < e.r + 1.1);
+    if (!near) return;
+    m.st = 'click';
+    m.t = 0.4;
+    SFX.click();
+    if (!G.mineHint) {
+      G.mineHint = true;
+      toast('Bear trap. Lure the enemy onto one.');
+    }
+  },
+  // the pan sinks, the jaws shiver: a moment to get out
+  click(m, dt) {
+    trapClose(m, 0.04 + Math.random() * 0.04);
+    m.beep -= dt;
+    if (m.beep <= 0) {
+      m.beep = 0.12;
+      SFX.click();
+    }
+    if (m.t <= 0) {
+      m.st = 'snap';
+      m.t = 0;
+      m.bites = 0;
+    }
+  },
+  // shut, half open, shut again: two bites
+  snap(m) {
+    const k = -m.t;
+    trapClose(m, snapShut(k));
+    if (k >= SNAP.first && m.bites === 0) {
+      m.bites = 1;
+      trapBite(m);
+    }
+    if (k >= SNAP.second && m.bites === 1) {
+      m.bites = 2;
+      trapBite(m);
+    }
+    if (k > 0.9) {
+      m.st = 'shut';
+      m.t = 4;
+    }
+  },
+  shut(m) {
+    if (m.t > 0) return;
+    m.st = 'open';
+    m.t = 0.8;
+  },
+  open(m) {
+    trapClose(m, Math.max(0, m.t / 0.8));
+    if (m.t > 0) return;
+    trapClose(m, 0);
+    m.st = 'armed';
+  }
+};
 function updateMines(dt) {
   for (const m of G.mines) {
     m.t -= dt;
-    if (m.st === 'armed') {
-      const near =
-        Math.hypot(hero.pos.x - m.x, hero.pos.z - m.z) < 1.5 ||
-        G.enemies.some(e => !e.dead && !e.dying && e.fly == null && !e.still && Math.hypot(e.pos.x - m.x, e.pos.z - m.z) < e.r + 1.1);
-      if (near) {
-        m.st = 'click';
-        m.t = 0.4;
-        SFX.click();
-        if (!G.mineHint) {
-          G.mineHint = true;
-          toast('Bear trap. Lure the enemy onto one.');
-        }
-      }
-    } else if (m.st === 'click') {
-      // the pan sinks, the jaws shiver: a moment to get out
-      trapClose(m, 0.04 + Math.random() * 0.04);
-      m.beep -= dt;
-      if (m.beep <= 0) {
-        m.beep = 0.12;
-        SFX.click();
-      }
-      if (m.t <= 0) {
-        m.st = 'snap';
-        m.t = 0;
-        m.bites = 0;
-      }
-    } else if (m.st === 'snap') {
-      // shut, half open, shut again: two bites
-      const k = -m.t;
-      trapClose(m, k < 0.07 ? k / 0.07 : k < 0.22 ? 1 - ((k - 0.07) / 0.15) * 0.55 : k < 0.29 ? 0.45 + ((k - 0.22) / 0.07) * 0.55 : 1);
-      if (k >= 0.07 && m.bites === 0) {
-        m.bites = 1;
-        trapBite(m);
-      }
-      if (k >= 0.29 && m.bites === 1) {
-        m.bites = 2;
-        trapBite(m);
-      }
-      if (k > 0.9) {
-        m.st = 'shut';
-        m.t = 4;
-      }
-    } else if (m.st === 'shut') {
-      if (m.t <= 0) {
-        m.st = 'open';
-        m.t = 0.8;
-      }
-    } else if (m.st === 'open') {
-      trapClose(m, Math.max(0, m.t / 0.8));
-      if (m.t <= 0) {
-        trapClose(m, 0);
-        m.st = 'armed';
-      }
-    }
+    MINE_STATES[m.st](m, dt);
   }
 }

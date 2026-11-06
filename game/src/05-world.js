@@ -222,68 +222,76 @@ function buildRaised(F) {
     }
 }
 // pushes a circle (centre p, radius r) out of walls, cells at another height (when y is given), props, pyramids and stakes
+// in the 3×3 cells around it; who (a talker, or none) may be drawn wider than it walks
+const STEP_MAX = 0.6; // metres of ground height a walker at height y can step onto
 function collide(p, r, y, who) {
   const [cx, cz] = cellOf(p.x, p.z);
   for (let iz = cz - 1; iz <= cz + 1; iz++)
     for (let ix = cx - 1; ix <= cx + 1; ix++) {
-      const nx0 = clamp(p.x, ix * CELL + 0.001, ix * CELL + CELL - 0.001),
-        nz0 = clamp(p.z, iz * CELL + 0.001, iz * CELL + CELL - 0.001);
-      if (solid(ix, iz) || (y != null && G.hk && Math.abs(cellHeight(ix, iz, nx0, nz0) - y) > 0.6)) {
-        const nx = clamp(p.x, ix * CELL, ix * CELL + CELL),
-          nz = clamp(p.z, iz * CELL, iz * CELL + CELL);
-        const dx = p.x - nx,
-          dz = p.z - nz,
-          d = Math.hypot(dx, dz);
-        if (d < r) {
-          if (d > 1e-4) {
-            p.x = nx + (dx / d) * r;
-            p.z = nz + (dz / d) * r;
-          } else {
-            // inside a solid cell: leave by the nearest open side, never by marching on through the wall
-            let bs = null,
-              bd = 1e9;
-            for (const [ax, az] of DIRS4) {
-              if (solid(ix + ax, iz + az)) continue;
-              const e = ax > 0 ? ix * CELL + CELL - p.x : ax < 0 ? p.x - ix * CELL : az > 0 ? iz * CELL + CELL - p.z : p.z - iz * CELL;
-              if (e < bd) {
-                bd = e;
-                bs = [ax, az];
-              }
-            }
-            if (bs) {
-              if (bs[0]) p.x = bs[0] > 0 ? ix * CELL + CELL + r : ix * CELL - r;
-              else p.z = bs[1] > 0 ? iz * CELL + CELL + r : iz * CELL - r;
-            }
-          }
-        }
-      } else if (pyrAt(ix, iz)) pyrPush(p, Math.max(r, (who && who.drawnR) || 0), pyrAt(ix, iz));
+      if (blocksWalker(ix, iz, p, y)) pushOutOfCell(p, r, ix, iz);
+      else if (pyrAt(ix, iz)) pyrPush(p, Math.max(r, (who && who.drawnR) || 0), pyrAt(ix, iz));
       else {
-        const pr = propRadius(cellAt(ix, iz));
-        if (pr) {
-          const px = cellMid(ix),
-            pz = cellMid(iz),
-            dx = p.x - px,
-            dz = p.z - pz,
-            d = Math.hypot(dx, dz),
-            rr = r + pr;
-          if (d < rr && d > 1e-4) {
-            p.x = px + (dx / d) * rr;
-            p.z = pz + (dz / d) * rr;
-          }
-        }
+        const reach = propRadius(cellAt(ix, iz));
+        if (reach) pushOffRound(p, cellMid(ix), cellMid(iz), r + reach);
       }
     }
-  for (const st of G.stakes) {
-    const dx = p.x - st.x,
-      dz = p.z - st.z,
-      d = Math.hypot(dx, dz),
-      rr = Math.max(r, (who && who.wide) || 0) + st.r;
-    if (d < rr && d > 1e-4) {
-      const out = rr - d > 0.25 ? 0.05 : rr - d;
-      p.x += (dx / d) * out;
-      p.z += (dz / d) * out;
+  for (const st of G.stakes) pushOffStake(p, st, Math.max(r, (who && who.wide) || 0) + st.r);
+}
+// a wall, or (y given, on a floor with heights) a cell whose ground nearest p is more than a step from y
+function blocksWalker(ix, iz, p, y) {
+  if (solid(ix, iz)) return true;
+  if (y == null || !G.hk) return false;
+  const x = clamp(p.x, ix * CELL + 0.001, ix * CELL + CELL - 0.001),
+    z = clamp(p.z, iz * CELL + 0.001, iz * CELL + CELL - 0.001);
+  return Math.abs(cellHeight(ix, iz, x, z) - y) > STEP_MAX;
+}
+// out of a blocked cell's square, away from its nearest point
+function pushOutOfCell(p, r, ix, iz) {
+  const nx = clamp(p.x, ix * CELL, ix * CELL + CELL),
+    nz = clamp(p.z, iz * CELL, iz * CELL + CELL),
+    dx = p.x - nx,
+    dz = p.z - nz,
+    d = Math.hypot(dx, dz);
+  if (d >= r) return;
+  if (d > 1e-4) {
+    p.x = nx + (dx / d) * r;
+    p.z = nz + (dz / d) * r;
+  } else escapeCell(p, r, ix, iz);
+}
+// inside a blocked cell: leave by the nearest open side, never by marching on through the wall
+function escapeCell(p, r, ix, iz) {
+  let best = null,
+    bestGap = 1e9;
+  for (const [ax, az] of DIRS4) {
+    if (solid(ix + ax, iz + az)) continue;
+    const gap = ax > 0 ? ix * CELL + CELL - p.x : ax < 0 ? p.x - ix * CELL : az > 0 ? iz * CELL + CELL - p.z : p.z - iz * CELL;
+    if (gap < bestGap) {
+      bestGap = gap;
+      best = [ax, az];
     }
   }
+  if (!best) return;
+  if (best[0]) p.x = best[0] > 0 ? ix * CELL + CELL + r : ix * CELL - r;
+  else p.z = best[1] > 0 ? iz * CELL + CELL + r : iz * CELL - r;
+}
+// out to distance rr from a round trunk at (x, z), at once
+function pushOffRound(p, x, z, rr) {
+  const dx = p.x - x,
+    dz = p.z - z,
+    d = Math.hypot(dx, dz);
+  if (d >= rr || d <= 1e-4) return;
+  p.x = x + (dx / d) * rr;
+  p.z = z + (dz / d) * rr;
+}
+// off a stake to distance rr: a slight overlap at once, a deep one (more than 0.25 m) 5 cm a frame
+function pushOffStake(p, st, rr) {
+  const dx = p.x - st.x,
+    dz = p.z - st.z,
+    d = Math.hypot(dx, dz);
+  if (d >= rr || d <= 1e-4) return;
+  const out = rr - d > 0.25 ? 0.05 : rr - d;
+  p.x += (dx / d) * out;
+  p.z += (dz / d) * out;
 }
 // a clear straight line between two points (walls only)
 function lineOfSight(a, b) {

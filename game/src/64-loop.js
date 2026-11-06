@@ -6,26 +6,22 @@ let last = performance.now(),
   flowT = 0, // until the next flow field
   beatT = 0; // until the next heartbeat (low on ties)
 
+const SLOW_MO = 0.2, // the final blow's slow motion: time runs at this share
+  HIT_STOP = 0.04, // the yo-yo's hit-stop
+  ANIM_STEP = 1 / 12, // the stop-motion tick
+  EDGE_TURN = { edge: 0.09, speed: 2.4 }; // the mouse within this share of the screen's side turns the camera (rad/s at the very edge)
+
 function frame(now) {
   requestAnimationFrame(frame);
-  const raw = now - last;
-  let dt = Math.min(raw / 1000, 0.05);
+  const raw = now - last,
+    realDt = Math.min(raw / 1000, 0.05),
+    dt = slowedDt(realDt);
   last = now;
-  // both count down in unslowed time, so a hit-stop inside slow motion (a bomb, the finale) lasts as long as anywhere else
-  const step = dt;
-  if (slowT > 0) {
-    slowT -= step;
-    dt *= 0.2;
-  }
-  if (hitStop > 0) {
-    hitStop -= step;
-    dt *= 0.04;
-  }
   adaptResolution(raw);
   animAcc += dt;
-  animTick = animAcc >= 1 / 12;
-  if (animTick) animAcc %= 1 / 12;
-  pollPad(Math.min(raw / 1000, 0.05));
+  animTick = animAcc >= ANIM_STEP;
+  if (animTick) animAcc %= ANIM_STEP;
+  pollPad(realDt);
   if (state === 'dead' && deadStill) return; // the death screen holds the last picture: nothing behind it moves
   if (!G || !worldOn || state === 'title' || state === 'build') {
     // the title has its slideshow; the world waits (and is not drawn while the ink covers the title), and a floor being cut
@@ -44,21 +40,34 @@ function frame(now) {
     updateFloaters(dt);
     updatePuffs(dt);
   }
-  if (state === 'play' && !locked && mouse.in && !touchUI) {
-    // the mouse at the screen's edge turns the camera
-    const ex = mouse.x / innerWidth,
-      edge = 0.09;
-    if (ex < edge) cam.yaw += 2.4 * dt * (1 - ex / edge);
-    else if (ex > 1 - edge) cam.yaw -= 2.4 * dt * (1 - (1 - ex) / edge);
-  }
+  if (state === 'play' && !locked && mouse.in && !touchUI) edgeTurn(dt);
   ambience(dt, now / 1000);
   G.lamp.position.set(hero.pos.x, 2.6, hero.pos.z);
   updateCamera(dt);
-  finaleShock(Math.min(raw / 1000, 0.05));
+  finaleShock(realDt);
   camera.updateMatrixWorld();
   updateWarn();
   pyrSort();
   render();
+}
+// both count down in unslowed time, so a hit-stop inside slow motion (a bomb, the finale) lasts as long as anywhere else
+function slowedDt(dt) {
+  const real = dt;
+  if (slowT > 0) {
+    slowT -= real;
+    dt *= SLOW_MO;
+  }
+  if (hitStop > 0) {
+    hitStop -= real;
+    dt *= HIT_STOP;
+  }
+  return dt;
+}
+function edgeTurn(dt) {
+  const ex = mouse.x / innerWidth,
+    { edge, speed } = EDGE_TURN;
+  if (ex < edge) cam.yaw += speed * dt * (1 - ex / edge);
+  else if (ex > 1 - edge) cam.yaw -= speed * dt * (1 - (1 - ex) / edge);
 }
 // a step of play: Red Cap, the flow field, every talker (their sounds come from where they are; the Grump's fill the floor),
 // the floor's features, the Geezer's swirl, the boss bar, the heartbeat
