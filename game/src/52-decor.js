@@ -337,6 +337,15 @@ function framed(tex, w, h, x, y, z, yaw, tilt, label, cut, keep) {
 }
 // Floor 1 is narcissism and madness: the Geezer's portraits everywhere, mirrors, newspapers full of crap
 function decorNarcissism(rng) {
+  const sheets = ['t_column', 't_crapwords', 't_textbox', 't_scribble'];
+  narcPortraits(rng);
+  narcMirrors(rng);
+  narcNewsprint(rng, sheets);
+  narcGlasses(rng);
+  narcPages(rng, sheets);
+}
+// the Geezer's portraits (and a few other faces) framed on the walls
+function narcPortraits(rng) {
   const portraits = [
     ['geezer', ''],
     ['geezer', 'MY BEST SIDE'],
@@ -355,7 +364,9 @@ function decorNarcissism(rng) {
       w = cut ? Math.min(h * SHAPES[k].aspect, 1.8) : h * (k === 't_canvas' ? 1.7 : 1.05);
     still(framed(TEX[k], w, h, x, 1.8 + rng() * 0.5, z, yaw, (rng() - 0.5) * (rng() < 0.4 ? 0.6 : 0.12), lab, cut).g);
   });
-  // standing mirrors: they only ever show the Geezer
+}
+// standing mirrors: they only ever show the Geezer
+function narcMirrors(rng) {
   wallFaces(rng, 0.045, (x, z, yaw, dx, dz) => {
     if (!clearOf(x - dx * 0.3, z - dz * 0.3, 0.7)) return;
     const g = still(new THREE.Group());
@@ -380,8 +391,9 @@ function decorNarcissism(rng) {
     leg.position.y = 0.3;
     g.add(leg);
   });
-  // newspapers on the floor, crumpled pages
-  const sheets = ['t_column', 't_crapwords', 't_textbox', 't_scribble'];
+}
+// newspapers on the floor, crumpled pages
+function narcNewsprint(rng, sheets) {
   let k = 0;
   floorSpots(
     rng,
@@ -406,7 +418,9 @@ function decorNarcissism(rng) {
     },
     0.3
   );
-  // magnifying glasses drifting overhead, a huge one above the Geezer
+}
+// magnifying glasses drifting overhead, a huge one above the Geezer
+function narcGlasses(rng) {
   floorSpots(rng, 4, (x, z) => {
     const m = paper('defuk', 1.6, 0.05, true);
     m.position.set(x, 3.4 + rng() * 1.5, z);
@@ -417,7 +431,9 @@ function decorNarcissism(rng) {
   big.position.set(7.5 * CELL, 5.5, 12.5 * CELL);
   G.group.add(big);
   G.deco.push({ m: big, spin: 0.15, bob: 1, y: 5.5 });
-  // loose pages falling all the time
+}
+// loose pages falling all the time, and painted faces drifting at camera height
+function narcPages(rng, sheets) {
   G.spirits = [];
   floorSpots(rng, 9, (x, z) => {
     const m = paper(['dd_scream', 'dd_grin', 'dd_eyes'][(rng() * 3) | 0], 1.1, 0.04);

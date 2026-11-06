@@ -109,19 +109,7 @@ function rimify(e) {
 // part moves it (rage, stagger, knockback), keeps it off the others, walls, clutter and cages, and sets it on the ground
 function updEnemy(e, dt) {
   if (e.dead) return;
-  if (e.caged) {
-    faceCam(e, dt);
-    const c = G.cages.find(q => q.e === e);
-    if (c && animTick) {
-      shake(e.tilt, c.rattle > 0 ? 0.12 : 0.02);
-      if (c.pole) e.tilt.position.z = Math.abs(e.tilt.position.z) * 0.5;
-    }
-    if (e.fly != null) e.tilt.position.y = e.fly;
-    e.gy = heightAt(e.pos.x, e.pos.z);
-    e.pos.y = e.gy;
-    e.root.position.copy(e.pos);
-    return;
-  }
+  if (e.caged) return updCaged(e, dt);
   const T = TALKERS[e.type];
   if (e.dying) {
     ((T && T.dying) || topple)(e, dt);
@@ -129,34 +117,7 @@ function updEnemy(e, dt) {
   }
   e.flash = Math.max(0, (e.flash || 0) - dt);
   for (const m of e.mats) m.color.setHex(e.flash > 0 ? 0xff5050 : 0xffffff);
-  if (e.dazedT > 0) {
-    // reeling (a trap's bite, a totem's shout): no attacks, wobbling on the spot, waiting for the finishing blow
-    e.dazedT -= dt;
-    faceCam(e, dt);
-    if (animTick) {
-      e.tilt.rotation.z = Math.sin(performance.now() / 110) * 0.16;
-      shake(e.tilt, 0.05);
-    }
-    if (Math.random() < dt * 3) floatWord(pick(['*', '@', '?']), e.pos.clone().setY(hitHeight(e) + 1.2 + rand(0, 0.6)), HEX.bile, 0.5);
-    if (e.waves && e.waves.length) {
-      e.waves.forEach(w => G.group.remove(w.m));
-      e.waves.length = 0;
-    }
-    if (T && T.dazed) T.dazed(e);
-    if (e.fade) {
-      e.hidden = false;
-      e.alpha = Math.min(1, (e.alpha || 0) + dt * 5);
-      e.fade.forEach(m => (m.opacity = e.alpha));
-      e.shadow.visible = true;
-    }
-    if (e.fly != null) e.tilt.position.y = e.fly;
-    if (e.dazedT <= 0) {
-      e.tilt.rotation.z = 0;
-      e.tilt.position.set(0, e.fly != null ? e.fly : 0, 0);
-    }
-    e.root.position.copy(e.pos);
-    return;
-  }
+  if (e.dazedT > 0) return updDazed(e, T, dt);
   e.stagger = Math.max(0, e.stagger - dt);
   const dx = hero.pos.x - e.pos.x,
     dz = hero.pos.z - e.pos.z,
@@ -176,42 +137,7 @@ function updEnemy(e, dt) {
   e.pos.x += (mv.x * mv.sp + e.knock.x) * dt;
   e.pos.z += (mv.z * mv.sp + e.knock.y) * dt;
   e.knock.multiplyScalar(Math.exp(-8 * dt));
-  if (!e.still) {
-    for (const o of G.enemies) {
-      if (o === e || o.dead || o.still) continue;
-      const ox = e.pos.x - o.pos.x,
-        oz = e.pos.z - o.pos.z,
-        od = Math.hypot(ox, oz),
-        rr = e.r + o.r;
-      if (od < rr && od > 1e-3) {
-        e.pos.x += (ox / od) * (rr - od) * 0.5;
-        e.pos.z += (oz / od) * (rr - od) * 0.5;
-      }
-    }
-    const ey = e.fly != null ? undefined : heightAt(e.pos.x, e.pos.z);
-    collide(e.pos, e.r, ey, e);
-    collide(e.pos, e.r, ey, e);
-    if (e.fly == null)
-      for (const c of G.clutter) {
-        const ox = e.pos.x - c.x,
-          oz = e.pos.z - c.z,
-          od = Math.hypot(ox, oz);
-        if (od < c.r + e.r && od > 1e-3) {
-          e.pos.x = c.x + (ox / od) * (c.r + e.r);
-          e.pos.z = c.z + (oz / od) * (c.r + e.r);
-        }
-      }
-    for (const c of G.cages)
-      if (!c.broken && c.e !== e) {
-        const ox = e.pos.x - c.x,
-          oz = e.pos.z - c.z,
-          od = Math.hypot(ox, oz);
-        if (od < 1.3 + e.r && od > 1e-3) {
-          e.pos.x = c.x + (ox / od) * (1.3 + e.r);
-          e.pos.z = c.z + (oz / od) * (1.3 + e.r);
-        }
-      }
-  }
+  if (!e.still) keepClear(e);
   e.gy = heightAt(e.pos.x, e.pos.z);
   e.pos.y = e.gy;
   e.root.position.copy(e.pos);
@@ -221,6 +147,83 @@ function updEnemy(e, dt) {
       e.tilt.position.x = e.tilt.position.z = 0;
     }
   }
+}
+// in a cage: faces Red Cap and rattles (harder while the cage is being hit), standing on the ground
+function updCaged(e, dt) {
+  faceCam(e, dt);
+  const c = G.cages.find(q => q.e === e);
+  if (c && animTick) {
+    shake(e.tilt, c.rattle > 0 ? 0.12 : 0.02);
+    if (c.pole) e.tilt.position.z = Math.abs(e.tilt.position.z) * 0.5;
+  }
+  if (e.fly != null) e.tilt.position.y = e.fly;
+  e.gy = heightAt(e.pos.x, e.pos.z);
+  e.pos.y = e.gy;
+  e.root.position.copy(e.pos);
+}
+// reeling (a trap's bite, a totem's shout): no attacks, wobbling on the spot, waiting for the finishing blow
+function updDazed(e, T, dt) {
+  e.dazedT -= dt;
+  faceCam(e, dt);
+  if (animTick) {
+    e.tilt.rotation.z = Math.sin(performance.now() / 110) * 0.16;
+    shake(e.tilt, 0.05);
+  }
+  if (Math.random() < dt * 3) floatWord(pick(['*', '@', '?']), e.pos.clone().setY(hitHeight(e) + 1.2 + rand(0, 0.6)), HEX.bile, 0.5);
+  if (e.waves && e.waves.length) {
+    e.waves.forEach(w => G.group.remove(w.m));
+    e.waves.length = 0;
+  }
+  if (T && T.dazed) T.dazed(e);
+  if (e.fade) {
+    e.hidden = false;
+    e.alpha = Math.min(1, (e.alpha || 0) + dt * 5);
+    e.fade.forEach(m => (m.opacity = e.alpha));
+    e.shadow.visible = true;
+  }
+  if (e.fly != null) e.tilt.position.y = e.fly;
+  if (e.dazedT <= 0) {
+    e.tilt.rotation.z = 0;
+    e.tilt.position.set(0, e.fly != null ? e.fly : 0, 0);
+  }
+  e.root.position.copy(e.pos);
+}
+// pushed apart from the other talkers, then off walls, clutter and cages (a flier ignores the ground and the clutter)
+function keepClear(e) {
+  for (const o of G.enemies) {
+    if (o === e || o.dead || o.still) continue;
+    const ox = e.pos.x - o.pos.x,
+      oz = e.pos.z - o.pos.z,
+      od = Math.hypot(ox, oz),
+      rr = e.r + o.r;
+    if (od < rr && od > 1e-3) {
+      e.pos.x += (ox / od) * (rr - od) * 0.5;
+      e.pos.z += (oz / od) * (rr - od) * 0.5;
+    }
+  }
+  const ey = e.fly != null ? undefined : heightAt(e.pos.x, e.pos.z);
+  collide(e.pos, e.r, ey, e);
+  collide(e.pos, e.r, ey, e);
+  if (e.fly == null)
+    for (const c of G.clutter) {
+      const ox = e.pos.x - c.x,
+        oz = e.pos.z - c.z,
+        od = Math.hypot(ox, oz);
+      if (od < c.r + e.r && od > 1e-3) {
+        e.pos.x = c.x + (ox / od) * (c.r + e.r);
+        e.pos.z = c.z + (oz / od) * (c.r + e.r);
+      }
+    }
+  for (const c of G.cages)
+    if (!c.broken && c.e !== e) {
+      const ox = e.pos.x - c.x,
+        oz = e.pos.z - c.z,
+        od = Math.hypot(ox, oz);
+      if (od < 1.3 + e.r && od > 1e-3) {
+        e.pos.x = c.x + (ox / od) * (1.3 + e.r);
+        e.pos.z = c.z + (oz / od) * (1.3 + e.r);
+      }
+    }
 }
 // the default death: the figure topples backwards and sinks (a Jester's mask flies off); then it is gone
 function topple(e, dt) {
