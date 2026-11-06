@@ -2,7 +2,7 @@
 // off see-through things, shaking on big blows and dipping when he is hurt.
 // how quickly it keeps up (ease rates, per second): its height on ramps and raised ground, the shoulder offset near a wall, the
 // arm drawing in against a wall, and back out once the way has stayed clear for CAM_EASE.hold s
-const CAM_EASE = { height: 20, shoulder: 18, armIn: 22, armOut: 10, hold: 0.2 },
+const CAM_EASE = { height: 20, shoulder: 18, armIn: 22, armOut: 10, hold: 0.28 },
   CAM_TURN = 3.2, // rad/s: turning with the keys, a stick at full tilt, or the mouse at the screen's edge
   CAM_TILT = 2.0; // rad/s: a stick looking up or down
 const camPivot = new THREE.Vector3(), // reused vectors: no garbage every frame
@@ -77,10 +77,11 @@ function camReach(pivot, arm) {
     }
   }
   // nor inside or flush against a pillar, prop or floating thing: it may stand behind one (which then fades), never in one
+  // (a floor with camThruFloaters: its drifting things don't push it in, they only fade)
   seeShapes();
   {
     let st = hit;
-    while (st > 0.3 && seeInside(camProbe.copy(pivot).addScaledVector(arm, st), SEE_PAD)) st -= 0.08;
+    while (st > 0.3 && seeInside(camProbe.copy(pivot).addScaledVector(arm, st), SEE_PAD, G.F.camThruFloaters)) st -= 0.08;
     if (st > 0.3) hit = st; // nowhere clear along the arm (he is pressed against one): stay, and it fades
   }
   return hit;

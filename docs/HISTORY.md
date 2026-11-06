@@ -342,3 +342,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Docs synced to this build: `CLAUDE.md` condensed (half the size; the file map and the not-verified list moved to
   `docs/ARCHITECTURE.md`), which now also covers the state tables, the shout rings' inside and the ending's clean screen.
 - Title label `v1.39`.
+
+## 1.40 (6 Nov 2026)
+- After a wall the camera waits 0.28 s of clear way before pulling back out (`CAM_EASE.hold`, was 0.2).
+- Floor one: the drifting faces, glasses and boxes no longer push the camera in and out as they float across its arm; they
+  only fade (`camThruFloaters` in 04-floors, `seeInside`'s `skipDyn`).
