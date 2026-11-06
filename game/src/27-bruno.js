@@ -230,7 +230,7 @@ function makeFireRing() {
 TALKERS.Z = {
   make: makeBruno,
   update: updateBruno,
-  bar: e => [e.st === 'flareWind' ? 'Flarin’ — back off' : '', false],
+  bar: e => [e.st === 'flareWind' ? 'Flarin’' : '', false],
   rim: { col: 0xffb35a },
   torn: e => e.fireRing && G.group.remove(e.fireRing),
   // the fire goes out with him; he leaves a plain heart

@@ -371,3 +371,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Red Cap's first words on a new game (not on a restarted floor), in marker font over his head, drifting up slowly: "How did
   I get here?" (`OPENING` in 60-flow; `floatWord`'s new `rise`).
 - Title text: "A paper slasher in three floors. Silence the voices." (was "…, then awake.").
+- Health bars: the Geezer's stare warning line is gone (WINDED stays), Bruno's reads "Flarin’" (was "Flarin’ — back
+  off"), the Smoker's has no line (was "Hidin’ in his smoke" / "Every hit shakes out pebbles").
