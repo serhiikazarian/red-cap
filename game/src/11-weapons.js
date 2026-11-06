@@ -97,17 +97,8 @@ function yoyo() {
   const a = aimInfo(),
     third = yoyoNextThird(),
     base = third ? 4.5 : 3.8,
-    reach = a.target ? yoyoReachFor(a.target, base) : null;
-  let fx = a.fx,
-    fz = a.fz;
-  if (reach !== null) {
-    // in reach (stretched or not): the throw turns to the target
-    const dx = a.target.pos.x - hero.pos.x,
-      dz = a.target.pos.z - hero.pos.z,
-      d = Math.hypot(dx, dz) || 1;
-    fx = dx / d;
-    fz = dz / d;
-  }
+    reach = a.target ? yoyoReachFor(a.target, base) : null,
+    [fx, fz] = reach !== null ? towards(a.target.pos) : [a.fx, a.fz]; // in reach (stretched or not): the throw turns to the target
   G.yySide = -G.yySide;
   const now = playT;
   hero.combo = third ? 3 : now - (hero.lastThrow || -9) < 1.1 ? ((hero.combo || 0) % 3) + 1 : 1;
@@ -128,15 +119,25 @@ function yoyo() {
   } else yoyoMesh.scale.setScalar(1);
   hero.flip = fx * Math.cos(cam.yaw) - fz * Math.sin(cam.yaw) >= 0 ? 1 : -1;
   yoyoMesh.visible = stringMesh.visible = true;
-  // point blank: hit at once
+  yoyoPointBlank(fx, fz);
+}
+// the unit direction on the ground from Red Cap to p
+function towards(p) {
+  const dx = p.x - hero.pos.x,
+    dz = p.z - hero.pos.z,
+    d = Math.hypot(dx, dz) || 1;
+  return [dx / d, dz / d];
+}
+// a talker point blank (and not behind cover) is hit at once
+function yoyoPointBlank(fx, fz) {
+  const y = hero.yy;
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.away) continue;
     const d = Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z);
-    if (d < e.r + 0.9 && (TALKERS[e.type].noCover || lineOfSight(hero.pos, e.pos))) {
-      hero.yy.hit.add(e);
-      damage(e, YOYO_DMG * hero.yy.power * hero.yy.mixP, fx * hero.yy.power, fz * hero.yy.power, false, true);
-      yoyoStop(hero.yy);
-    }
+    if (d >= e.r + 0.9 || !(TALKERS[e.type].noCover || lineOfSight(hero.pos, e.pos))) continue;
+    y.hit.add(e);
+    damage(e, YOYO_DMG * y.power * y.mixP, fx * y.power, fz * y.power, false, true);
+    yoyoStop(y);
   }
 }
 function updateYoyo(dt) {

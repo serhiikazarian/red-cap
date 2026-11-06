@@ -154,51 +154,36 @@ function soak() {
 }
 // aim: the camera's forward on the ground, with a soft lock on the talker nearest the reticle (the Priest's ghosts one by one;
 // with pyr, the slingshot's: floor two's pyramids too, a talker first)
+const AIM = { cone: 0.42, near: 0.5, far: 26, partFar: 22, perMetre: 0.012 }; // rad off the aim; m; score per metre away
 function aimInfo(pyr) {
   const fx = -Math.sin(cam.yaw),
     fz = -Math.cos(cam.yaw);
   let best = null,
-    bestS = 1e9;
+    bestScore = 1e9;
+  // one candidate standing at (x, z), seen at `to`: the lowest score wins (in front first, then close; bias shifts it).
+  // False when it is out of range.
+  const offer = (who, x, z, to, far, bias) => {
+    const dx = x - hero.pos.x,
+      dz = z - hero.pos.z,
+      d = Math.hypot(dx, dz);
+    if (d > far || d < AIM.near) return false;
+    const off = Math.acos(clamp((dx * fx + dz * fz) / d, -1, 1)),
+      score = off + d * AIM.perMetre + bias;
+    if (off < AIM.cone && score < bestScore && lineOfSight(hero.pos, to)) {
+      bestScore = score;
+      best = who;
+    }
+    return true;
+  };
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.dormant || e.hidden || e.waiting || e.part === 'whole') continue;
-    const dx = e.pos.x - hero.pos.x,
-      dz = e.pos.z - hero.pos.z,
-      d = Math.hypot(dx, dz);
-    if (d > 26 || d < 0.5) continue;
-    const a = Math.acos(clamp((dx * fx + dz * fz) / d, -1, 1));
-    const sc = a + d * 0.012; // in front first, then close
-    if (a < 0.42 && sc < bestS && lineOfSight(hero.pos, e.pos)) {
-      bestS = sc;
-      best = e;
-    }
+    if (!offer(e, e.pos.x, e.pos.z, e.pos, AIM.far, 0)) continue;
     const T = TALKERS[e.type];
-    if (T.aimParts)
-      T.aimParts(e, (at, tgt) => {
-        const gx = at.x - hero.pos.x,
-          gz = at.z - hero.pos.z,
-          gd = Math.hypot(gx, gz);
-        if (gd > 22 || gd < 0.5) return;
-        const ga = Math.acos(clamp((gx * fx + gz * fz) / gd, -1, 1)),
-          gs = ga + gd * 0.012 - 0.03;
-        if (ga < 0.42 && gs < bestS && lineOfSight(hero.pos, at)) {
-          bestS = gs;
-          best = tgt;
-        }
-      });
+    if (T.aimParts) T.aimParts(e, (at, tgt) => offer(tgt, at.x, at.z, at, AIM.partFar, -0.03)); // a part a little before its owner
   }
   for (const k in (pyr && G.pyr) || {}) {
     const q = G.pyr[k];
-    if (q.hp <= 0 || !q.tgt) continue;
-    const dx = q.x - hero.pos.x,
-      dz = q.z - hero.pos.z,
-      d = Math.hypot(dx, dz);
-    if (d > 26 || d < 0.5) continue;
-    const a = Math.acos(clamp((dx * fx + dz * fz) / d, -1, 1)),
-      sc = a + d * 0.012 + 0.08;
-    if (a < 0.42 && sc < bestS && lineOfSight(hero.pos, q.tgt.pos)) {
-      bestS = sc;
-      best = q.tgt;
-    }
+    if (q.hp > 0 && q.tgt) offer(q.tgt, q.x, q.z, q.tgt.pos, AIM.far, 0.08); // a pyramid after a talker
   }
   return { fx, fz, target: best };
 }

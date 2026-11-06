@@ -65,46 +65,56 @@ function updateBystanders(dt) {
     const dx = hero.pos.x - n.pos.x,
       dz = hero.pos.z - n.pos.z,
       d = Math.hypot(dx, dz);
-    const target = n.offended ? Math.atan2(dx, dz) + Math.PI : d < 11 ? Math.atan2(dx, dz) : n.rest;
-    n.yaw += angDiff(n.yaw, target) * (1 - Math.exp(-2.2 * dt));
-    n.lean = lerp(n.lean, d < 2.6 && !n.offended ? 0.22 : n.offended ? -0.08 : 0, 1 - Math.exp(-6 * dt));
-    if (animTick) {
-      n.face.rotation.y = n.yaw + Math.sin(now * 0.8 + n.seed) * 0.06;
-      n.tilt.rotation.x = -n.lean;
-      n.tilt.rotation.z = Math.sin(now * 1.3 + n.seed) * 0.03;
-    }
-    // onlookers step aside instead of pinning Red Cap against a wall
-    if (!n.home) n.home = n.pos.clone();
-    if (d < 1.3 && d > 1e-3) {
-      n.pos.x -= (dx / d) * (1.3 - d) * 0.6;
-      n.pos.z -= (dz / d) * (1.3 - d) * 0.6;
-      collide(n.pos, 0.3, n.pos.y);
-    } else {
-      n.pos.x = lerp(n.pos.x, n.home.x, 1 - Math.exp(-1.5 * dt));
-      n.pos.z = lerp(n.pos.z, n.home.z, 1 - Math.exp(-1.5 * dt));
-    }
+    bystanderFaces(n, dx, dz, d, dt, now);
+    bystanderMakesRoom(n, dx, dz, d, dt);
     if (d < 1.9 && !n.gave && state === 'play' && hero.ammo < hero.maxAmmo) {
       n.gave = true;
       npcVoice(n);
       giveAmmo(n.gift, n.pos);
     }
     n.pos.y = heightAt(n.pos.x, n.pos.z);
-    if (n.kind === 'npc_spike' && d < 6 && animTick) n.tilt.rotation.z = rand(-0.14, 0.14); // can't keep still near Red Cap
-    if (n.kind === 'npc_hair') {
-      n.smoke -= dt;
-      if (n.smoke <= 0) {
-        n.smoke = 0.45; // Long Hair keeps exhaling smoke
-        smokePuff(new THREE.Vector3(n.pos.x + Math.sin(n.yaw) * 0.35, n.pos.y + n.h * 0.7, n.pos.z + Math.cos(n.yaw) * 0.35), 0.35, 2.2, 0.45);
-      }
-    }
-    n.t -= dt;
-    if (n.t <= 0 && state === 'play') {
-      n.t = rand(12, 24);
-      if (d < 9 && !n.offended) npcVoice(n, 0.6);
-    }
+    bystanderHabits(n, d, dt);
   }
   // how long Red Cap has been on his last tie (hitNpc)
   G.lastTieT = state === 'play' && hero.hp === 1 ? G.lastTieT + dt : state === 'play' ? 0 : G.lastTieT;
+}
+// turns to watch Red Cap within 11 m (away, once offended) and leans in when he is close
+function bystanderFaces(n, dx, dz, d, dt, now) {
+  const target = n.offended ? Math.atan2(dx, dz) + Math.PI : d < 11 ? Math.atan2(dx, dz) : n.rest;
+  n.yaw += angDiff(n.yaw, target) * (1 - Math.exp(-2.2 * dt));
+  n.lean = lerp(n.lean, d < 2.6 && !n.offended ? 0.22 : n.offended ? -0.08 : 0, 1 - Math.exp(-6 * dt));
+  if (!animTick) return;
+  n.face.rotation.y = n.yaw + Math.sin(now * 0.8 + n.seed) * 0.06;
+  n.tilt.rotation.x = -n.lean;
+  n.tilt.rotation.z = Math.sin(now * 1.3 + n.seed) * 0.03;
+}
+// steps aside instead of pinning Red Cap against a wall, and drifts back home after
+function bystanderMakesRoom(n, dx, dz, d, dt) {
+  if (!n.home) n.home = n.pos.clone();
+  if (d < 1.3 && d > 1e-3) {
+    n.pos.x -= (dx / d) * (1.3 - d) * 0.6;
+    n.pos.z -= (dz / d) * (1.3 - d) * 0.6;
+    collide(n.pos, 0.3, n.pos.y);
+  } else {
+    n.pos.x = lerp(n.pos.x, n.home.x, 1 - Math.exp(-1.5 * dt));
+    n.pos.z = lerp(n.pos.z, n.home.z, 1 - Math.exp(-1.5 * dt));
+  }
+}
+// Spike fidgets near Red Cap, Long Hair keeps exhaling smoke, and each says something now and then
+function bystanderHabits(n, d, dt) {
+  if (n.kind === 'npc_spike' && d < 6 && animTick) n.tilt.rotation.z = rand(-0.14, 0.14);
+  if (n.kind === 'npc_hair') {
+    n.smoke -= dt;
+    if (n.smoke <= 0) {
+      n.smoke = 0.45;
+      smokePuff(new THREE.Vector3(n.pos.x + Math.sin(n.yaw) * 0.35, n.pos.y + n.h * 0.7, n.pos.z + Math.cos(n.yaw) * 0.35), 0.35, 2.2, 0.45);
+    }
+  }
+  n.t -= dt;
+  if (n.t <= 0 && state === 'play') {
+    n.t = rand(12, 24);
+    if (d < 9 && !n.offended) npcVoice(n, 0.6);
+  }
 }
 // each onlooker has a voice: the hat hums, the spiky one giggles, the long-haired one exhales and coughs
 function npcVoice(n, vol = 1) {
