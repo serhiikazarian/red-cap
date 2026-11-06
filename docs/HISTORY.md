@@ -392,7 +392,13 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   sight checks, a talker's height, the boss bar behind walls, the opening line, the build's line breaks, not-verified list).
 - Title label `v1.41`.
 
-## 1.42 (6 Nov 2026), no change to the game
+## 1.42 (6 Nov 2026)
 - `CLAUDE.md`: Serj's own edit restored (he/him; "Be interactive and report your progress."), which shipping 1.41 had
   overwritten with the work branch's older copy.
+- Phones play on their side only: held upright, a sheet covers the screen and asks to turn it ("Turn your phone sideways",
+  `#turn` in style.css and index.html), and play pauses if turned upright mid-fight (62-input). No such rule was found in
+  the history since the clean base, so this is new rather than repaired.
+- Short windows (a phone on its side, a low desktop window: under 520 px tall): the catalogue and win sheets go compact
+  (smaller heading, cards and padding) so whole rows fit; they used to run cards over the footer and arrows (3 cut off at
+  740 x 360). Heights use `dvh` (the browser's bars left out); the card grid scrolls only if a row still cannot fit.
 - Title label `v1.42`.

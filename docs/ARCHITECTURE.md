@@ -124,6 +124,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   (`sprayFollow`). The Jester's laugh and the Grump are never distance-faded.
 
 ## Loading and flow (60-flow, 61-menus, 64-loop)
+- Phones (`touchUI`, pointer coarse) play on their side: upright, `#turn` covers everything and play pauses. Short windows
+  (under 520 px tall) get compact paged sheets (catalogue, win); `catLayout` fits whole rows of cards per page.
 - Menu buttons and the exit door enter a floor in steps: `state` `'leave'` (the ink veil, 0.36 s) → `'build'` (the paper scrap
   while the floor is built: planned 1.4 s for floor one, 0.7 s for two, 3 s for three) → `'intro'`. Plain `startGame()` /
   `enterFloor(i)` still build at once.
