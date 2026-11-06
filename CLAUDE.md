@@ -22,7 +22,7 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
 - Change the file that owns the behaviour, and tidy what you touch (names, dead lines, stale comments, long functions
   into named steps: `node tools/sizes.js`; none is 68 lines or more: keep it so). Comments say how things work now. Each
   file opens with its tuning numbers and often a comment with its rules: read that first.
-- `tools/` scripts, one word out (`OK`, `SAME`, `SAVED`, `SHIPPED`); a sequence needed twice becomes one. Cut long output;
+- `tools/` scripts, one word out (`OK`, `SAME`, `SAVED`, `SHIPPED`, `PRERELEASED`); a sequence needed twice becomes one. Cut long output;
   long runs in the background (Monitor), never poll. A probe: `tests/shot.js` with one expression (in a file via
   `"$(cat f)"` when it holds `$`). One screenshot only for a visual change.
 
@@ -56,9 +56,9 @@ Version: `git log -1 --format=%s --grep='^[0-9]*\.[0-9][0-9]$'`.
    Never merge, squash or force-push by hand. Pages updates in ~3 min; CI tags `vN.NN`.
 3. Undo: `git revert <commit>`, ship anew. An older version: `git fetch --tags`, `git checkout vN.NN -- game`, check, ship
    anew. Never rewrite `main`'s history.
-- To try a version first (when Serj asks): label and history as for a ship, `check.sh`, then one commit named N.NN on top of
-  `origin/prerelease` holding the current files (`git commit-tree`, as `ship.sh` does for `main`), pushed to `prerelease`;
-  the work branch takes it as a second parent. Never force-push it. Serj downloads it from the run's Summary page.
+- To try a version first (when Serj asks): label and history as for a ship, then `tools/prerelease.sh N.NN "<attribution
+  lines>"` → `PRERELEASED N.NN` (checks, one commit on top of `prerelease`, and of `main` when it lacks it; the same
+  version may go again). CI builds it; Serj downloads it from the run's Summary page (Artifacts). Never force-push it.
 - Between versions (the stop hook asks): `tools/wip.sh "message" "<attribution lines>"` → `SAVED` (work branch only).
 
 ## Rules that bite
