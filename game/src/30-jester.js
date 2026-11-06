@@ -98,7 +98,7 @@ function jesterWaits(e, dt) {
     if (G.F.lowHeart && hero.hp < 3) spawnPickup(cellMid(G.F.lowHeart[0]), cellMid(G.F.lowHeart[1]));
     e.t = 1.4;
     SFX.laugh();
-    toast('Immune when masked. Ring a totem nearby, or knock a fallen face back.');
+    toast('Immune when masked. Ring a totem.');
     floatWord('WELCOME', e.pos.clone().setY(4.4), HEX.paper, 1.1);
   }
 }
