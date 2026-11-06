@@ -3,7 +3,8 @@
 # First set the title label (#version in game/index.html: vN.NN) and append "## N.NN (date)" to docs/HISTORY.md.
 # Runs tools/check.sh, then makes ONE commit with subject N.NN on top of origin/main holding exactly the current files (nothing is
 # merged, so nothing can conflict) and pushes it to main. A work branch then records the version as a second parent with the same
-# files, so it goes on from main: no merge, no force push, ever. The optional second argument is added under the subject (attribution lines).
+# files, so it goes on from main: no merge, no force push, ever. The optional second argument goes under the subject
+# (attribution lines).
 cd "$(dirname "$0")/.."
 v=$1
 fail() { echo "FAIL $1"; exit 1; }
