@@ -146,7 +146,9 @@ function newFloor(F, w) {
     keep: [], // story ground set dressing keeps off
     pyr: null, // floor two's pyramids by cell, when the floor has them
     props: null, // floor three's cover blocks by cell, when the floor has them
-    texs: [] // textures the floor makes that no mesh holds yet (the Grump's walls): warmUp uploads them
+    texs: [], // textures the floor makes that no mesh holds yet (the Grump's walls): warmUp uploads them
+    doorT: 0, // until the exit door is next checked (openDoor, every 0.5 s of play)
+    npcHearts: 0 // hearts shaken out of onlookers on this floor (at most two: hitNpc)
   };
   buildHeights(F);
   scene.add(G.group);
@@ -201,11 +203,11 @@ function wallMaterials(F) {
 function buildCell(B, x, z) {
   const { F, box, rng } = B,
     c = G.map[z][x],
-    cx = x * CELL + CELL / 2,
-    cz = z * CELL + CELL / 2,
+    cx = cellMid(x),
+    cz = cellMid(z),
     nBefore = G.group.children.length;
   const mv = B.movedFrom[x + ',' + z];
-  if (mv) buildProp(F, mv[0] * CELL + CELL / 2, mv[1] * CELL + CELL / 2, rng);
+  if (mv) buildProp(F, cellMid(mv[0]), cellMid(mv[1]), rng);
   if (c === '#') {
     if (F.deco === 'blocks') blockWall(B, x, z);
     else tallWall(B, x, z);
@@ -232,8 +234,8 @@ function buildCell(B, x, z) {
 }
 // floor three's wall: 2-3 painted blocks stacked, the upper ones a little off and turned
 function blockWall({ w, box, rng, mats }, x, z) {
-  const cx = x * CELL + CELL / 2,
-    cz = z * CELL + CELL / 2;
+  const cx = cellMid(x),
+    cz = cellMid(z);
   let y = 0;
   const n = 2 + ((rng() * 2) | 0);
   for (let k = 0; k < n; k++) {
@@ -250,8 +252,8 @@ function blockWall({ w, box, rng, mats }, x, z) {
 }
 // one tall box (taller next to raised ground); floor two's gets a cornice on each open side; now and then a block floats above
 function tallWall({ F, w, box, rng, mats, cornice, webFaces }, x, z) {
-  const cx = x * CELL + CELL / 2,
-    cz = z * CELL + CELL / 2;
+  const cx = cellMid(x),
+    cz = cellMid(z);
   const h = F.wallH[0] + rng() * (F.wallH[1] - F.wallH[0]) + (nearRaised(x, z) ? LIFT : 0),
     m = new THREE.Mesh(box, mats[(rng() * mats.length) | 0]);
   m.scale.set(CELL, h, CELL);

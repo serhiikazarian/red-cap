@@ -50,8 +50,8 @@ function placeBystanders(rng, count) {
   for (let k = 0; k < count && spots.length; ) {
     const [x, z, [wx, wz]] = spots.splice((rng() * spots.length) | 0, 1)[0];
     const side = (rng() - 0.5) * 1.4;
-    const cx = x * CELL + CELL / 2 + wx * 1.05 + wz * side,
-      cz = z * CELL + CELL / 2 + wz * 1.05 + wx * side;
+    const cx = cellMid(x) + wx * 1.05 + wz * side,
+      cz = cellMid(z) + wz * 1.05 + wx * side;
     if (!clearOf(cx, cz, 0.5)) continue;
     makeBystander(kinds[k % 3], cx, cz, Math.atan2(-wx, -wz));
     k++;
@@ -126,9 +126,9 @@ function hitNpc(p, rad) {
   if (!G || !G.npcs) return false;
   for (const n of G.npcs) {
     if (Math.hypot(n.pos.x - p.x, n.pos.z - p.z) > 0.45 + rad || p.y < n.pos.y - 0.1 || p.y > n.pos.y + n.h + 0.2) continue;
-    if (hero.hp === 1 && G.lastTieT > 16 && (G.npcHearts || 0) < 2) {
+    if (hero.hp === 1 && G.lastTieT > 16 && G.npcHearts < 2) {
       // on the last tie for a while: the heart is shaken out of him
-      G.npcHearts = (G.npcHearts || 0) + 1;
+      G.npcHearts++;
       G.lastTieT = 0;
       heartBetween(n.pos, hero.pos);
       burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [COL.tie, COL.paper], 10, 3, 0.14);

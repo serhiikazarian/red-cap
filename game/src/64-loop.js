@@ -77,7 +77,7 @@ function playStep(dt) {
   AU.at = null;
   sprayFollow();
   heroSafety();
-  G.doorT = (G.doorT || 0) - dt;
+  G.doorT -= dt;
   if (G.doorT <= 0) {
     G.doorT = 0.5;
     openDoor();
