@@ -468,6 +468,7 @@ function updateFinalMask(dt, now) {
     G.group.remove(f.m);
     G.group.remove(f.glow);
     G.group.remove(f.ring);
+    quietScreen();
     const fl = $('#flash');
     fl.classList.add('on');
     SFX.unmask();
