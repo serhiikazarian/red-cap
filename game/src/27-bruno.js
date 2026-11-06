@@ -152,6 +152,7 @@ function brunoInsults(e, ux, uz) {
   e.t = rand(2.2, 3.2);
   e.tilt.position.set(0, 0, 0);
   const mouth = e.mouth.clone().applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
+  SFX.bark();
   for (const off of [-0.28, 0, 0.28]) {
     const a = Math.atan2(ux, uz) + off;
     insultShot(mouth, new THREE.Vector3(Math.sin(a), 0, Math.cos(a))).parry = true; // Red Cap can strike it down (hitWord)

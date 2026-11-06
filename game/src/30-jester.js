@@ -4,7 +4,8 @@
 const JESTER_DEEP = 0.3, // his laugh deepens once he is down to this share of his health
   JESTER_FACES = [3, 4, 5], // masks per drop as the fight goes on
   SLAB_MAX = 10, // masks on the floor at once, falling or lying
-  FIN_LEN = 1.6; // seconds of the finale's shock ring
+  FIN_LEN = 1.6, // seconds of the finale's shock ring
+  JESTER_REMIND = 35; // s without a blow that hurts him before UNMASKED / Attack him! is called again (always the first time)
 const FACE_RING_GEO = share(new THREE.RingGeometry(1.1, 1.4, 28)); // a falling face's mark
 const slabs = [];
 let slabBoomT = 0;
@@ -55,6 +56,8 @@ function setMasked(e, on) {
   if (e.masked === on) return;
   e.masked = on;
   if (on) return; // the mask goes back on without a word
+  e.callOut = !e.calledAt || playT - Math.max(e.calledAt, e.hurtAt || 0) > JESTER_REMIND; /* the bar flashes UNMASKED */
+  if (e.callOut) e.calledAt = playT;
   SFX.unmask();
   jesterLaugh(e);
   floatWord('HA HA HA', e.pos.clone().setY(4.4), HEX.bile, 1.1);
@@ -583,7 +586,7 @@ TALKERS.M = {
   make: makeJester,
   update: updateJester,
   totemProof: true,
-  bar: e => (e.masked ? ['Masked — immune', false] : ['', false, 'UNMASKED']),
+  bar: e => (e.masked ? ['Masked — immune', false] : ['', false, e.callOut ? 'UNMASKED' : null]),
   struck: jesterBlow,
   stagger: 0.12,
   knock: 2,
@@ -607,6 +610,7 @@ function jesterBlow(e, n, weapon, force) {
     floatWord(pick(['HA!', 'TINK', 'NOPE', 'HA HA']), e.pos.clone().setY(4.1 + rand(0, 0.4)), HEX.paper, 0.9);
     return null;
   }
+  if (weapon) e.hurtAt = playT; /* a blow that hurts him: UNMASKED waits JESTER_REMIND from here */
   if (weapon || e.hp - n > 0) return n;
   e.hp = Math.min(e.hp, 0.5);
   e.dazedT = 6;

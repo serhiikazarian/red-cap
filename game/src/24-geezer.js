@@ -1,4 +1,5 @@
 // The Geezer (Y): floor one's boss. Stares people mad, mostly himself, in mirrors.
+const GEEZER_WARN_AGAIN = 2; // stares in a row that catch Red Cap before GAZING / Take cover! is called again (always on the first)
 
 // his stare: walls and pillars hide Red Cap from it; an easel is too small to (though he still blinks round one, to spook)
 const geezerSees = e => clearOfCover(e.pos, hero.pos, 0.3, false);
@@ -56,6 +57,15 @@ function updateGeezer(e, dt, dist, ux, uz, mv) {
   if (step) step(e, dt, dist, ux, uz, mv, now, p2, seenK);
   if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
 }
+// a stare begins: GAZING / Take cover! on his first, and again only once two stares in a row have caught Red Cap
+function geezerWarn(e) {
+  if (e.gazes) e.caughtRow = e.gazeCaught ? (e.caughtRow || 0) + 1 : 0; /* how the last stare went */
+  e.gazes = (e.gazes || 0) + 1;
+  e.gazeCaught = false;
+  if (e.gazes > 1 && e.caughtRow < GEEZER_WARN_AGAIN) return;
+  e.caughtRow = 0;
+  bigWord('GAZING', 'var(--alarm)', 1, 'Take cover!', 'var(--bile)'); /* the other way round from Attack him!: red, then yellow */
+}
 // his states, one step each (updateGeezer runs the one he is in)
 const GEEZER_STATES = {
   idle(e, dt, dist, ux, uz, mv, now, p2, seenK) {
@@ -96,6 +106,7 @@ const GEEZER_STATES = {
         e.missed = false;
         SFX.psyRise(e.tWind);
         floatWord('LOOK AT ME', e.pos.clone().setY(5.3), '#b48cff', 1.1);
+        geezerWarn(e);
       }
     }
   },
@@ -107,6 +118,7 @@ const GEEZER_STATES = {
       const dodged = hero.dodgeT > 0 || performance.now() / 1000 - (hero.lastDodgeAt || -9) < 0.6;
       const exposed = dist < 24 && geezerSees(e) && !dodged && hero.stun <= 0;
       if (exposed) {
+        e.gazeCaught = true;
         // the stare weakens with distance: full up close, less across the room, a dizzy blink from far away
         const far = dist > 17 ? 2 : dist > 9 ? 1 : 0;
         if (far === 2) stunHero(0.5, true, 0.2 * seenK);
@@ -201,7 +213,6 @@ const GEEZER_STATES = {
 TALKERS.Y = {
   make: makeGeezer,
   update: updateGeezer,
-  bar: e => (e.exhaust > 0 ? ['', false, 'WINDED'] : ['', false]),
   warn: e =>
     e.st === 'gaze'
       ? { c: '#b48cff', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'Y' + e.flashes }
