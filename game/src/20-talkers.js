@@ -105,6 +105,8 @@ function rimify(e) {
   });
   if (e.fade) e.fade.push(...e.rims);
 }
+const HIT_RED = new THREE.Color(0xff5050), // a struck talker's tint while e.flash runs (updEnemy)
+  NO_TINT = new THREE.Color(0xffffff);
 // stances that keep their own sway: the shared part leaves the figure's offset alone
 const OWN_SWAY = new Set(['wind', 'shout', 'inflate', 'stun', 'laugh']);
 // every frame: caged, dying and reeling talkers are handled here; otherwise its own update decides the move, then the shared
@@ -118,7 +120,10 @@ function updEnemy(e, dt) {
     return;
   }
   e.flash = Math.max(0, (e.flash || 0) - dt);
-  for (const m of e.mats) m.color.setHex(e.flash > 0 ? 0xff5050 : 0xffffff);
+  // every frame each material is brought back to the hit flash's red or to no tint, but only written when it is not already
+  // that: whatever else changed it (the Jester's blink) is still undone the next frame
+  const tint = e.flash > 0 ? HIT_RED : NO_TINT;
+  for (const m of e.mats) if (!m.color.equals(tint)) m.color.copy(tint);
   if (e.dazedT > 0) return updDazed(e, T, dt);
   e.stagger = Math.max(0, e.stagger - dt);
   const dx = hero.pos.x - e.pos.x,

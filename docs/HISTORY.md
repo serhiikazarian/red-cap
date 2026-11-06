@@ -281,11 +281,13 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   final blow's, the secret's, …), starting as they behaved unset; the `|| 0`, `?? 6` and `|| 1` fallbacks are gone.
 - `updEnemy`: a caged talker reaches its cage directly (`e.cage`, set by `buildCages`) instead of searching `G.cages` every
   frame; the stances that keep their own sway are one set made once (`OWN_SWAY`), not a list built per talker per frame.
-  The hit-flash colour reset every frame stays: the Jester's blink relies on it.
+  The hit-flash colour is still checked every frame (the Jester's blink relies on it being undone), but each material is
+  written only when its colour is not already the one wanted (`HIT_RED`, `NO_TINT`).
 - The floating-word lists (`WORDS_FLOOR`, 03-textures) name core colours (`${HEX.paper}` …) instead of typing them out
   (69 places); the lists come out the same, character for character.
 - CI: pushes to `prerelease` build and check the game and keep it as a download on the run's page (30 days); only `main`
   publishes, tags and releases (a manual run on another branch could publish before).
-- First shipped to the `prerelease` branch, not `main` (three times: the second 1.35 adds the 24 splits, the third `cellMid` and the two `G` fields, the fourth the rest of `G`, the cage link, the review's fixes and the
-  word lists' colours).
+- Tried on the `prerelease` branch first, then shipped to `main`. On `prerelease` four times: the second 1.35 added the 24
+  splits, the third `cellMid` and the two `G` fields, the fourth the rest of `G`, the cage link, the review's fixes and the
+  word lists' colours; the hit-flash check came with the ship.
 - Title label `v1.35`.
