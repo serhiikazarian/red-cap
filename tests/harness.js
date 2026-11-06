@@ -38,7 +38,7 @@ async function openGame(browser, build, errs) {
 function install() {
   // the pictures' quality is fixed (single ink lines at RES_MIN), so it does not depend on how fast this machine draws
   resScale = RES_MIN;
-  post.uniforms.lite.value = 1;
+  inkPass.uniforms.lite.value = 1;
   resize();
   const H = (window.__H = { T: 1e6, timers: [], rafs: [], id: 1 });
   performance.now = () => H.T;
@@ -58,9 +58,9 @@ function install() {
   H.draw = renderer.render.bind(renderer);
   renderer.render = () => {};
   // no sound: sounds load in the background, and code that waits on them must not change the run
-  if (AU.ctx) AU.ctx.close();
-  AU.ctx = null;
-  auInit = () => {};
+  if (AUDIO.ctx) AUDIO.ctx.close();
+  AUDIO.ctx = null;
+  initAudio = () => {};
   H.step = () => {
     H.T += 1000 / 60;
     for (;;) {
@@ -103,7 +103,7 @@ function install() {
         const x = e.pos.x + Math.cos((a / 16) * 6.283) * r,
           z = e.pos.z + Math.sin((a / 16) * 6.283) * r,
           [ix, iz] = cellOf(x, z);
-        if (!solid(ix, iz) && los(new THREE.Vector3(x, 1, z), e.pos)) return [x, z];
+        if (!solid(ix, iz) && lineOfSight(new THREE.Vector3(x, 1, z), e.pos)) return [x, z];
       }
     return null;
   };

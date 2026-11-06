@@ -2,7 +2,7 @@
 // kind: 'fire' and 'word' hurt and burst; 'blood' soaks and falls; 'rain' (the Priest's) falls from above.
 const shots = [];
 function fireball(from, dir) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: violetTex, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  const s = glowSprite(violetTex, { fog: false });
   s.scale.setScalar(1.2);
   s.position.copy(from);
   scene.add(s);
@@ -29,12 +29,12 @@ function bloodDrop(from, v) {
   return b;
 }
 function redOrb(from, dir) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowRed, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  const s = glowSprite(glowRed, { fog: false });
   s.scale.setScalar(0.8);
   s.position.copy(from);
   scene.add(s);
   shots.push({ kind: 'fire', s, v: dir.clone().multiplyScalar(9), life: 3.5 });
-  sTone({ f: 700, f2: 300, dur: 0.15, type: 'square', gain: 0.05 });
+  playTone({ f: 700, f2: 300, dur: 0.15, type: 'square', gain: 0.05 });
 }
 function insultShot(from, dir, word, color) {
   const s = new THREE.Sprite(
@@ -58,79 +58,97 @@ function hitWord(p, rad) {
   for (const b of shots) {
     if (!b.parry || b.life <= 0 || Math.abs(b.s.position.y - p.y) > 0.6 || Math.hypot(b.s.position.x - p.x, b.s.position.z - p.z) > rad + 0.8)
       continue;
-    b.life = 0; // updShots bursts it and takes it away
+    b.life = 0; // updateShots bursts it and takes it away
     hit = true;
     burst(b.s.position.clone(), [COL.hot, COL.paper, COL.ink], 14, 5, 0.18);
-    sNoise({ dur: 0.18, f: 3200, f2: 1200, q: 2, gain: 0.22 });
+    playNoise({ dur: 0.18, f: 3200, f2: 1200, q: 2, gain: 0.22 });
     SFX.tink();
   }
   return hit;
 }
 function emberShot(from, dir) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  const s = glowSprite(fireTex, { fog: false });
   s.scale.setScalar(0.55);
   s.position.copy(from);
   scene.add(s);
   shots.push({ kind: 'fire', s, v: dir.multiplyScalar(13), life: 3 });
-  sTone({ f: 900, f2: 300, dur: 0.15, type: 'triangle', gain: 0.1 });
+  playTone({ f: 900, f2: 300, dur: 0.15, type: 'triangle', gain: 0.1 });
 }
 
-// shots fly; walls and props stop them, and a pyramid takes one as a blow; blood and rain fall and may leave a pool; one that reaches Red Cap hurts him
-// (blood soaks him even when the blow itself is not taken)
-function updShots(dt) {
+const SHOT_FALL = 9, // m/s² pulling blood and rain down
+  SHOT_REACH = { fire: 0.7, word: 0.85 }, // how close to Red Cap a shot hits him (any other kind: SHOT_REACH_ELSE)
+  SHOT_REACH_ELSE = 0.55,
+  FIRE_TRAIL = [0xffb030, 0xff5a1a, COL.bile],
+  FIRE_BURST = [0xffb030, 0xff5a1a, COL.ink];
+const falls = b => b.kind === 'blood' || b.kind === 'rain';
+
+// Each frame every shot flies, then walls and props stop it (a pyramid takes it as a blow), blood and rain land (and may leave
+// a pool), and one that reaches Red Cap hurts him (blood soaks him even when the blow itself is not taken). Every test runs
+// each frame, even for a shot already spent: each may leave its mark, and the dice must roll the same way.
+function updateShots(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {
-    const b = shots[i];
-    b.life -= dt;
-    let dead = b.life <= 0;
-    if (b.kind === 'blood') b.v.y -= 9 * dt;
-    b.s.position.addScaledVector(b.v, dt);
-    if ((b.kind === 'fire' || b.kind === 'word') && Math.random() < 0.6)
-      burst(b.s.position, [0xffb030, 0xff5a1a, COL.bile], 1, 1.2, 0.14, { g: -2, life: 0.5 });
-    if (b.kind === 'blood') b.s.rotation.z += dt * 10;
-    const p = b.s.position,
-      [ix, iz] = cellOf(p.x, p.z);
-    if (solid(ix, iz)) dead = true;
-    else {
-      const pr = propR(ch(ix, iz));
-      if (pr && p.y < 3.2 && Math.hypot(p.x - cellMid(ix), p.z - cellMid(iz)) < pr + 0.15) {
-        dead = true;
-        if (b.kind !== 'rain') hitPyr(p, 0.15, b.volley); /* a pyramid takes it as a blow (the rain strikes once as it lands) */
-      }
-    }
-    if (b.kind === 'rain') b.v.y -= 9 * dt;
-    if ((b.kind === 'blood' || b.kind === 'rain') && p.y < heightAt(p.x, p.z) + 0.05) {
-      dead = true;
-      if (Math.random() < 0.12) bloodPool(p.x, p.z, rand(0.25, 0.6));
-    }
-    const dh = Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z);
-    if (
-      !dead &&
-      b.kind !== 'rain' &&
-      dh < (b.kind === 'fire' ? 0.7 : b.kind === 'word' ? 0.85 : 0.55) &&
-      p.y - hero.pos.y < 2.2 &&
-      p.y > hero.pos.y - 0.5
-    ) {
-      if (b.kind === 'blood' && hero.dodgeT <= 0 && (hero.dodgeIF || 0) <= 0) {
-        soak();
-        dead = true;
-      }
-      if (hurtHero(1, p)) dead = true;
-      else if (b.kind === 'fire' && hero.dodgeT <= 0) dead = true;
-    }
+    const shot = shots[i];
+    shot.life -= dt;
+    flyShot(shot, dt);
+    let dead = shot.life <= 0;
+    if (shotHitsScenery(shot)) dead = true;
+    if (shotLands(shot)) dead = true;
+    if (!dead && shotHitsHero(shot)) dead = true;
     if (dead) {
-      if (b.kind !== 'blood' && b.kind !== 'rain') burst(p, [0xffb030, 0xff5a1a, COL.ink], 10, 4, 0.2);
-      if (b.s.slot !== undefined) {
-        if (b.s.slot != null) {
-          BLOOD.setMatrixAt(b.s.slot, ZERO_M);
-          bloodFree.push(b.s.slot);
-          b.s.slot = null;
-        }
-      } else {
-        scene.remove(b.s);
-        b.s.material.dispose();
-      }
+      endShot(shot);
       shots.splice(i, 1);
-    } else if (b.s.slot != null) bloodSlot(b.s);
+    } else if (shot.s.slot != null) bloodSlot(shot.s);
   }
   if (BLOOD) BLOOD.instanceMatrix.needsUpdate = true;
+}
+// blood starts falling before it moves, the Priest's rain after (as each was tuned); fire trails sparks, blood spins
+function flyShot(shot, dt) {
+  if (shot.kind === 'blood') shot.v.y -= SHOT_FALL * dt;
+  shot.s.position.addScaledVector(shot.v, dt);
+  if (shot.kind === 'rain') shot.v.y -= SHOT_FALL * dt;
+  if ((shot.kind === 'fire' || shot.kind === 'word') && Math.random() < 0.6) burst(shot.s.position, FIRE_TRAIL, 1, 1.2, 0.14, { g: -2, life: 0.5 });
+  if (shot.kind === 'blood') shot.s.rotation.z += dt * 10;
+}
+// a wall, or a prop's trunk (below 3.2 m); a pyramid takes it as a blow (the rain strikes once, as it lands)
+function shotHitsScenery(shot) {
+  const p = shot.s.position,
+    [ix, iz] = cellOf(p.x, p.z);
+  if (solid(ix, iz)) return true;
+  const reach = propRadius(cellAt(ix, iz));
+  if (!reach || p.y >= 3.2 || Math.hypot(p.x - cellMid(ix), p.z - cellMid(iz)) >= reach + 0.15) return false;
+  if (shot.kind !== 'rain') hitPyr(p, 0.15, shot.volley);
+  return true;
+}
+function shotLands(shot) {
+  const p = shot.s.position;
+  if (!falls(shot) || p.y >= heightAt(p.x, p.z) + 0.05) return false;
+  if (Math.random() < 0.12) bloodPool(p.x, p.z, rand(0.25, 0.6));
+  return true;
+}
+// the rain never strikes him on the way down (only where it lands); returns whether the shot is spent
+function shotHitsHero(shot) {
+  const p = shot.s.position,
+    reach = SHOT_REACH[shot.kind] || SHOT_REACH_ELSE;
+  if (shot.kind === 'rain' || heroDist(p.x, p.z) >= reach) return false;
+  if (p.y - hero.pos.y >= 2.2 || p.y <= hero.pos.y - 0.5) return false;
+  let spent = false;
+  if (shot.kind === 'blood' && hero.dodgeT <= 0 && (hero.dodgeIF || 0) <= 0) {
+    soak();
+    spent = true;
+  }
+  if (hurtHero(1, p)) spent = true;
+  else if (shot.kind === 'fire' && hero.dodgeT <= 0) spent = true;
+  return spent;
+}
+// fire and words burst; a blood drop gives its slot back to the BLOOD pool, a sprite is taken away
+function endShot(shot) {
+  if (!falls(shot)) burst(shot.s.position, FIRE_BURST, 10, 4, 0.2);
+  if (shot.s.slot === undefined) {
+    scene.remove(shot.s);
+    shot.s.material.dispose();
+  } else if (shot.s.slot != null) {
+    BLOOD.setMatrixAt(shot.s.slot, ZERO_M);
+    bloodFree.push(shot.s.slot);
+    shot.s.slot = null;
+  }
 }

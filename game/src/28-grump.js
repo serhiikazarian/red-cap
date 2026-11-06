@@ -50,7 +50,7 @@ function wallStrip(px, n) {
 // no wall anywhere (the loading screen's stand-in ring); made on first use, after the boot's own drawing
 let WAVE_OPEN = null;
 const waveOpen = () => WAVE_OPEN || (WAVE_OPEN = wallStrip(new Uint8Array([255, 255, 255, 255]), 1));
-// how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (los):
+// how far the Grump's shout carries in each direction before a wall (or the closed gate) stops it, as it does in play (lineOfSight):
 // WAVE_WALL_N directions round him, the angle of each as the shader reads it (atan of z over x), softened across neighbours
 function waveWalls(x, z) {
   const d = [],
@@ -76,64 +76,72 @@ function waveWalls(x, z) {
   return wallStrip(px, WAVE_WALL_N);
 }
 // He never moves: he catches his breath (pause), inflates (GRRR) and shouts four rings in a row.
-function updGrump(e, dt, dist, ux, uz, mv) {
+function updateGrump(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
-  const near = dist < 33;
   if (!e.wearOn && (e.engaged || dist < 16)) e.wearOn = true; // from here on, shouting wears the blocks down
-  if (e.st === 'pause') {
+  GRUMP_STATES[e.st](e, dist);
+  updateWaves(e, dt, dist, ux, uz);
+  if (dist < e.r + hero.r) pushOffGrump(e, ux, uz);
+}
+const GRUMP_HEARS = 33, // m: Red Cap nearer than this sets him off again after a pause
+  GRUMP_INFLATE = 0.55, // s to fill his lungs
+  GRUMP_RINGS = 4, // rings in a row
+  GRUMP_RING_GAP = 0.42, // s between them
+  GRUMP_PAUSE = 2.3; // s of catching his breath after
+const GRUMP_STATES = {
+  pause(e, dist) {
     if (animTick) {
       e.body.scale.y = lerp(e.body.scale.y, 0.94, 0.3);
       e.body.scale.x = lerp(e.body.scale.x, 1.04, 0.3);
       e.tilt.position.set(0, 0, 0);
     }
-    if (e.t <= 0 && near) {
-      e.st = 'inflate';
-      e.t = 0.55;
-      SFX.growl();
-      floatWord('GRRR', e.pos.clone().setY(8.8), HEX.tie, 2);
-    }
-  } else if (e.st === 'inflate') {
-    const k = 1 - e.t / 0.55;
+    if (e.t > 0 || dist >= GRUMP_HEARS) return;
+    e.st = 'inflate';
+    e.t = GRUMP_INFLATE;
+    SFX.growl();
+    floatWord('GRRR', e.pos.clone().setY(8.8), HEX.tie, 2);
+  },
+  inflate(e) {
+    const k = 1 - e.t / GRUMP_INFLATE;
     if (animTick) {
       e.body.scale.set(1 + k * 0.12, 1 + k * 0.14, 1 + k * 0.5);
       shake(e.tilt, 0.05 * k);
     }
-    if (e.t <= 0) {
-      e.st = 'shout';
-      e.waveCount = 4;
-      e.t = 0;
-    }
-  } else if (e.st === 'shout') {
+    if (e.t > 0) return;
+    e.st = 'shout';
+    e.waveCount = GRUMP_RINGS;
+    e.t = 0;
+  },
+  shout(e) {
     if (animTick) shake(e.tilt, 0.08);
-    if (e.t <= 0) {
-      if (e.waveCount > 0) {
-        e.waveCount--;
-        e.t = 0.42;
-        emitWave(e);
-        e.body.scale.set(1.2, 1.18, 1.6);
-      } else {
-        e.st = 'pause';
-        e.t = 2.3;
-      }
-    } else if (animTick) e.body.scale.lerp(GRUMP_SWELL, 0.4);
+    if (e.t > 0) {
+      if (animTick) e.body.scale.lerp(GRUMP_SWELL, 0.4);
+    } else if (e.waveCount > 0) {
+      e.waveCount--;
+      e.t = GRUMP_RING_GAP;
+      emitWave(e);
+      e.body.scale.set(1.2, 1.18, 1.6);
+    } else {
+      e.st = 'pause';
+      e.t = GRUMP_PAUSE;
+    }
   }
-  updWaves(e, dt, dist, ux, uz);
-  if (dist < e.r + hero.r) {
-    // pushed back out of his bulk on your own side, never through the gate wall behind him
-    const nx = e.pos.x + ux * (e.r + hero.r),
-      nz = e.pos.z + uz * (e.r + hero.r),
-      ok = (x, z) => !solid(...cellOf(x, z));
-    if (ok(nx, nz)) {
-      hero.pos.x = nx;
-      hero.pos.z = nz;
-    } else if (ok(nx, hero.pos.z)) hero.pos.x = nx;
-    else if (ok(hero.pos.x, nz)) hero.pos.z = nz;
-    collide(hero.pos, hero.r);
-  }
+};
+// Red Cap is pushed back out of his bulk on his own side (ux, uz: from the Grump to him), never through the gate wall behind
+function pushOffGrump(e, ux, uz) {
+  const nx = e.pos.x + ux * (e.r + hero.r),
+    nz = e.pos.z + uz * (e.r + hero.r),
+    open = (x, z) => !solid(...cellOf(x, z));
+  if (open(nx, nz)) {
+    hero.pos.x = nx;
+    hero.pos.z = nz;
+  } else if (open(nx, hero.pos.z)) hero.pos.x = nx;
+  else if (open(hero.pos.x, nz)) hero.pos.z = nz;
+  collide(hero.pos, hero.r);
 }
 // the rings roll out: past GRUMP_REACH they fade and do nothing; each one that reaches Red Cap hurts by how much gets through
 // (two hearts up close in the open, one further back; nothing behind a whole block; a worn block leaks)
-function updWaves(e, dt, dist, ux, uz) {
+function updateWaves(e, dt, dist, ux, uz) {
   for (let i = e.waves.length - 1; i >= 0; i--) {
     const w = e.waves[i];
     WAVE_T.value = performance.now() / 1000;
@@ -151,7 +159,7 @@ function updWaves(e, dt, dist, ux, uz) {
         through = grumpThrough(e, open);
       if (hero.dodgeT > 0 || hero.dodgeIF > 0 || through <= 0) {
         w.hit = true; // a dodge timed right slips through; a whole block soaks it
-        if (through <= 0 && !(hero.dodgeT > 0 || hero.dodgeIF > 0) && los(e.pos, hero.pos) && performance.now() - (e.muffledAt || 0) > 1500) {
+        if (through <= 0 && !(hero.dodgeT > 0 || hero.dodgeIF > 0) && lineOfSight(e.pos, hero.pos) && performance.now() - (e.muffledAt || 0) > 1500) {
           e.muffledAt = performance.now();
           bigWord('MUFFLED', HEX.paper, 1 / 1.7);
         }
@@ -179,7 +187,7 @@ function updWaves(e, dt, dist, ux, uz) {
 }
 TALKERS.U = {
   make: makeGrump,
-  update: updGrump,
+  update: updateGrump,
   bar: e => [e.st === 'pause' ? 'Catchin’ breath' : 'Shoutin’', e.st === 'pause'],
   hurt: e => e.st === 'pause' && (e.t = Math.min(e.t, 0.5)), // hit while he catches his breath and he shouts again sooner
   stagger: 0.12,
@@ -205,7 +213,7 @@ TALKERS.U = {
 // the hearts a ring carries to Red Cap: 0 behind a sound block, rising as the block wears, the full amount (open) in the open.
 // A block shelters him when it stands between them and he is pressed up behind it (GRUMP_SHADE); a wall is total cover.
 function grumpThrough(e, open) {
-  if (!los(e.pos, hero.pos)) return 0;
+  if (!lineOfSight(e.pos, hero.pos)) return 0;
   const dx = hero.pos.x - e.pos.x,
     dz = hero.pos.z - e.pos.z,
     d = Math.hypot(dx, dz) || 1,
@@ -215,7 +223,7 @@ function grumpThrough(e, open) {
   let best = open;
   for (let iz = hz - 2; iz <= hz + 2; iz++)
     for (let ix = hx - 2; ix <= hx + 2; ix++) {
-      const pr = propR(ch(ix, iz));
+      const pr = propRadius(cellAt(ix, iz));
       if (!pr) continue;
       const px = cellMid(ix),
         pz = cellMid(iz),
@@ -240,7 +248,7 @@ function grumpWear(e, w) {
     const b = G.props[k];
     if (b.hp <= 0 || w.blk.has(k)) continue;
     const dd = Math.hypot(b.x - e.pos.x, b.z - e.pos.z);
-    if (Math.abs(dd - w.r) > 0.6 || !los(e.pos, tmpW.set(b.x, 0, b.z))) continue;
+    if (Math.abs(dd - w.r) > 0.6 || !lineOfSight(e.pos, tmpW.set(b.x, 0, b.z))) continue;
     w.blk.add(k);
     b.flashT = 3; // it flashes either way: at first only to show what shouting does to a block
     if (e.wearOn) b.hp -= 0.0224; // about nine bursts of shouting from whole to spent
@@ -274,12 +282,12 @@ function grumpWear(e, w) {
       delete G.props[k];
       burst(FX_AT.set(b.x, 1, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 24, 6, 0.26);
       for (let p = 0; p < 6; p++) smokePuff(FX_AT.set(b.x + rand(-0.8, 0.8), rand(0.4, 1.8), b.z + rand(-0.8, 0.8)), rand(1.2, 2), 0.9, 0.6);
-      sNoise({ dur: 0.45, f: 900, f2: 200, q: 0.8, gain: 0.3 });
+      playNoise({ dur: 0.45, f: 900, f2: 200, q: 0.8, gain: 0.3 });
     }
   }
 }
 // a block hit by a ring pulses dim brown for a few seconds
-function updCovers(dt) {
+function updateCovers(dt) {
   if (!G.props) return;
   const now = performance.now() / 1000;
   for (const k in G.props) {
@@ -321,9 +329,9 @@ function shedBox(b, it, e) {
     t: 0.75
   });
   burst(m.position.clone(), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 8, 3, 0.16);
-  sNoise({ dur: 0.18, f: 700, f2: 250, q: 1, gain: 0.18 });
+  playNoise({ dur: 0.18, f: 700, f2: 250, q: 1, gain: 0.18 });
 }
-function updDebris(dt) {
+function updateDebris(dt) {
   for (let i = coverDebris.length - 1; i >= 0; i--) {
     const c = coverDebris[i];
     c.t -= dt;
@@ -346,27 +354,45 @@ function updDebris(dt) {
 // The rings: a zigzag STOP TALKIN' SH#T band (waveTex) whose shader cuts a torn gap where it runs behind a block
 // (uSh: angle seen from the ring's middle, half-width, distance, strength), with a burning rim and cracks before it, and
 // ends, torn, at the first wall in each direction (uWall, from waveWalls): a wall stops a ring for good.
+// the GLSL the ring's material gets (waveCompile): the vertex shader passes on each point's place on the ground (vWP), its
+// height (vWY) and the ring's centre (vMid); the fragment shader tears the ring where walls and blocks stand in its way
+const WAVE_VARYINGS = 'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\n';
 function waveCompile(sh) {
   sh.uniforms.uSh = this.userData.uSh;
   sh.uniforms.uWall = this.userData.uWall;
   sh.uniforms.uWT = WAVE_T;
   sh.vertexShader =
-    'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\n' +
+    WAVE_VARYINGS +
     sh.vertexShader.replace(
       '#include <begin_vertex>',
       '#include <begin_vertex>\n  vWP = (modelMatrix * vec4(transformed, 1.0)).xz;\n  vWY = (modelMatrix * vec4(transformed, 1.0)).y;\n  vMid = vec2(modelMatrix[3][0], modelMatrix[3][2]);'
     );
   sh.fragmentShader =
-    'varying vec2 vWP;\nvarying vec2 vMid;\nvarying float vWY;\nuniform float uWT;\nuniform sampler2D uWall;\nuniform vec4 uSh[' +
+    WAVE_VARYINGS +
+    'uniform float uWT;\nuniform sampler2D uWall;\nuniform vec4 uSh[' +
     WAVE_SH_N +
     '];\n' +
-    sh.fragmentShader.replace(
-      '#include <map_fragment>',
-      `#include <map_fragment>
-  {
+    sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n' + waveTearGLSL());
+}
+// keep (how much of the ring is left), rim (its burning torn edge) and hot (that edge's yellow), from the wall and the blocks
+function waveTearGLSL() {
+  return (
+    `  {
     vec2 rel = vWP - vMid;
     float ang = atan(rel.y, rel.x), rad = length(rel), keep = 1.0, rim = 0.0, hot = 0.0;
-    {
+` +
+    waveWallGLSL() +
+    waveBlocksGLSL() +
+    `    diffuseColor.a *= keep;
+    vec3 tear = mix(vec3(0.85, 0.13, 0.16), vec3(0.94, 0.81, 0.18), hot);
+    diffuseColor.rgb = mix(diffuseColor.rgb, tear, rim);
+    diffuseColor.a = max(diffuseColor.a, rim * 0.92 * opacity);
+  }`
+  );
+}
+// the walls (uWall: how far the ring runs before a wall, by angle)
+function waveWallGLSL() {
+  return `    {
       /* a wall tears the ring as a block does: cracks running ahead, a burning rim, shards, then nothing */
       float wj = 0.3 * sin(vWY * 7.0 + uWT * 11.0 + ang * 9.0) + 0.18 * sin(vWY * 19.0 - uWT * 17.0 + ang * 23.0) + 0.12 * sin(ang * 61.0 - uWT * 6.0);
       float wEdge = texture2D(uWall, vec2(ang / 6.2831853 + 0.5, 0.5)).r * ${WAVE_WALL_FAR.toFixed(1)} - 0.7 + wj;
@@ -380,7 +406,11 @@ function waveCompile(sh) {
       rim = max(rim, wBand * (0.55 + 0.45 * sin(vWY * 23.0 + uWT * 31.0 + rad * 5.0)));
       hot = max(hot, wBand * smoothstep(0.6, 1.0, sin(uWT * 9.0 + vWY * 4.0 + ang * 5.0)));
     }
-    for (int i = 0; i < ${WAVE_SH_N}; i++) {
+`;
+}
+// each block in its way (uSh: angle, half-width, distance and strength) cuts a gap that cracks, burns at the edge and sheds shards
+function waveBlocksGLSL() {
+  return `    for (int i = 0; i < ${WAVE_SH_N}; i++) {
       vec4 q = uSh[i];
       if (q.w <= 0.0) continue;
       float da = abs(mod(ang - q.x + 3.14159265, 6.2831853) - 3.14159265);
@@ -402,12 +432,7 @@ function waveCompile(sh) {
       rim = max(rim, band * crackle);
       hot = max(hot, band * smoothstep(0.6, 1.0, sin(uWT * 9.0 + vWY * 4.0 + fi)));
     }
-    diffuseColor.a *= keep;
-    vec3 tear = mix(vec3(0.85, 0.13, 0.16), vec3(0.94, 0.81, 0.18), hot);
-    diffuseColor.rgb = mix(diffuseColor.rgb, tear, rim);
-    diffuseColor.a = max(diffuseColor.a, rim * 0.92 * opacity);
-  }`
-    );
+`;
 }
 // the gaps for one ring, from where it started: every block standing in its way (at most WAVE_SH_N), as strong as the block still is
 function waveShade(w) {
@@ -422,7 +447,7 @@ function waveShade(w) {
     const dx = b.x - c.x,
       dz = b.z - c.z,
       dd = Math.hypot(dx, dz);
-    if (dd < 1.2 || !los(c, tmpW.set(b.x, 0, b.z))) continue;
+    if (dd < 1.2 || !lineOfSight(c, tmpW.set(b.x, 0, b.z))) continue;
     sh[n++].set(Math.atan2(dz, dx), Math.asin(Math.min(1, GRUMP_SHADE.w / dd)), dd, st);
   }
   for (; n < WAVE_SH_N; n++) sh[n].set(0, 0, 0, 0);
@@ -441,6 +466,6 @@ function emitWave(e) {
   e.waves.push(w);
   waveShade(w);
   SFX.wah();
-  sTone({ f: 70, f2: 45, dur: 0.5, type: 'sawtooth', gain: 0.18, filt: [500, 200] });
+  playTone({ f: 70, f2: 45, dur: 0.5, type: 'sawtooth', gain: 0.18, filt: [500, 200] });
   if (e.waveCount === 3) floatWord(pick(['BLAH', 'STOP', 'SHUT UP', 'GRR']), e.pos.clone().setY(8.8), HEX.ink, 1.8);
 }

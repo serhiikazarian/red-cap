@@ -118,60 +118,72 @@ function bakeGeo(parts, colours) {
   if (col) geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return geo;
 }
+// every still mesh of the floor goes into one mesh per look (material, and see-through group if it fades)
 function bakeStatics() {
   G.group.updateMatrixWorld(true);
   const looks = new Map(),
     gone = [];
+  G.group.traverse(o => {
+    if (takeStill(o, looks)) gone.push(o);
+  });
+  for (const o of gone) o.parent.remove(o);
+  pruneEmpty(G.group);
+  for (const b of looks.values()) G.group.add(bakedMesh(b));
+  G.group.updateMatrixWorld(true);
+}
+// the see-through group a mesh belongs to, or null (a hard one never fades: it is baked with everything else, only its
+// shape kept for the camera)
+function seeGroupOf(o) {
   let see = null;
-  const take = (mat, g, s0, s1, mw) => {
+  for (let q = o; q && q !== G.group; q = q.parent) if (q.userData.seeId) see = G.see[q.userData.seeId - 1];
+  if (see && see.hard) {
+    see.baked = true;
+    see = null;
+  }
+  return see;
+}
+// files a still mesh's triangles under their looks (each material group on its own); true if it was taken
+function takeStill(o, looks) {
+  if (!o.isMesh || o.isInstancedMesh || !o.visible || !isStill(o)) return false;
+  const g = o.geometry,
+    mats = Array.isArray(o.material) ? o.material : [o.material];
+  if (!g.isBufferGeometry || !g.attributes.normal || g.attributes.position.itemSize !== 3 || mats.some(m => !bakeable(m))) return false;
+  const total = g.index ? g.index.count : g.attributes.position.count,
+    see = seeGroupOf(o);
+  const take = (mat, s0, s1) => {
     const k = lookKey(mat) + (see ? '|see' + see.o.userData.seeId : '');
     let b = looks.get(k);
     if (!b) looks.set(k, (b = { mat, parts: [], see }));
-    b.parts.push({ g, s0, s1, mw, flip: mw.determinant() < 0 });
+    b.parts.push({ g, s0, s1, mw: o.matrixWorld, flip: o.matrixWorld.determinant() < 0 });
   };
-  G.group.traverse(o => {
-    if (!o.isMesh || o.isInstancedMesh || !o.visible || !isStill(o)) return;
-    const g = o.geometry,
-      mats = Array.isArray(o.material) ? o.material : [o.material];
-    if (!g.isBufferGeometry || !g.attributes.normal || g.attributes.position.itemSize !== 3 || mats.some(m => !bakeable(m))) return;
-    const total = g.index ? g.index.count : g.attributes.position.count;
-    see = null;
-    for (let q = o; q && q !== G.group; q = q.parent) if (q.userData.seeId) see = G.see[q.userData.seeId - 1];
-    if (see && see.hard) {
-      see.baked = true; // never fades: baked with everything else; only its shape is kept, for the camera
-      see = null;
+  if (Array.isArray(o.material)) {
+    for (const gr of g.groups) {
+      const m = mats[gr.materialIndex];
+      if (m && m.visible) take(m, gr.start, Math.min(total, gr.start + gr.count));
     }
-    if (Array.isArray(o.material)) {
-      for (const gr of g.groups) {
-        const m = mats[gr.materialIndex];
-        if (m && m.visible) take(m, g, gr.start, Math.min(total, gr.start + gr.count), o.matrixWorld);
-      }
-    } else if (o.material.visible) take(o.material, g, 0, total, o.matrixWorld);
-    gone.push(o);
-  });
-  for (const o of gone) o.parent.remove(o);
-  const prune = o => {
-    for (const c of [...o.children]) prune(c);
-    if (o !== G.group && o.isGroup && !o.children.length && isStill(o)) o.parent.remove(o);
-  };
-  prune(G.group);
-  for (const b of looks.values()) {
-    const m = new THREE.Mesh(bakeGeo(b.parts, b.mat.vertexColors), b.mat);
-    m.matrixAutoUpdate = false;
-    m.userData.static = true;
-    if (b.see && b.see.solid) {
-      // placed where it stands (not at the origin): faded, it is sorted against Red Cap by its own place, so its solid foot covers him
-      m.geometry.computeBoundingBox();
-      m.geometry.boundingBox.getCenter(m.position);
-      m.geometry.translate(-m.position.x, -m.position.y, -m.position.z);
-    }
-    m.updateMatrix();
-    if (b.mat.transparent) m.renderOrder = -1;
-    G.group.add(m);
-    if (b.see) {
-      b.see.meshes.push(m);
-      b.see.baked = true; // its own objects are gone from the floor now: only the baked mesh is left
-    }
+  } else if (o.material.visible) take(o.material, 0, total);
+  return true;
+}
+// still groups left empty go too
+function pruneEmpty(o) {
+  for (const c of [...o.children]) pruneEmpty(c);
+  if (o !== G.group && o.isGroup && !o.children.length && isStill(o)) o.parent.remove(o);
+}
+function bakedMesh(b) {
+  const m = new THREE.Mesh(bakeGeo(b.parts, b.mat.vertexColors), b.mat);
+  m.matrixAutoUpdate = false;
+  m.userData.static = true;
+  if (b.see && b.see.solid) {
+    // placed where it stands (not at the origin): faded, it is sorted against Red Cap by its own place, so its solid foot covers him
+    m.geometry.computeBoundingBox();
+    m.geometry.boundingBox.getCenter(m.position);
+    m.geometry.translate(-m.position.x, -m.position.y, -m.position.z);
   }
-  G.group.updateMatrixWorld(true);
+  m.updateMatrix();
+  if (b.mat.transparent) m.renderOrder = -1;
+  if (b.see) {
+    b.see.meshes.push(m);
+    b.see.baked = true; // its own objects are gone from the floor now: only the baked mesh is left
+  }
+  return m;
 }

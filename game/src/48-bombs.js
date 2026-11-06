@@ -72,14 +72,14 @@ function bombTex() {
 // the bomb goes off: a flash, a moment of slow motion, a heart or two from Red Cap in reach, a big blow to the talkers
 function bombBlast(x, z) {
   const p = new THREE.Vector3(x, heightAt(x, z) + 0.8, z),
-    at = AU.at;
-  AU.at = null; // full loudness wherever Red Cap is
-  sTone({ f: 70, f2: 22, dur: 1.4, gain: 0.8 });
-  sTone({ f: 140, f2: 40, dur: 0.6, type: 'sawtooth', gain: 0.35, filt: [900, 120] });
-  sNoise({ dur: 1.3, f: 3000, f2: 120, q: 0.5, gain: 0.8 });
-  sNoise({ dur: 0.4, f: 7000, f2: 1500, q: 0.8, gain: 0.4, at: 0.03 });
-  for (let i = 0; i < 6; i++) sNoise({ dur: 0.12, f: rand(400, 1600), q: 2, gain: 0.25, at: 0.25 + i * rand(0.08, 0.16) }); // debris coming down
-  AU.at = at;
+    at = AUDIO.at;
+  AUDIO.at = null; // full loudness wherever Red Cap is
+  playTone({ f: 70, f2: 22, dur: 1.4, gain: 0.8 });
+  playTone({ f: 140, f2: 40, dur: 0.6, type: 'sawtooth', gain: 0.35, filt: [900, 120] });
+  playNoise({ dur: 1.3, f: 3000, f2: 120, q: 0.5, gain: 0.8 });
+  playNoise({ dur: 0.4, f: 7000, f2: 1500, q: 0.8, gain: 0.4, at: 0.03 });
+  for (let i = 0; i < 6; i++) playNoise({ dur: 0.12, f: rand(400, 1600), q: 2, gain: 0.25, at: 0.25 + i * rand(0.08, 0.16) }); // debris coming down
+  AUDIO.at = at;
   cam.shake = Math.max(cam.shake, 1.1);
   slowT = Math.max(slowT, 0.25);
   const fl = $('#flash');
@@ -89,7 +89,7 @@ function bombBlast(x, z) {
   for (let i = 0; i < 3; i++) burst(p.clone().setY(p.y + i * 0.6), [0xfff0a0, COL.bile, COL.hot, COL.tie, 0x1a1618], 45, 13, 0.36, { g: 9 });
   for (let i = 0; i < 12; i++) smokePuff(p.clone().add(new THREE.Vector3(rand(-2.2, 2.2), rand(0, 2), rand(-2.2, 2.2))), rand(2, 3.4), 1.6, 1.2);
   floatWord('BOOM', p.clone().setY(p.y + 3), HEX.bile, 1.8, true);
-  const d = Math.hypot(hero.pos.x - x, hero.pos.z - z);
+  const d = heroDist(x, z);
   if (d < BOMB_R) hurtHero(d < BOMB_CLOSE ? 2 : 1, p, true);
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.dormant || e.hidden) continue;

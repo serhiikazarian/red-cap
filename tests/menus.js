@@ -8,7 +8,7 @@ const { launch, newPage, openTitle } = require('./browser');
     pg = await newPage(b, errs);
   await openTitle(pg, build);
   const still = () => pg.evaluate(() => document.getAnimations().forEach(a => (a.pause(), (a.currentTime = 0))));
-  await pg.evaluate(() => { slidesOn(false); localStorage.clear(); catMem = {}; });
+  await pg.evaluate(() => { slidesOn(false); localStorage.clear(); catalogueSeen = {}; });
   await pg.evaluate(() => openCatalogue('title'));
   await pg.waitForTimeout(600);
   await still();

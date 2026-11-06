@@ -27,16 +27,12 @@ function shake(m, amt) {
 function faceCam(e, dt) {
   const target = Math.atan2(camera.position.x - e.pos.x, camera.position.z - e.pos.z);
   e.yaw = e.yaw ?? target;
-  e.yaw += angDiff(e.yaw, target) * (1 - Math.exp(-6 * dt));
+  e.yaw += angDiff(e.yaw, target) * ease(6, dt);
   if (animTick) e.face.rotation.y = e.yaw + Math.sin(performance.now() / 700 + e.seed) * 0.1;
 }
 // a talker of the given map letter at (x, z): the shared parts (root > face > tilt), then its own (TALKERS[type].make)
 function makeEnemy(type, x, z, part) {
-  const root = new THREE.Group(),
-    face = new THREE.Group(),
-    tilt = new THREE.Group();
-  root.add(face);
-  face.add(tilt);
+  const { root, face, tilt } = figureRig();
   const e = {
     type,
     root,
@@ -105,15 +101,15 @@ function rimify(e) {
   });
   if (e.fade) e.fade.push(...e.rims);
 }
-const HIT_RED = new THREE.Color(0xff5050), // a struck talker's tint while e.flash runs (updEnemy)
+const HIT_RED = new THREE.Color(0xff5050), // a struck talker's tint while e.flash runs (updateEnemy)
   NO_TINT = new THREE.Color(0xffffff);
 // stances that keep their own sway: the shared part leaves the figure's offset alone
 const OWN_SWAY = new Set(['wind', 'shout', 'inflate', 'stun', 'laugh']);
 // every frame: caged, dying and reeling talkers are handled here; otherwise its own update decides the move, then the shared
 // part moves it (rage, stagger, knockback), keeps it off the others, walls, clutter and cages, and sets it on the ground
-function updEnemy(e, dt) {
+function updateEnemy(e, dt) {
   if (e.dead) return;
-  if (e.caged) return updCaged(e, dt);
+  if (e.caged) return updateCaged(e, dt);
   const T = TALKERS[e.type];
   if (e.dying) {
     ((T && T.dying) || topple)(e, dt);
@@ -124,7 +120,7 @@ function updEnemy(e, dt) {
   // that: whatever else changed it (the Jester's blink) is still undone the next frame
   const tint = e.flash > 0 ? HIT_RED : NO_TINT;
   for (const m of e.mats) if (!m.color.equals(tint)) m.color.copy(tint);
-  if (e.dazedT > 0) return updDazed(e, T, dt);
+  if (e.dazedT > 0) return updateDazed(e, T, dt);
   e.stagger = Math.max(0, e.stagger - dt);
   const dx = hero.pos.x - e.pos.x,
     dz = hero.pos.z - e.pos.z,
@@ -156,7 +152,7 @@ function updEnemy(e, dt) {
   }
 }
 // in a cage: faces Red Cap and rattles (harder while the cage is being hit), standing on the ground
-function updCaged(e, dt) {
+function updateCaged(e, dt) {
   faceCam(e, dt);
   const c = e.cage;
   if (c && animTick) {
@@ -169,7 +165,7 @@ function updCaged(e, dt) {
   e.root.position.copy(e.pos);
 }
 // reeling (a trap's bite, a totem's shout): no attacks, wobbling on the spot, waiting for the finishing blow
-function updDazed(e, T, dt) {
+function updateDazed(e, T, dt) {
   e.dazedT -= dt;
   faceCam(e, dt);
   if (animTick) {
