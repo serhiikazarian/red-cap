@@ -333,3 +333,12 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Repeated code folded into shared helpers: `heroDist` (27 places), `ease` (21), `glowSprite` (12), `figureRig` (Red Cap,
   talkers, onlookers), `KEEP_INK` (the blending that leaves the picture's alpha alone).
 - Title label `v1.38`.
+
+## 1.39 (6 Nov 2026)
+- The ending plays on a clean screen: from the Jester's final blow there is no 1 TALKER LEFT call, whoever is still
+  counted (most often Brainless the Second away in his smoke, unseen but counted; or the hidden boss, if woken):
+  `updateLeft` checks `G.finalFx`. Taking his mask clears whatever words and hint are showing (`quietScreen`, 07-hud).
+- Tidy: the hair's lash state points straight at `livingDyingHairLash` (it only passed the call on).
+- Docs synced to this build: `CLAUDE.md` condensed (half the size; the file map and the not-verified list moved to
+  `docs/ARCHITECTURE.md`), which now also covers the state tables, the shout rings' inside and the ending's clean screen.
+- Title label `v1.39`.

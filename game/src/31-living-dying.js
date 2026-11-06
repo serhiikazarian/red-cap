@@ -115,9 +115,7 @@ const HAIR_STATES = {
     SFX.dodge();
     playNoise({ dur: 0.4, f: 1500, f2: 400, q: 0.8, gain: 0.25 });
   },
-  lash(e, dist, ux, uz) {
-    livingDyingHairLash(e, dist, ux, uz);
-  },
+  lash: livingDyingHairLash,
   snareWind(e) {
     if (animTick) shake(e.tilt, 0.05);
     if (e.t > 0) return;
