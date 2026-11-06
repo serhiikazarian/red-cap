@@ -311,8 +311,8 @@ function heroInput(dt) {
     ix /= l;
     iz /= l;
   }
-  if (keys.has('KeyQ') || keys.has('ArrowLeft')) cam.yaw += 2.4 * dt;
-  if (keys.has('KeyE') || keys.has('ArrowRight')) cam.yaw -= 2.4 * dt;
+  if (keys.has('KeyQ') || keys.has('ArrowLeft')) cam.yaw += CAM_TURN * dt;
+  if (keys.has('KeyE') || keys.has('ArrowRight')) cam.yaw -= CAM_TURN * dt;
   return [ix, iz];
 }
 // what holds him back (a Shade's fright, a trap, the hidden boss's strand, the Priest's blood, a niche's blessing): his speed
