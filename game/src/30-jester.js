@@ -372,7 +372,7 @@ function jesterStruck(J, fx, fz) {
     setMasked(J, false);
   }
 }
-// a fallen face hit by the yo-yo or a pebble flies back at him (RETURN TO SENDER)
+// a fallen face hit by the yo-yo or a pebble flies back at him
 function kickFace(p, rad) {
   for (const s of slabs) {
     if (s.st !== 'lie' || Math.hypot(s.x - p.x, s.z - p.z) > rad + 1.1) continue;
@@ -381,7 +381,6 @@ function kickFace(p, rad) {
     s.slab.rotation.set(0, 0, 0);
     s.slab.position.set(s.x, 1, s.z);
     G.group.remove(s.ring);
-    floatWord('RETURN TO SENDER', new THREE.Vector3(s.x, 2.6, s.z), HEX.bile, 0.8);
     SFX.yoyo();
     return true;
   }
