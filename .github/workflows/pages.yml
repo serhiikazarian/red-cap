@@ -1,10 +1,11 @@
 name: Build, check and deploy
 
 # Every push to main: build the single-file game, run the quick checks, publish it on GitHub Pages.
-# Pull requests: the same build and checks, no deploy.
+# Pushes to prerelease: the same build and checks, and the game kept as a download on the run's page (Artifacts), no deploy.
+# Pull requests: the same build and checks, no deploy. Only main publishes, tags and releases.
 on:
   push:
-    branches: [main]
+    branches: [main, prerelease]
   pull_request:
   workflow_dispatch:
 
@@ -43,16 +44,24 @@ jobs:
           mkdir _site
           cp game/red-cap.html _site/index.html
 
-      - if: github.event_name != 'pull_request'
+      # a prerelease to play before it ships: red-cap.html in a zip, on the run's page for 30 days
+      - if: github.ref == 'refs/heads/prerelease'
+        uses: actions/upload-artifact@v4
+        with:
+          name: red-cap-prerelease
+          path: game/red-cap.html
+          retention-days: 30
+
+      - if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
-      - if: github.event_name != 'pull_request'
+      - if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
   deploy:
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -67,7 +76,7 @@ jobs:
   # cloud sessions cannot push tags. Only the commit just pushed: CI's own token may not tag an older commit whose workflow
   # file differs from main's (GitHub answers "Resource not accessible by integration").
   versions:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: deploy
     runs-on: ubuntu-latest
     permissions:

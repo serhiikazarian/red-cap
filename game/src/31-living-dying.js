@@ -92,16 +92,7 @@ function ldWhole(e, dt, dist, ux, uz, mv, now) {
 // the hair sways like a living wig, circles Red Cap, lashes all round when he crowds it (HSSS), snares him from afar (a strand
 // that reels him in until a dodge tears it) or swoops at him and ends up tangled
 function ldHair(e, dt, dist, ux, uz, mv, now) {
-  const H = e.hair,
-    tt = now;
-  H.reach = lerp(H.reach, e.st === 'lash' ? 2.4 : e.st === 'lashWind' ? 0.75 : 1, 1 - Math.exp(-(e.st === 'lash' ? 22 : 6) * dt));
-  H.bristle = lerp(H.bristle, e.st === 'lashWind' || e.st === 'snareWind' ? 1 : 0, 1 - Math.exp(-8 * dt));
-  for (const c of H.clumps) {
-    c.g.rotation.z = Math.sin(tt * 2.2 + c.ph) * 0.25 + H.bristle * 0.7;
-    c.g.rotation.x = Math.sin(tt * 1.7 + c.ph * 2) * 0.2;
-    c.g.scale.set(H.reach, 1 + H.bristle * 0.3, 1);
-  }
-  H.g.rotation.y += dt * (e.st === 'lash' ? 9 : 0.6);
+  ldHairSway(e, dt, now);
   if (e.st === 'idle' || e.st === 'circle') {
     e.st = 'circle';
     const side = Math.sin(e.seed) > 0 ? 1 : -1,
@@ -110,27 +101,7 @@ function ldHair(e, dt, dist, ux, uz, mv, now) {
     mv.z = ux * side + uz * want;
     mv.sp = 4.4;
     e.fly = lerp(e.fly, 2.6, 0.05);
-    if (e.t <= 0) {
-      if (dist < 5.5) {
-        e.st = 'lashWind';
-        e.t = 0.65;
-        sNoise({ dur: 0.6, f: 6000, f2: 2500, q: 1, gain: 0.14 });
-        floatWord('HSSS', e.pos.clone().setY(4.2), '#d8642a', 0.9); // every strand stands on end
-      } else if (dist < 15 && Math.random() < 0.55) {
-        e.st = 'snareWind';
-        e.t = 0.6;
-        e.sx = ux;
-        e.sz = uz;
-        sNoise({ dur: 0.5, f: 5000, f2: 9000, q: 4, gain: 0.1 });
-      } else {
-        e.st = 'swoopWind';
-        e.t = 0.8;
-        e.sx = ux;
-        e.sz = uz;
-        floatWord('WHOOSH', e.pos.clone().setY(4.6), '#d8642a', 1);
-        SFX.growl();
-      }
-    }
+    if (e.t <= 0) ldHairPick(e, dist, ux, uz);
   } else if (e.st === 'lashWind') {
     if (animTick) shake(e.tilt, 0.07);
     if (e.t <= 0) {
@@ -140,43 +111,13 @@ function ldHair(e, dt, dist, ux, uz, mv, now) {
       SFX.dodge();
       sNoise({ dur: 0.4, f: 1500, f2: 400, q: 0.8, gain: 0.25 });
     }
-  } else if (e.st === 'lash') {
-    // a full spin with every strand thrown out: dodge it or back off
-    if (!e.lashHit && dist < 4.6) {
-      e.lashHit = true;
-      if (hurtHero(1, e.pos)) hero.knock.set(ux * 12, uz * 12);
-    }
-    if (animTick)
-      for (let k = 0; k < 3; k++) {
-        const a = rand(0, TAU),
-          r = rand(1.5, 4.2);
-        burst(e.pos.clone().add(new THREE.Vector3(Math.cos(a) * r, e.fly - 0.6, Math.sin(a) * r)), [0xc8642a, 0xd8823a], 1, 2, 0.2, {
-          g: 2,
-          life: 0.4
-        });
-      }
-    if (e.t <= 0) {
-      e.st = 'circle';
-      e.t = rand(1.8, 2.8);
-    }
-  } else if (e.st === 'snareWind') {
+  } else if (e.st === 'lash') ldHairLash(e, dist, ux, uz);
+  else if (e.st === 'snareWind') {
     if (animTick) shake(e.tilt, 0.05);
     if (e.t <= 0) {
       e.st = 'snare';
       e.t = 0.35;
-      // one long strand whips out along the line; if it finds you, it wraps your legs and starts reeling you in
-      const ex = hero.pos.x - e.pos.x,
-        ez = hero.pos.z - e.pos.z,
-        along = ex * e.sx + ez * e.sz,
-        off = Math.abs(ex * e.sz - ez * e.sx);
-      for (let k = 0; k < 14; k++)
-        burst(new THREE.Vector3(e.pos.x + e.sx * k * 1.1, 1, e.pos.z + e.sz * k * 1.1), [0xc8642a, 0x6a3418], 1, 0.5, 0.14, { g: 0, life: 0.5 });
-      if (along > 0 && along < 16 && off < 0.9 && hero.dodgeT <= 0 && hero.dodgeIF <= 0) {
-        hero.snared = 1.6;
-        hero.snareFrom = e;
-        floatWord('SNAGGED', hero.pos.clone().setY(hero.pos.y + 2.4), '#d8642a', 0.9, true);
-        sTone({ f: 300, f2: 120, dur: 0.3, type: 'sawtooth', gain: 0.08 });
-      }
+      ldHairSnare(e);
     }
   } else if (e.st === 'snare') {
     if (e.t <= 0) {
@@ -209,6 +150,75 @@ function ldHair(e, dt, dist, ux, uz, mv, now) {
       e.t = rand(2.2, 3.2);
       e.tilt.rotation.z = 0;
     }
+  }
+}
+// every strand sways; they reach out for the lash, pull in and bristle as it winds up; the wig spins
+function ldHairSway(e, dt, now) {
+  const H = e.hair;
+  H.reach = lerp(H.reach, e.st === 'lash' ? 2.4 : e.st === 'lashWind' ? 0.75 : 1, 1 - Math.exp(-(e.st === 'lash' ? 22 : 6) * dt));
+  H.bristle = lerp(H.bristle, e.st === 'lashWind' || e.st === 'snareWind' ? 1 : 0, 1 - Math.exp(-8 * dt));
+  for (const c of H.clumps) {
+    c.g.rotation.z = Math.sin(now * 2.2 + c.ph) * 0.25 + H.bristle * 0.7;
+    c.g.rotation.x = Math.sin(now * 1.7 + c.ph * 2) * 0.2;
+    c.g.scale.set(H.reach, 1 + H.bristle * 0.3, 1);
+  }
+  H.g.rotation.y += dt * (e.st === 'lash' ? 9 : 0.6);
+}
+// circling, its wait over: lash when Red Cap is close, else snare him from afar (or swoop)
+function ldHairPick(e, dist, ux, uz) {
+  if (dist < 5.5) {
+    e.st = 'lashWind';
+    e.t = 0.65;
+    sNoise({ dur: 0.6, f: 6000, f2: 2500, q: 1, gain: 0.14 });
+    floatWord('HSSS', e.pos.clone().setY(4.2), '#d8642a', 0.9); // every strand stands on end
+  } else if (dist < 15 && Math.random() < 0.55) {
+    e.st = 'snareWind';
+    e.t = 0.6;
+    e.sx = ux;
+    e.sz = uz;
+    sNoise({ dur: 0.5, f: 5000, f2: 9000, q: 4, gain: 0.1 });
+  } else {
+    e.st = 'swoopWind';
+    e.t = 0.8;
+    e.sx = ux;
+    e.sz = uz;
+    floatWord('WHOOSH', e.pos.clone().setY(4.6), '#d8642a', 1);
+    SFX.growl();
+  }
+}
+// a full spin with every strand thrown out: dodge it or back off
+function ldHairLash(e, dist, ux, uz) {
+  if (!e.lashHit && dist < 4.6) {
+    e.lashHit = true;
+    if (hurtHero(1, e.pos)) hero.knock.set(ux * 12, uz * 12);
+  }
+  if (animTick)
+    for (let k = 0; k < 3; k++) {
+      const a = rand(0, TAU),
+        r = rand(1.5, 4.2);
+      burst(e.pos.clone().add(new THREE.Vector3(Math.cos(a) * r, e.fly - 0.6, Math.sin(a) * r)), [0xc8642a, 0xd8823a], 1, 2, 0.2, {
+        g: 2,
+        life: 0.4
+      });
+    }
+  if (e.t <= 0) {
+    e.st = 'circle';
+    e.t = rand(1.8, 2.8);
+  }
+}
+// one long strand whips out along the line; if it finds you, it wraps your legs and starts reeling you in
+function ldHairSnare(e) {
+  const ex = hero.pos.x - e.pos.x,
+    ez = hero.pos.z - e.pos.z,
+    along = ex * e.sx + ez * e.sz,
+    off = Math.abs(ex * e.sz - ez * e.sx);
+  for (let k = 0; k < 14; k++)
+    burst(new THREE.Vector3(e.pos.x + e.sx * k * 1.1, 1, e.pos.z + e.sz * k * 1.1), [0xc8642a, 0x6a3418], 1, 0.5, 0.14, { g: 0, life: 0.5 });
+  if (along > 0 && along < 16 && off < 0.9 && hero.dodgeT <= 0 && hero.dodgeIF <= 0) {
+    hero.snared = 1.6;
+    hero.snareFrom = e;
+    floatWord('SNAGGED', hero.pos.clone().setY(hero.pos.y + 2.4), '#d8642a', 0.9, true);
+    sTone({ f: 300, f2: 120, dur: 0.3, type: 'sawtooth', gain: 0.08 });
   }
 }
 

@@ -81,16 +81,7 @@ let floorTok = 0; // a newer enterFloor cancels a build still waiting to run
 function enterFloor(i, later) {
   if (later === true && (state === 'leave' || state === 'build')) return; // a floor is already on its way in
   stats.npc[i] = 0;
-  if (i !== hero.ammoFloor) {
-    hero.ammoFloor = i;
-    hero.floorAmmo = hero.ammo;
-    hero.floorHp = hero.hp;
-    hero.floorJaw = !!hero.hasJaw;
-  } else {
-    hero.ammo = hero.floorAmmo;
-    hero.hp = hero.floorHp;
-    if (hero.hasJaw && !hero.floorJaw) loseJaw();
-  }
+  floorSupplies(i);
   hero.stun = 0;
   updAmmo();
   floorIdx = i;
@@ -106,45 +97,59 @@ function enterFloor(i, later) {
   state = 'leave';
   $('#card').classList.remove('enter');
   $('#veil').classList.add('on');
-  setTimeout(() => {
-    if (!live()) return;
-    // cut: under full ink, the scrap shows while the floor is built (after it has been painted)
-    state = 'build';
-    showOnly(null);
-    slidesOn(false);
-    droneStop();
-    for (const id of ['#hud', '#reticle', '#touch']) $(id).hidden = true;
-    $('#toast').style.opacity = 0;
-    $('#cutNum').textContent = FLOORS[i].num;
-    const run = snipPlan(i);
-    $('#cutting .snip').style.animationDuration = run + 'ms';
-    $('#cutting').hidden = false;
-    const t0 = performance.now(),
-      snip = snipRun(run, live, () => {
-        // in: the veil dissolves into the new floor and the card fades in with it
-        $('#cutting').hidden = true;
-        floorShow(i);
-        $('#card').classList.add('enter');
-        veilOff();
-      });
-    // two painted frames and a moment of snipping before the build holds the page, so the scissors are always seen moving
+  setTimeout(() => floorCut(i, live), 360);
+}
+// a new floor: remember the ties, pebbles and jaw he brings in; the same floor again (a retry): give those back
+function floorSupplies(i) {
+  if (i !== hero.ammoFloor) {
+    hero.ammoFloor = i;
+    hero.floorAmmo = hero.ammo;
+    hero.floorHp = hero.hp;
+    hero.floorJaw = !!hero.hasJaw;
+  } else {
+    hero.ammo = hero.floorAmmo;
+    hero.hp = hero.floorHp;
+    if (hero.hasJaw && !hero.floorJaw) loseJaw();
+  }
+}
+// cut: under full ink, the scrap shows while the floor is built (after it has been painted); live: this entry is still the latest
+function floorCut(i, live) {
+  if (!live()) return;
+  state = 'build';
+  showOnly(null);
+  slidesOn(false);
+  droneStop();
+  for (const id of ['#hud', '#reticle', '#touch']) $(id).hidden = true;
+  $('#toast').style.opacity = 0;
+  $('#cutNum').textContent = FLOORS[i].num;
+  const run = snipPlan(i);
+  $('#cutting .snip').style.animationDuration = run + 'ms';
+  $('#cutting').hidden = false;
+  const t0 = performance.now(),
+    snip = snipRun(run, live, () => {
+      // in: the veil dissolves into the new floor and the card fades in with it
+      $('#cutting').hidden = true;
+      floorShow(i);
+      $('#card').classList.add('enter');
+      veilOff();
+    });
+  // two painted frames and a moment of snipping before the build holds the page, so the scissors are always seen moving
+  requestAnimationFrame(() =>
     requestAnimationFrame(() =>
-      requestAnimationFrame(() =>
-        setTimeout(() => {
-          if (!live()) return;
-          floorBuilt(i);
-          tune(
-            live,
-            () => {
-              loadMemSet(i, performance.now() - t0);
-              snip.loaded();
-            },
-            snip.expect
-          );
-        }, 280)
-      )
-    );
-  }, 360);
+      setTimeout(() => {
+        if (!live()) return;
+        floorBuilt(i);
+        tune(
+          live,
+          () => {
+            loadMemSet(i, performance.now() - t0);
+            snip.loaded();
+          },
+          snip.expect
+        );
+      }, 280)
+    )
+  );
 }
 // The scissors cross their line at an even speed while the floor loads, cutting it open behind them, and the floor shows as
 // they reach the end. Their run is the floor's least scrap time, or how long it took to load here (LOAD_KEY: a faster load
@@ -387,8 +392,8 @@ function calViews(n) {
       if (r > run) [run, dir] = [r, [dx, dz]];
     }
     if (!dir) continue;
-    const cx = (x + 0.5) * CELL,
-      cz = (z + 0.5) * CELL,
+    const cx = cellMid(x),
+      cz = cellMid(z),
       y = heightAt(cx, cz),
       eye = new THREE.PerspectiveCamera(); // a camera's lookAt turns its back (-z) to the target
     eye.position.set(cx, y + 2.4, cz);

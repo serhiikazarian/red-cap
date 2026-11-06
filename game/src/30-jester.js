@@ -95,7 +95,7 @@ function jesterWaits(e, dt) {
     e.dormant = false;
     e.engaged = true;
     G.totemIdle = null; // the two nearest big totems flash at once
-    if (G.F.lowHeart && hero.hp < 3) spawnPickup((G.F.lowHeart[0] + 0.5) * CELL, (G.F.lowHeart[1] + 0.5) * CELL);
+    if (G.F.lowHeart && hero.hp < 3) spawnPickup(cellMid(G.F.lowHeart[0]), cellMid(G.F.lowHeart[1]));
     e.t = 1.4;
     SFX.laugh();
     toast('Immune when masked. Ring a totem nearby, or knock a fallen face back.');
@@ -395,7 +395,7 @@ function finale(J) {
   cam.hurt = 0.34;
   const f = $('#flash');
   f.classList.add('on');
-  setTimeout(() => f.classList.remove('on'), 140);
+  setTimeout(() => f.classList.remove('on'), 140); // screen time, not later(): a flash must always clear
   SFX.boom();
   SFX.tear();
   sTone({ f: 55, f2: 28, dur: 2.4, type: 'sawtooth', gain: 0.22, filt: [700, 70] });

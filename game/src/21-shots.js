@@ -92,7 +92,7 @@ function updShots(dt) {
     if (solid(ix, iz)) dead = true;
     else {
       const pr = propR(ch(ix, iz));
-      if (pr && p.y < 3.2 && Math.hypot(p.x - (ix * CELL + CELL / 2), p.z - (iz * CELL + CELL / 2)) < pr + 0.15) {
+      if (pr && p.y < 3.2 && Math.hypot(p.x - cellMid(ix), p.z - cellMid(iz)) < pr + 0.15) {
         dead = true;
         if (b.kind !== 'rain') hitPyr(p, 0.15, b.volley); /* a pyramid takes it as a blow (the rain strikes once as it lands) */
       }
