@@ -37,8 +37,10 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Random set dressing must pass `clearOf(x, z, r)`; story things claim ground with `keepOut(x, z, r)`; `storyGround()` lays
   down the map's story cells and talkers.
 - Map legend and per-floor settings live in `FLOORS` (04-floors); the optional fields `start` and `pitch` set the opening view,
-  `camThruFloaters` (floor one: drifting things never push the camera in) and `strayShots` (floor two: see Talkers).
-- `clearOfWalls` counts walls only; `clearOfCover` also pillars and props, or pillars only with `props = false` (the Geezer's stare:
+  `camThruFloaters` (floor one: drifting things never push the camera in), `plainFloaters` (floor one's floaters fade without
+  a contour), `strayShots` (floor two: see Talkers), `pyramids`, `flatProps` and `embers` (floor two). Shared code reads these,
+  never `F.deco` (that only picks what the floor builder makes). Obstacle sizes: `propRadius`, `BUMP_R`.
+- "Can he see you?" has two answers; pick the one the rule means: `clearOfWalls` counts walls only; `clearOfCover` also pillars and props, or pillars only with `props = false` (the Geezer's stare:
   `geezerSees`; his blink still treats an easel as cover, to spook).
 
 ## Drawing and the ink pass (02-render, 03-textures)
@@ -101,6 +103,10 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   to a boss, a stray shot to anyone. Stray shots (21-shots `shotHitsTalker`, floors with `strayShots`): fire and blood that hit
   a small talker do `STRAY_DMG`, never to the thrower (`shot.by`), a boss or the caged, never the last blow; insults fly past.
   `touchesTalker(e, p, pad)` is the shared hit shape (pebbles too).
+- A talker's height: `e.pos.y` / `e.gy` is its ground (raised floor included, unknown until its first move: use `e.gy || 0`),
+  `e.fly` how high a flier is drawn above it; shots, words and strands it gives off start at `(e.gy || 0) + e.fly`.
+- The boss bar (`bossInFight` in 64-loop, `bossBar` in 07-hud): the nearest boss met, within 26 m and with no wall between
+  (`clearOfWalls`); out of sight it fades out after 0.3 s (`#boss.on` in style.css), back in at once.
 - The crosshair's lock: yellow, red when the yo-yo reaches (`reach`), white on a pyramid (`pyr`) or on a talker pebbles bounce
   off (`proof`, from its `bounce` hook: the Grump).
 - Shout rings (the Grump's `emitWave`, the totems' `totemRingMat`) are open cylinders wrapped in `waveTex`; their back
@@ -121,6 +127,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Menu buttons and the exit door enter a floor in steps: `state` `'leave'` (the ink veil, 0.36 s) → `'build'` (the paper scrap
   while the floor is built: planned 1.4 s for floor one, 0.7 s for two, 3 s for three) → `'intro'`. Plain `startGame()` /
   `enterFloor(i)` still build at once.
+- Red Cap's first words on a new game: `OPENING` (60-flow), in marker font (`HERO_WORDS`), rising slowly (`floatWord`'s
+  `rise`).
 - Loading does real work: `warmUp` pre-draws `WORDS_SEED` + `WORDS_FLOOR[floor]` + words used this session and every `TEX`
   (a word with `\n` breaks there; `spacedWord` puts thin spaces between letters: the Jester's NOT FUNNY);
   `warmSet` compiles every material/shader variant from stand-ins; then `calibrate()`.
@@ -166,7 +174,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 11 weapons; 20 shared talker code (`TALKERS[letter]`, hooks listed at its top), 21 shots, 22–31 one file per talker; 4x
 floor features (40 pickups, 41 bystanders, 42 traps, 43 totems, 44 pyramids, 45 niches, 46 gates, 47 cages, 48 bombs, 49
 floor-three secret); 5x building a floor (50 level, 51 props, 52 decor, 53 architecture, 54 dreamwork, 55 baking, 56
-see-through); 6x flow and loading, menus, input, camera, loop, boot. Also `game/index.html` (build markers; the scissors'
+see-through); 6x flow and loading, menus, input, camera, loop, boot (`game/build.py` joins them, a line break after each).
+Also `game/index.html` (build markers; the scissors'
 strokes are typed out there), `style.css`, `assets/` (`img/*.webp` → ASSETS, `sfx/*.mp3` → SOUNDS, fonts, `shapes.json`),
 `vendor/three-r128.min.js`.
 
@@ -175,4 +184,4 @@ On a real GPU: the loading's chosen sharpness, the scissors' pace, low-end frame
 fog wall), the 1.38 camera speeds and the 1.40 wall wait (0.28 s). By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the exhale. By
 feel: the yo-yo's hit-stop in slow motion, the 0.85 s chain, see-through fades in motion, Grump ring cracks, hologram gaze
 timing, Bruno's circle, talkers breaking pyramids, floor one's floaters passing through the camera, floor two's stray
-shots (how often Grins reel), Spike's pebble odds. Touch on a real phone; controller on hardware.
+shots (how often Grins reel), Spike's pebble odds, the boss bar's fade at wall corners. Touch on a real phone; controller on hardware.

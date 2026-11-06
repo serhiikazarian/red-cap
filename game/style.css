@@ -197,4 +197,4 @@ button:focus, button:focus-visible { outline: none; }
 #bYoyo { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(118px + env(safe-area-inset-bottom, 0px)); background: var(--cap); }
 #bSling { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); background: #6b5a2a; }
 #bDodge { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); background: #3a332c; }
-@media (max-width: 560px) { .title-row { grid-template-columns: 1fr auto; } .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }
+@media (max-width: 560px) { .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }

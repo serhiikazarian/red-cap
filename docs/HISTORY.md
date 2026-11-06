@@ -373,7 +373,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Title text: "A paper slasher in three floors. Silence the voices." (was "…, then awake.").
 - Health bars: the Geezer's stare warning line is gone (WINDED stays), Bruno's reads "Flarin’" (was "Flarin’ — back
   off"), the Smoker's has no line (was "Hidin’ in his smoke" / "Every hit shakes out pebbles").
-- Title label `v1.41`.
 - Tidy, no change to play (replays SAME): floors say what they have instead of shared code asking which floor it is
   (`plainFloaters`, `pyramids`, `flatProps`, `embers` in 04-floors; `BUMP_R` in 05-world); the two sight checks say which
   they are: `clearOfWalls` (was `lineOfSight`), `clearOfCover` (was `losCover`).
@@ -387,3 +386,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   the Priest and Bruno.
 - Build: a code file without a last line break gets one before the next file is joined on, so it can never run into it
   (`include` in game/build.py; every file has one today, so the built game is the same).
+- Phone layout: the title row's repeated column rule removed (style.css; no change on screen).
+- Priest replay remade (Grins on raised ground now fire from their real height).
+- Docs synced: `CLAUDE.md` (sight helpers; floors say what they have), `docs/ARCHITECTURE.md` (the floor fields, the two
+  sight checks, a talker's height, the boss bar behind walls, the opening line, the build's line breaks, not-verified list).
+- Title label `v1.41`.

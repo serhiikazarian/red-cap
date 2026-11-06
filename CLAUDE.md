@@ -20,7 +20,8 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   vendor, baselines or a built HTML. Targeted edits only.
 - Change the file that owns the behaviour; tidy what you touch. Each file opens with its tuning numbers and rules. No
   function 68+ lines (`node tools/sizes.js`) except `floorState`. State machines: one step per state in a table
-  (`*_STATES`). Helpers: `heroDist`, `ease`, `glowSprite`, `figureRig`, `cellMid`, `KEEP_INK`/`INK_HIDE`. Name numbers.
+  (`*_STATES`). Helpers: `heroDist`, `ease`, `glowSprite`, `figureRig`, `cellMid`, `KEEP_INK`/`INK_HIDE`,
+  `clearOfWalls`/`clearOfCover`. Floors say what they have (`FLOORS` fields): never ask `F.deco` in shared code. Name numbers.
 
 ## Checks
 - Every change: `tools/check.sh` → `OK` (~15 s). Play/looks unchanged: `tools/same.sh` → `SAME` (~80 s, replays with
