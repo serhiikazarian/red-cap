@@ -366,3 +366,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Docs synced: `CLAUDE.md` (floor two's stray shots), `docs/ARCHITECTURE.md` (floor fields `camThruFloaters` and `strayShots`,
   `losCover`'s `props`, reeling and stray shots, the crosshair's colours, `\n` in a word, the not-verified list).
 - Title label `v1.40`.
+
+## 1.41 (6 Nov 2026)
+- Red Cap's first words on a new game (not on a restarted floor), in marker font over his head, drifting up slowly: "How did
+  I get here?" (`OPENING` in 60-flow; `floatWord`'s new `rise`).
+- Title text: "A paper slasher in three floors. Silence the voices." (was "…, then awake.").
