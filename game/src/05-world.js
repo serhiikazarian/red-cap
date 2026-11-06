@@ -56,6 +56,10 @@ function tickLater(rdt) {
 function cellOf(x, z) {
   return [Math.floor(x / CELL), Math.floor(z / CELL)];
 }
+// the middle of cell i along one axis, in metres (the other way from cellOf)
+function cellMid(i) {
+  return i * CELL + CELL / 2;
+}
 function ch(ix, iz) {
   if (!G || iz < 0 || iz >= G.h || ix < 0 || ix >= G.w) return '#';
   return G.map[iz][ix];
@@ -81,7 +85,7 @@ function losCover(a, b, pad = 0.3) {
       z = a.z + dz * t,
       [ix, iz] = cellOf(x, z),
       pr = propR(ch(ix, iz));
-    if (pr && Math.hypot(x - (ix * CELL + CELL / 2), z - (iz * CELL + CELL / 2)) < pr + pad) return false;
+    if (pr && Math.hypot(x - cellMid(ix), z - cellMid(iz)) < pr + pad) return false;
   }
   return true;
 }
@@ -196,8 +200,8 @@ function buildRaised(F) {
   for (let z = 0; z < G.h; z++)
     for (let x = 0; x < G.w; x++) {
       const k = kindAt(x, z),
-        cx = x * CELL + CELL / 2,
-        cz = z * CELL + CELL / 2;
+        cx = cellMid(x),
+        cz = cellMid(z);
       if (k === 1) {
         const b = new THREE.Mesh(new THREE.BoxGeometry(CELL, LIFT, CELL), [side, side, top, side, side, side]);
         b.position.set(cx, LIFT / 2, cz);
@@ -256,8 +260,8 @@ function collide(p, r, y, who) {
       else {
         const pr = propR(ch(ix, iz));
         if (pr) {
-          const px = ix * CELL + CELL / 2,
-            pz = iz * CELL + CELL / 2,
+          const px = cellMid(ix),
+            pz = cellMid(iz),
             dx = p.x - px,
             dz = p.z - pz,
             d = Math.hypot(dx, dz),
@@ -398,8 +402,8 @@ function steerRaw(e, target) {
       bz = nz;
     }
   }
-  const tx = bx * CELL + CELL / 2 - e.pos.x,
-    tz = bz * CELL + CELL / 2 - e.pos.z,
+  const tx = cellMid(bx) - e.pos.x,
+    tz = cellMid(bz) - e.pos.z,
     d = Math.hypot(tx, tz) || 1;
   return [tx / d, tz / d];
 }

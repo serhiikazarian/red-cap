@@ -275,7 +275,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `grinBall`, `pyrScream` (`screamBus`, `screamVoices`), `buildPyramid`, `buildProp`, `buildHero` (`heroFigure`,
   `buildYoyo`), `updBruno`, `buildCages` (`brunoStake`, `ironCage`), `addPaintings`, `enterFloor` (`floorSupplies`,
   `floorCut`). The unread cobweb counter `G.strips` is gone. Nothing in `game/src` is 68 lines or longer now.
+- `cellMid(i)` (05-world, next to `cellOf`): the middle of a cell in metres, in place of `i * CELL + CELL / 2` written out
+  36 times; `blockWall` and `tallWall` work it out themselves from the cell.
+- `G.doorT` and `G.npcHearts` are declared in `newFloor` (were `G.x = (G.x || 0) …`).
 - CI: pushes to `prerelease` build and check the game and keep it as a download on the run's page (30 days); only `main`
   publishes, tags and releases (a manual run on another branch could publish before).
-- First shipped to the `prerelease` branch, not `main` (twice: the second 1.35 adds the 24 splits).
+- First shipped to the `prerelease` branch, not `main` (three times: the second 1.35 adds the 24 splits, the third `cellMid` and the two `G` fields).
 - Title label `v1.35`.

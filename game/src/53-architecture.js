@@ -148,8 +148,8 @@ function cornerWebs({ r, pos, uv, used }, w) {
         const hA = top(x + a, z),
           hB = top(x, z + b);
         if (!hA || !hB || r() > 0.95) continue;
-        const cx = x * CELL + CELL / 2 + a * H,
-          cz = z * CELL + CELL / 2 + b * H;
+        const cx = cellMid(x) + a * H,
+          cz = cellMid(z) + b * H;
         if (used.some(([ux, uz]) => Math.hypot(ux - cx, uz - cz) < 2.2)) continue;
         const L = 1.8 + r() * 0.8,
           yt = Math.min(hA, hB) - 0.36,
@@ -253,16 +253,16 @@ function addPaintings(w) {
     easels = 0;
   for (const [x, z, dx, dz] of spots) {
     const base = G.blockBase[x + dx + (z + dz) * w] || 0,
-      fx = x * CELL + CELL / 2 + dx * (CELL / 2 - 0.05),
-      fz = z * CELL + CELL / 2 + dz * (CELL / 2 - 0.05);
+      fx = cellMid(x) + dx * (CELL / 2 - 0.05),
+      fz = cellMid(z) + dz * (CELL / 2 - 0.05);
     if (hung < PAINT.hung && base >= 2.4 && far(fx, fz)) {
       hangPainting(M, fx, fz, dx, dz);
       used.push([fx, fz]);
       hung++;
       continue;
     }
-    const ex = x * CELL + CELL / 2 + dx * 0.55,
-      ez = z * CELL + CELL / 2 + dz * 0.55;
+    const ex = cellMid(x) + dx * 0.55,
+      ez = cellMid(z) + dz * 0.55;
     if (easels < PAINT.easels && far(ex, ez)) {
       paintEasel(M, r, ex, ez, dx, dz);
       used.push([ex, ez]);

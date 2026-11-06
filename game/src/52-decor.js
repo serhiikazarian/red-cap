@@ -293,7 +293,7 @@ function wallFaces(rng, prob, fn) {
         if (ch(x + dx, z + dz) === '#' && rng() < prob) {
           const n0 = G.group.children.length,
             h = kindAt(x, z) === 1 ? LIFT : 0;
-          fn(x * CELL + CELL / 2 + dx * (CELL / 2 - 0.04), z * CELL + CELL / 2 + dz * (CELL / 2 - 0.04), Math.atan2(-dx, -dz), dx, dz);
+          fn(cellMid(x) + dx * (CELL / 2 - 0.04), cellMid(z) + dz * (CELL / 2 - 0.04), Math.atan2(-dx, -dz), dx, dz);
           if (h) for (let k = n0; k < G.group.children.length; k++) G.group.children[k].position.y += h;
         }
     }
@@ -540,8 +540,8 @@ function doodleDecals(rng, tint) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1), mat);
     m.rotation.x = -Math.PI / 2;
     m.rotation.z = rng() * TAU;
-    if (kindAt(x, z) === 2 || !clearOf(x * CELL + CELL / 2, z * CELL + CELL / 2, 1.3)) continue;
-    m.position.set(x * CELL + CELL / 2, 0.025 + heightAt(x * CELL + CELL / 2, z * CELL + CELL / 2), z * CELL + CELL / 2);
+    if (kindAt(x, z) === 2 || !clearOf(cellMid(x), cellMid(z), 1.3)) continue;
+    m.position.set(cellMid(x), 0.025 + heightAt(cellMid(x), cellMid(z)), cellMid(z));
     G.group.add(still(m));
   }
 }

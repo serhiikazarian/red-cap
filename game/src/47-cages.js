@@ -3,8 +3,8 @@
 function buildCages(F) {
   G.cages = [];
   for (const [x, z, type] of F.cages || []) {
-    const cx = x * CELL + CELL / 2,
-      cz = z * CELL + CELL / 2;
+    const cx = cellMid(x),
+      cz = cellMid(z);
     let e = G.enemies.find(q => q.type === type && cellOf(q.pos.x, q.pos.z)[0] === x && cellOf(q.pos.x, q.pos.z)[1] === z) || makeEnemy(type, cx, cz);
     e.caged = true;
     if (e.fly != null) e.fly = 1.3;
