@@ -264,7 +264,7 @@ function pyrTieAndPool(cx, cz) {
 }
 // the pyramids' glow breathes, all together: their core and scratches (emissive) and the pools on the floor
 function pyrGlow() {
-  if (!PYR || !G || G.F.deco !== 'mouth') return;
+  if (!PYR || !G || !G.F.pyramids) return;
   const k = 0.78 + 0.22 * Math.sin(performance.now() / 650);
   PYR.mat.emissive.setRGB(PYR_GLOW[0] * k, PYR_GLOW[1] * k, PYR_GLOW[2] * k);
   PYR.poolM.opacity = 0.45 * k;

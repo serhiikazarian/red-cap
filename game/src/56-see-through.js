@@ -75,7 +75,7 @@ function seeThru(o, dyn, how) {
 // after instanceProps, before baking: what each thing is drawn with, and its shapes
 function seePrep() {
   // floor one's floaters (glasses, golden spirals, boxes) fade without a contour
-  for (const d of G.deco) if (!d.m.userData.seeId) seeThru(d.m, true, G.F.deco === 'corridor' ? 'plain' : undefined);
+  for (const d of G.deco) if (!d.m.userData.seeId) seeThru(d.m, true, G.F.plainFloaters ? 'plain' : undefined);
   G.group.updateMatrixWorld(true);
   for (const c of G.see) {
     if (c.solid === 'pyramid') {

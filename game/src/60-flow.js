@@ -14,6 +14,7 @@ function startGame(later) {
   stats.deaths = 0;
   stats.npc = [0, 0, 0];
   stats.start = performance.now();
+  openingSaid = false;
   enterFloor(0, later === true);
 }
 // Loading rule: everything a floor will use is prepared during its loading screen, never mid-game. warmSet holds stand-ins
@@ -426,6 +427,10 @@ function floorShow(i) {
 // nothing moves, attacks, or hurts until the player dismisses the floor's card
 let cardAt = 0;
 const cardReady = () => performance.now() - cardAt > 900; // a key still held from walking through the door must not skip the card
+// Red Cap's first words on a new game (not on a restarted floor): a moment into play, at y m over him, floating for life s,
+// rising slowly (m/s) so the whole line stays in view
+const OPENING = { line: 'How did I get here?', delay: 0.6, y: 2.1, life: 2.4, rise: 0.25 };
+let openingSaid = false;
 function beginFloor() {
   if (state !== 'intro' || !cardReady()) return;
   state = 'play';
@@ -437,6 +442,12 @@ function beginFloor() {
   hero.iframe = Math.max(hero.iframe, 0.8);
   keys.clear();
   lockPointer();
+  if (!openingSaid && floorIdx === 0) {
+    openingSaid = true;
+    later(OPENING.delay, () =>
+      floatWord(OPENING.line, hero.pos.clone().setY(hero.pos.y + OPENING.y), HEX.paper, 1.1, true, OPENING.life, OPENING.rise)
+    );
+  }
 }
 $('#card').addEventListener('pointerdown', e => {
   e.preventDefault();

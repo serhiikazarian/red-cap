@@ -5,10 +5,10 @@ Live: https://serhiikazarian.github.io/red-cap/ (Pages, from `main`). Version: `
 Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (read only the section you need).
 
 ## Working with Serj
-- Serj does not code: plain language, he/him. Report what changed, what was tested, what to check in play. Be interactive and report your progress.
+- Serj does not code: plain language, they/them. Report what changed, what was tested, what to check in play.
 - Only what is asked. Ambiguous look, sound, play or workflow: one AskUserQuestion with options first.
 - Before anything slow, one line on what runs and how long.
-- Checks pass: say so, ask whether to ship. Never push `main` without his yes.
+- Checks pass: say so, ask whether to ship. Never push `main` without their yes.
 - Docs wait for the end of the chat; meanwhile only code, the `#version` label and a `## N.NN (date)` entry in
   `docs/HISTORY.md` (one bullet per change). At the end sync `CLAUDE.md` and `docs/ARCHITECTURE.md` once.
 
@@ -20,7 +20,8 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   vendor, baselines or a built HTML. Targeted edits only.
 - Change the file that owns the behaviour; tidy what you touch. Each file opens with its tuning numbers and rules. No
   function 68+ lines (`node tools/sizes.js`) except `floorState`. State machines: one step per state in a table
-  (`*_STATES`). Helpers: `heroDist`, `ease`, `glowSprite`, `figureRig`, `cellMid`, `KEEP_INK`/`INK_HIDE`. Name numbers.
+  (`*_STATES`). Helpers: `heroDist`, `ease`, `glowSprite`, `figureRig`, `cellMid`, `KEEP_INK`/`INK_HIDE`,
+  `clearOfWalls`/`clearOfCover`. Floors say what they have (`FLOORS` fields): never ask `F.deco` in shared code. Name numbers.
 
 ## Checks
 - Every change: `tools/check.sh` → `OK` (~15 s). Play/looks unchanged: `tools/same.sh` → `SAME` (~80 s, replays with
@@ -35,7 +36,7 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   changed; `tools/ship.sh N.NN "<attribution lines>"` → `SHIPPED`. Never merge, squash or force-push by hand. Undo:
   `git revert`, ship anew.
 - Try first: `tools/prerelease.sh N.NN "<attribution lines>"` → `PRERELEASED` (may repeat); Serj downloads from the CI
-  run's Summary → Artifacts: give him the run link. Between versions: `tools/wip.sh "msg" "<attribution lines>"`.
+  run's Summary → Artifacts: give them the run link. Between versions: `tools/wip.sh "msg" "<attribution lines>"`.
 
 ## Rules that bite
 - **Load rule:** anything new is prepared on the loading screen, never mid-game: a new material/shader variant gets a

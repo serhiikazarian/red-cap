@@ -62,7 +62,7 @@ function updatePriest(e, dt, dist, ux, uz, mv) {
     e.reelHits = null;
     e.ghosts.forEach(g => (g.m.visible = g.wait <= 0));
   }
-  const seen = dist < 20 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const seen = dist < 20 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos);
   const step = PRIEST_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, seen);
   if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);

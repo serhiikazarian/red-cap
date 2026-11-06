@@ -115,7 +115,7 @@ function wordRect(pos, scale) {
   return { x: (v.x * 0.5 + 0.5) * innerWidth, y: (-v.y * 0.5 + 0.5) * innerHeight, w: h * 2.875, h, behind: v.z > 1 };
 }
 const wordsMeet = (a, b) => !a.behind && !b.behind && Math.abs(a.x - b.x) < (a.w + b.w) / 2 && Math.abs(a.y - b.y) < (a.h + b.h) / 2;
-function floatWord(text, pos, color, scale = 1.2, must, life = 0.9) {
+function floatWord(text, pos, color, scale = 1.2, must, life = 0.9, rise = 1.1) {
   const now = performance.now();
   if (!must) {
     if (lastWord[text] && now - lastWord[text] < 1200) return;
@@ -135,7 +135,7 @@ function floatWord(text, pos, color, scale = 1.2, must, life = 0.9) {
   s.scale.set(2.3 * scale, 0.8 * scale, 1);
   s.renderOrder = 10;
   scene.add(s);
-  floaters.push({ s, life, vy: 1.1, scale });
+  floaters.push({ s, life, vy: rise, scale });
 }
 function updateFloaters(dt) {
   for (let i = floaters.length - 1; i >= 0; i--) {

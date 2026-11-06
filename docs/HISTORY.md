@@ -366,3 +366,28 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Docs synced: `CLAUDE.md` (floor two's stray shots), `docs/ARCHITECTURE.md` (floor fields `camThruFloaters` and `strayShots`,
   `losCover`'s `props`, reeling and stray shots, the crosshair's colours, `\n` in a word, the not-verified list).
 - Title label `v1.40`.
+
+## 1.41 (6 Nov 2026)
+- Red Cap's first words on a new game (not on a restarted floor), in marker font over his head, drifting up slowly: "How did
+  I get here?" (`OPENING` in 60-flow; `floatWord`'s new `rise`).
+- Title text: "A paper slasher in three floors. Silence the voices." (was "…, then awake.").
+- Health bars: the Geezer's stare warning line is gone (WINDED stays), Bruno's reads "Flarin’" (was "Flarin’ — back
+  off"), the Smoker's has no line (was "Hidin’ in his smoke" / "Every hit shakes out pebbles").
+- Tidy, no change to play (replays SAME): floors say what they have instead of shared code asking which floor it is
+  (`plainFloaters`, `pyramids`, `flatProps`, `embers` in 04-floors; `BUMP_R` in 05-world); the two sight checks say which
+  they are: `clearOfWalls` (was `lineOfSight`), `clearOfCover` (was `losCover`).
+- A Grin on raised ground spits its fireball from where it is drawn (was from 1.5 m lower, as if on the floor below):
+  `grinSpit`.
+- On raised ground, these come from where the talker is drawn too (were 1.5 m low): a Grin's HAAA, a Shade's BOO!, a
+  Smoker's PSST and *COUGH*, the hidden boss's red orbs, laughs, NOT YET and its snaring strand (floor three is flat: no
+  change there today).
+- A boss's health bar shows only while no wall stands between him and Red Cap: it fades out behind one (after 0.3 s, so a
+  corner can't make it blink) and fades back in when he is in sight (`bossInFight`, `#boss.on` in style.css). Seen with
+  the Priest and Bruno.
+- Build: a code file without a last line break gets one before the next file is joined on, so it can never run into it
+  (`include` in game/build.py; every file has one today, so the built game is the same).
+- Phone layout: the title row's repeated column rule removed (style.css; no change on screen).
+- Priest replay remade (Grins on raised ground now fire from their real height).
+- Docs synced: `CLAUDE.md` (sight helpers; floors say what they have), `docs/ARCHITECTURE.md` (the floor fields, the two
+  sight checks, a talker's height, the boss bar behind walls, the opening line, the build's line breaks, not-verified list).
+- Title label `v1.41`.

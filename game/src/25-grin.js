@@ -176,7 +176,7 @@ function updateGrin(e, dt, dist, ux, uz, mv) {
   grinWiggle(e);
   e.y0 = e.fly - 0.8;
   e.y1 = e.fly + 0.8;
-  const seen = dist < 22 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const seen = dist < 22 && !hero.inSmoke && clearOfWalls(e.pos, hero.pos);
   if (e.st === 'idle') {
     if (seen || dist < 9) {
       e.st = 'hover';
@@ -224,7 +224,7 @@ function grinHover(e, seen, dist, ux, uz, mv) {
   } else if (seen && e.t <= 0 && e.stagger <= 0) {
     e.st = 'wind';
     e.t = 0.55;
-    floatWord('HAAA', e.pos.clone().setY(e.fly + 1.1), HEX.bile, 0.7);
+    floatWord('HAAA', e.pos.clone().setY((e.gy || 0) + e.fly + 1.1), HEX.bile, 0.7);
   }
 }
 // the wind-up done: a fireball spat where he is going
@@ -232,7 +232,7 @@ function grinSpit(e, dist) {
   e.body.scale.setScalar(1);
   e.tilt.rotation.x = 0;
   e.tilt.position.set(0, e.fly, 0);
-  const from = e.pos.clone().setY(e.fly),
+  const from = e.pos.clone().setY((e.gy || 0) + e.fly), // from the ball itself, raised ground too
     to = hero.pos
       .clone()
       .setY(hero.pos.y + 1.1)

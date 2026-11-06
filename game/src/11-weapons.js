@@ -136,7 +136,7 @@ function yoyoPointBlank(fx, fz) {
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.away) continue;
     const d = heroDist(e.pos.x, e.pos.z);
-    if (d >= e.r + 0.9 || !(TALKERS[e.type].noCover || lineOfSight(hero.pos, e.pos))) continue;
+    if (d >= e.r + 0.9 || !(TALKERS[e.type].noCover || clearOfWalls(hero.pos, e.pos))) continue;
     y.hit.add(e);
     damage(e, YOYO_DMG * y.power * y.mixP, fx * y.power, fz * y.power, false, true);
     yoyoStop(y);
@@ -190,7 +190,7 @@ function yoyoTip(y, hand, k, out) {
 // the string's point (x, z) is out in the open, reached from the hand, and sees the talker: no blows through a wall or round a
 // corner (the Geezer is left as he was)
 function yoyoClear(hand, x, z, at) {
-  return !solid(...cellOf(x, z)) && lineOfSight(hand, tmpY.set(x, 0, z)) && lineOfSight(tmpY, at);
+  return !solid(...cellOf(x, z)) && clearOfWalls(hand, tmpY.set(x, 0, z)) && clearOfWalls(tmpY, at);
 }
 // the string from hand to p: each talker it brushes is hit once per throw; ghosts, holograms, totems, pyramids, fallen faces
 // and plaques along it too; onlookers only by the yo-yo itself (brushing one with the string is never a strike)

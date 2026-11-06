@@ -55,7 +55,8 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 .tie.gone { background: var(--smoke); opacity: .35; }
 #left { font-family: var(--display); font-size: 1.1rem; letter-spacing: .03em; text-shadow: 2px 2px 0 var(--ink); text-align: right; }
 #left small { display: block; font-family: var(--body); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
-#boss { justify-self: center; width: min(520px, 86vw); text-align: center; align-self: start; margin-top: 8px; }
+#boss { justify-self: center; width: min(520px, 86vw); text-align: center; align-self: start; margin-top: 8px; opacity: 0; transition: opacity .35s .3s; }
+#boss.on { opacity: 1; transition-delay: 0s; } /* in at once; out only after .3 s out of sight, so a corner can't make it blink */
 #boss .name { font-family: var(--display); font-size: 1.2rem; text-shadow: 2px 2px 0 var(--ink); }
 #boss .state { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; min-height: 1em; text-shadow: 1px 1px 0 var(--ink); }
 #boss .state.open { color: var(--bile); }
@@ -196,4 +197,4 @@ button:focus, button:focus-visible { outline: none; }
 #bYoyo { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(118px + env(safe-area-inset-bottom, 0px)); background: var(--cap); }
 #bSling { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); background: #6b5a2a; }
 #bDodge { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); background: #3a332c; }
-@media (max-width: 560px) { .title-row { grid-template-columns: 1fr auto; } .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }
+@media (max-width: 560px) { .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }

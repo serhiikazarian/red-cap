@@ -72,8 +72,7 @@ const setText = (el, t) => {
 function bossBar(e) {
   const b = HUD.boss;
   if (!e) {
-    if (!b.hidden) b.hidden = true;
-    bossShown = bossWord = null;
+    b.classList.remove('on'); /* fades out (style.css), keeping the last boss's name and bar while it goes */
     return;
   }
   if (bossShown !== e) {
@@ -83,6 +82,7 @@ function bossBar(e) {
     bossWord = null;
   }
   if (b.hidden) b.hidden = false;
+  b.classList.add('on');
   const fp = Math.max(0, Math.round((e.hp / e.maxHp) * 1000) / 10);
   if (fp !== bossFill) {
     bossFill = fp;
