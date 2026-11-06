@@ -119,8 +119,18 @@ function buildLevel(i) {
 }
 // the floor's state (G), its light and fog, and the ground
 function newFloor(F, w) {
+  G = floorState(F, w);
+  buildHeights(F);
+  scene.add(G.group);
+  SEE.on = false;
+  SEE.tg = null;
+  floorLight(F);
+  floorGround(F, w);
+}
+// every field of G (none is added later), each map row padded with wall to width w
+function floorState(F, w) {
   const map = F.map.map(r => r.padEnd(w, '#'));
-  G = {
+  return {
     F,
     map,
     w,
@@ -190,10 +200,9 @@ function newFloor(F, w) {
     jawT: 6, // until the jaw Red Cap carries next taunts the masked Jester (it knocks his mask off)
     npcHearts: 0 // hearts shaken out of onlookers on this floor (at most two: hitNpc)
   };
-  buildHeights(F);
-  scene.add(G.group);
-  SEE.on = false;
-  SEE.tg = null;
+}
+// the sky colour, fog, ambient and sky light, and the lamp that follows Red Cap
+function floorLight(F) {
   scene.background = new THREE.Color(F.bg);
   scene.fog = new THREE.Fog(F.fog, F.near, F.far);
   inkPass.uniforms.far.value = F.far;
@@ -202,6 +211,9 @@ function newFloor(F, w) {
   const lamp = new THREE.PointLight(F.lamp[0], F.lamp[1], F.lamp[2], 1.6);
   G.lamp = lamp;
   G.group.add(lamp);
+}
+// the ground: one painted plane under the whole map, 15 m wider all round
+function floorGround(F, w) {
   const fw = w * CELL,
     fh = G.h * CELL;
   const floor = new THREE.Mesh(
