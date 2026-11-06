@@ -335,8 +335,20 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Title label `v1.38`.
 
 ## 1.39 (6 Nov 2026)
-- The ending plays on a clean screen: from the Jester's final blow there is no 1 TALKER LEFT call (even with the hidden
-  boss still about: `updateLeft` checks `G.finalFx`), and taking his mask clears whatever words and hint are showing
-  (`quietScreen`, 07-hud).
+- The ending plays on a clean screen: from the Jester's final blow there is no 1 TALKER LEFT call, whoever is still
+  counted (most often Brainless the Second away in his smoke, unseen but counted; or the hidden boss, if woken):
+  `updateLeft` checks `G.finalFx`. Taking his mask clears whatever words and hint are showing (`quietScreen`, 07-hud).
 - Tidy: the hair's lash state points straight at `livingDyingHairLash` (it only passed the call on).
+- Docs synced to this build: `CLAUDE.md` condensed (half the size; the file map and the not-verified list moved to
+  `docs/ARCHITECTURE.md`), which now also covers the state tables, the shout rings' inside and the ending's clean screen.
 - Title label `v1.39`.
+
+## 1.40 (6 Nov 2026)
+- After a wall the camera waits 0.28 s of clear way before pulling back out (`CAM_EASE.hold`, was 0.2).
+- Floor one: the drifting faces, glasses and boxes no longer push the camera in and out as they float across its arm; they
+  only fade (`camThruFloaters` in 04-floors, `seeInside`'s `skipDyn`).
+- The Geezer's stare goes past the easels (too small to hide behind): only walls and pillars hide Red Cap from it
+  (`geezerSees`, `losCover`'s `props`). Behind an easel he still blinks round it now and then, just to spook.
+- The crosshair locked on the Grump is white, not yellow (pebbles bounce off him); still red when the yo-yo reaches him
+  (`proof` class on the reticle, from his `bounce` hook).
+- Title label `v1.40`.
