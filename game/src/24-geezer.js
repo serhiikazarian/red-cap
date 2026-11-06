@@ -1,5 +1,8 @@
 // The Geezer (Y): floor one's boss. Stares people mad, mostly himself, in mirrors.
 
+// his stare: walls and pillars hide Red Cap from it; an easel is too small to
+const geezerSees = e => losCover(e.pos, hero.pos, 0.3, false);
+
 // a big floating head, with two eye glows over the painted eyes
 function makeGeezer(e, add) {
   const H = 4.4;
@@ -78,12 +81,12 @@ const GEEZER_STATES = {
         e.side = Math.random() < 0.5 ? 1 : -1;
         floatWord('HMMPH', e.pos.clone().setY(5.2), HEX.paper, 1);
         SFX.growl();
-      } else if (!losCover(e.pos, hero.pos) ? Math.random() < 0.5 : p2 && Math.random() < 0.45) {
+      } else if (!geezerSees(e) ? Math.random() < 0.5 : p2 && Math.random() < 0.45) {
         // hidden from him (or now and then in his second half): he blinks to where he can see you
         e.st = 'blink';
         e.t = 0.45;
         playNoise({ dur: 0.4, f: 3000, f2: 300, q: 2, gain: 0.2 });
-      } else if (!losCover(e.pos, hero.pos)) {
+      } else if (!geezerSees(e)) {
         e.t = rand(0.6, 1.2); // no stare at what he cannot see
       } else {
         e.st = 'gaze';
@@ -102,7 +105,7 @@ const GEEZER_STATES = {
       e.flashT = 0.25;
       SFX.psyFlash();
       const dodged = hero.dodgeT > 0 || performance.now() / 1000 - (hero.lastDodgeAt || -9) < 0.6;
-      const exposed = dist < 24 && losCover(e.pos, hero.pos) && !dodged && hero.stun <= 0;
+      const exposed = dist < 24 && geezerSees(e) && !dodged && hero.stun <= 0;
       if (exposed) {
         // the stare weakens with distance: full up close, less across the room, a dizzy blink from far away
         const far = dist > 17 ? 2 : dist > 9 ? 1 : 0;

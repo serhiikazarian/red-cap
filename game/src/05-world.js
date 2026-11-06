@@ -74,8 +74,8 @@ function solid(ix, iz) {
 function propRadius(c) {
   return c === 'T' ? (G && G.F.deco === 'mouth' ? PYR_R : 0.5) : c === 'o' ? (G && G.F.deco === 'mouth' ? 0 : 0.6) : 0;
 }
-// line of sight that also counts pillars and props as cover
-function losCover(a, b, pad = 0.3) {
+// line of sight that also counts pillars and props as cover (props = false: pillars only, the props too small to hide behind)
+function losCover(a, b, pad = 0.3, props = true) {
   if (!lineOfSight(a, b)) return false;
   const dx = b.x - a.x,
     dz = b.z - a.z,
@@ -86,7 +86,8 @@ function losCover(a, b, pad = 0.3) {
       x = a.x + dx * t,
       z = a.z + dz * t,
       [ix, iz] = cellOf(x, z),
-      pr = propRadius(cellAt(ix, iz));
+      c = cellAt(ix, iz),
+      pr = props || c !== 'o' ? propRadius(c) : 0;
     if (pr && Math.hypot(x - cellMid(ix), z - cellMid(iz)) < pr + pad) return false;
   }
   return true;
