@@ -140,3 +140,18 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   the mouse in play: test hover on the title screen. God mode: type G-O-D in play (fills ties and pebbles, next floor; wins on
   floor 3). CPU profiles are useless under swiftshader: count programs, uploads, draw calls (`renderer.info.autoReset=false`);
   a material's program: `renderer.properties.get(m).currentProgram`. Some floor-2 ground is raised: use `heightAt`.
+
+## File map (game/src, joined in name order)
+0x core (00 util, 01 audio, 02 render + ink pass, 03 textures, 04 floors, 05 world grid, 06 fx, 07 HUD); 10 Red Cap,
+11 weapons; 20 shared talker code (`TALKERS[letter]`, hooks listed at its top), 21 shots, 22–31 one file per talker; 4x
+floor features (40 pickups, 41 bystanders, 42 traps, 43 totems, 44 pyramids, 45 niches, 46 gates, 47 cages, 48 bombs, 49
+floor-three secret); 5x building a floor (50 level, 51 props, 52 decor, 53 architecture, 54 dreamwork, 55 baking, 56
+see-through); 6x flow and loading, menus, input, camera, loop, boot. Also `game/index.html` (build markers; the scissors'
+strokes are typed out there), `style.css`, `assets/` (`img/*.webp` → ASSETS, `sfx/*.mp3` → SOUNDS, fonts, `shapes.json`),
+`vendor/three-r128.min.js`.
+
+## Not verified by playing
+On a real GPU: the loading's chosen sharpness, the scissors' pace, low-end frame rate, floor three's busiest moments (smoke,
+fog wall), the 1.38 camera speeds. By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the exhale. By
+feel: the yo-yo's hit-stop in slow motion, the 0.85 s chain, see-through fades in motion, Grump ring cracks, hologram gaze
+timing, Bruno's circle, talkers breaking pyramids. Touch on a real phone; controller on hardware.
