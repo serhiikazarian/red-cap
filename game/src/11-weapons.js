@@ -80,7 +80,7 @@ const slingDir = new THREE.Vector3(0, 0, -1);
 
 // how far the yo-yo has to fly to meet a target: its usual reach if that is enough, a stretched one, or null (out of reach)
 function yoyoReachFor(t, base) {
-  const need = Math.hypot(t.pos.x - hero.pos.x, t.pos.z - hero.pos.z) - 0.25 - (t.r || 0.4) - 0.25; // the tip just inside its near edge
+  const need = heroDist(t.pos.x, t.pos.z) - 0.25 - (t.r || 0.4) - 0.25; // the tip just inside its near edge
   return need <= base ? base : need <= base + YOYO_STRETCH ? need : null;
 }
 // a shot of kind 'y' or 's': the chain grows on a switch made in time, else starts again
@@ -133,7 +133,7 @@ function yoyoPointBlank(fx, fz) {
   const y = hero.yy;
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.away) continue;
-    const d = Math.hypot(e.pos.x - hero.pos.x, e.pos.z - hero.pos.z);
+    const d = heroDist(e.pos.x, e.pos.z);
     if (d >= e.r + 0.9 || !(TALKERS[e.type].noCover || lineOfSight(hero.pos, e.pos))) continue;
     y.hit.add(e);
     damage(e, YOYO_DMG * y.power * y.mixP, fx * y.power, fz * y.power, false, true);
@@ -374,7 +374,7 @@ function pebbleHoming(b, dt) {
   const t = b.target;
   if (!t || t.dead || t.dying || t.hidden) return;
   const want = tmpV.set(t.pos.x, hitHeight(t), t.pos.z).sub(b.m.position).normalize().multiplyScalar(26);
-  b.v.lerp(want, 1 - Math.exp(-(t.ghost ? 14 : 5) * dt));
+  b.v.lerp(want, ease(t.ghost ? 14 : 5, dt));
 }
 // one of a frame's PEBBLE_STEPS moves; true when it stops (past its range, in a wall or the floor, or on something it hit)
 function pebbleStep(b, dt) {

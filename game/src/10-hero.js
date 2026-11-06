@@ -15,11 +15,7 @@ function heroFigure() {
     foot = Math.max(S.hero_leg_l.box[3], S.hero_leg_r.box[3]);
   const sc = 1.95 / (foot - top),
     cx = (S.hero_body.box[0] + S.hero_body.box[2]) / 2;
-  const root = new THREE.Group(),
-    face = new THREE.Group(),
-    tilt = new THREE.Group();
-  root.add(face);
-  face.add(tilt);
+  const { root, face, tilt } = figureRig();
   const part = (name, depth) => {
     const b = S[name].box,
       h = (b[3] - b[1]) * sc,
@@ -284,7 +280,7 @@ function updateHero(dt) {
   updateNiches(dt);
   heroHeat(dt);
   updatePickups(dt);
-  if (G.portal && G.portal.open && Math.hypot(G.portal.x - hero.pos.x, G.portal.z - hero.pos.z) < 1.3) nextFloor();
+  if (G.portal && G.portal.open && heroDist(G.portal.x, G.portal.z) < 1.3) nextFloor();
 }
 function heroTimers(dt) {
   hero.iframe = Math.max(0, hero.iframe - dt);
@@ -338,8 +334,8 @@ function heroConditions(dt) {
 }
 // eases toward the wanted velocity (tvx, tvz), adds knockback or the dodge, and moves in small steps so nothing is passed through
 function heroMove(dt, tvx, tvz) {
-  hero.vel.x = lerp(hero.vel.x, tvx, 1 - Math.exp(-14 * dt));
-  hero.vel.y = lerp(hero.vel.y, tvz, 1 - Math.exp(-14 * dt));
+  hero.vel.x = lerp(hero.vel.x, tvx, ease(14, dt));
+  hero.vel.y = lerp(hero.vel.y, tvz, ease(14, dt));
   let vx = hero.vel.x + hero.knock.x,
     vz = hero.vel.y + hero.knock.y;
   if (hero.dodgeT > 0) {
@@ -423,8 +419,7 @@ function heroPose(moving, rx, rz) {
 // standing in the heat of a brazier or a candle stake: a short grace, HOT, then it burns
 function heroHeat(dt) {
   let nearFire = 0;
-  for (const f of G.hot)
-    if (Math.hypot(hero.pos.x - f.x, hero.pos.z - f.z) < f.r && (!f.see || lineOfSight(f, hero.pos))) nearFire = Math.max(nearFire, f.k || 1);
+  for (const f of G.hot) if (heroDist(f.x, f.z) < f.r && (!f.see || lineOfSight(f, hero.pos))) nearFire = Math.max(nearFire, f.k || 1);
   if (nearFire) {
     hero.heat = (hero.heat || 0) + dt * nearFire;
     if (hero.heat > 0.45 && !hero.heatWarned) {

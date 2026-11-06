@@ -143,6 +143,8 @@ const INK_HIDE = {
   blendSrcAlpha: THREE.ZeroFactor,
   blendDstAlpha: THREE.OneMinusSrcAlphaFactor
 };
+// normal colour blending that leaves the picture's alpha as it is (soft see-through bits the ink pass should not notice)
+const KEEP_INK = { ...INK_HIDE, blendDstAlpha: THREE.OneFactor };
 
 // The resolution controller. resScale is the drawing ratio, never above the screen's (resolutionCap). calibrate (60-flow) sets it while a
 // floor loads; then adaptResolution looks at each second of play. A frame is late when it takes 1.4 frames of a 60 Hz screen (or of

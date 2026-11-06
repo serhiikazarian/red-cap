@@ -194,7 +194,7 @@ function seeShapes() {
       s.y0 = p.y + c.at[2];
       s.y1 = p.y + c.at[3];
     }
-    c.near = c.dyn || Math.hypot(c.w[0].x - hero.pos.x, c.w[0].z - hero.pos.z) < cam.dist + c.w[0].r + 4;
+    c.near = c.dyn || heroDist(c.w[0].x, c.w[0].z) < cam.dist + c.w[0].r + 4;
     if (!c.dyn) continue;
     if (c.inst) {
       const s = c.w[0],

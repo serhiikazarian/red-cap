@@ -89,7 +89,7 @@ function bombBlast(x, z) {
   for (let i = 0; i < 3; i++) burst(p.clone().setY(p.y + i * 0.6), [0xfff0a0, COL.bile, COL.hot, COL.tie, 0x1a1618], 45, 13, 0.36, { g: 9 });
   for (let i = 0; i < 12; i++) smokePuff(p.clone().add(new THREE.Vector3(rand(-2.2, 2.2), rand(0, 2), rand(-2.2, 2.2))), rand(2, 3.4), 1.6, 1.2);
   floatWord('BOOM', p.clone().setY(p.y + 3), HEX.bile, 1.8, true);
-  const d = Math.hypot(hero.pos.x - x, hero.pos.z - z);
+  const d = heroDist(x, z);
   if (d < BOMB_R) hurtHero(d < BOMB_CLOSE ? 2 : 1, p, true);
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.dormant || e.hidden) continue;

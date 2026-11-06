@@ -305,7 +305,7 @@ function maskFlight(e, dt, tq) {
     const hx = hero.pos.x - home.x,
       hz = hero.pos.z - home.z,
       hd = Math.hypot(hx, hz) || 1,
-      f = 1 - Math.exp(-1.6 * dt); // on the way out it bends toward you
+      f = ease(1.6, dt); // on the way out it bends toward you
     b.dx = lerp(b.dx, hx / hd, f);
     b.dz = lerp(b.dz, hz / hd, f);
     b.reach = lerp(b.reach, Math.min(hd, 13), f);
@@ -316,7 +316,7 @@ function maskFlight(e, dt, tq) {
     home.z + b.dz * b.reach * out + b.sz * Math.sin(k * TAU) * 1.3
   );
   if (animTick) b.m.rotation.y += 1.1;
-  if (Math.hypot(b.m.position.x - hero.pos.x, b.m.position.z - hero.pos.z) < 1.25) hurtHero(2, b.m.position);
+  if (heroDist(b.m.position.x, b.m.position.z) < 1.25) hurtHero(2, b.m.position);
   if (k >= 1) {
     G.group.remove(b.m);
     e.mBoom = null;
@@ -462,7 +462,7 @@ function updateFinalMask(dt, now) {
   f.m.position.y = 1.1 + Math.sin(now * 1.6) * 0.25;
   f.glow.material.opacity = 0.6 + Math.sin(now * 3) * 0.2;
   f.ring.rotation.z += dt * 0.5;
-  if (Math.hypot(hero.pos.x - f.x, hero.pos.z - f.z) < 2.3 && state === 'play') {
+  if (heroDist(f.x, f.z) < 2.3 && state === 'play') {
     G.finalMask = null;
     G.finalAt = null;
     G.group.remove(f.m);
@@ -572,7 +572,7 @@ function slabLands(s) {
   s.ring.material.color.setHex(COL.bile);
   s.ring.scale.setScalar(1);
   burst(new THREE.Vector3(s.x, 0.3, s.z), [0x9a9e98, COL.paper, COL.ink], 12, 5, 0.22);
-  if (Math.hypot(hero.pos.x - s.x, hero.pos.z - s.z) < 1.4) hurtHero(1, new THREE.Vector3(s.x, 0, s.z));
+  if (heroDist(s.x, s.z) < 1.4) hurtHero(1, new THREE.Vector3(s.x, 0, s.z));
 }
 function updateSlabs(dt) {
   for (let i = slabs.length - 1; i >= 0; i--) {

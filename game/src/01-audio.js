@@ -13,7 +13,7 @@ const VOL = {
 };
 function distanceGain(p) {
   if (!p) return 1;
-  const d = Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z);
+  const d = heroDist(p.x, p.z);
   return d <= SOUND_NEAR ? 1 : Math.max(0.05, Math.pow(SOUND_NEAR / d, 1.4));
 }
 function initAudio() {

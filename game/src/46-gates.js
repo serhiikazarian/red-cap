@@ -255,7 +255,7 @@ function trailLay() {
       for (; u < len && pts.length < TRAIL_N; u += TRAIL_STEP) {
         const x = a.x + ((b.x - a.x) * u) / len,
           z = a.z + ((b.z - a.z) * u) / len;
-        if (Math.hypot(x - hero.pos.x, z - hero.pos.z) < 1.6) break;
+        if (heroDist(x, z) < 1.6) break;
         pts.push({ x, z, yaw: Math.atan2(b.x - a.x, b.z - a.z), r: ((((x * 7.3 + z * 3.1) % 1) + 1) % 1) * 0.9 - 0.45 });
       }
       carry = u - len;
@@ -298,7 +298,7 @@ function openDoor() {
     p.lineT = 0;
   } else if (p.line < 2) {
     p.lineT += 0.5; // openDoor runs every half second of play
-    const near = Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z) < DOOR_NEAR,
+    const near = heroDist(p.x, p.z) < DOOR_NEAR,
       t = $('#toast');
     if (near || p.lineT >= DOOR_HOLD) {
       if (near) {

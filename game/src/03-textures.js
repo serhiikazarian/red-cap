@@ -219,6 +219,8 @@ function wordTex(text, color = HEX.tie, stroke = HEX.ink) {
   const t = new THREE.CanvasTexture(c);
   return (canvasTexCache[key] = t);
 }
+// a sprite that glows: its light adds to what is behind, and it writes no depth (extra: more of the material's settings)
+const glowSprite = (map, extra) => new THREE.Sprite(new THREE.SpriteMaterial({ map, blending: THREE.AdditiveBlending, depthWrite: false, ...extra }));
 // a soft round glow
 function glowTex(inner, outer) {
   const c = document.createElement('canvas');

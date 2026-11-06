@@ -27,16 +27,12 @@ function shake(m, amt) {
 function faceCam(e, dt) {
   const target = Math.atan2(camera.position.x - e.pos.x, camera.position.z - e.pos.z);
   e.yaw = e.yaw ?? target;
-  e.yaw += angDiff(e.yaw, target) * (1 - Math.exp(-6 * dt));
+  e.yaw += angDiff(e.yaw, target) * ease(6, dt);
   if (animTick) e.face.rotation.y = e.yaw + Math.sin(performance.now() / 700 + e.seed) * 0.1;
 }
 // a talker of the given map letter at (x, z): the shared parts (root > face > tilt), then its own (TALKERS[type].make)
 function makeEnemy(type, x, z, part) {
-  const root = new THREE.Group(),
-    face = new THREE.Group(),
-    tilt = new THREE.Group();
-  root.add(face);
-  face.add(tilt);
+  const { root, face, tilt } = figureRig();
   const e = {
     type,
     root,

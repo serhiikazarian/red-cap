@@ -2,7 +2,7 @@
 // kind: 'fire' and 'word' hurt and burst; 'blood' soaks and falls; 'rain' (the Priest's) falls from above.
 const shots = [];
 function fireball(from, dir) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: violetTex, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  const s = glowSprite(violetTex, { fog: false });
   s.scale.setScalar(1.2);
   s.position.copy(from);
   scene.add(s);
@@ -29,7 +29,7 @@ function bloodDrop(from, v) {
   return b;
 }
 function redOrb(from, dir) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowRed, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  const s = glowSprite(glowRed, { fog: false });
   s.scale.setScalar(0.8);
   s.position.copy(from);
   scene.add(s);
@@ -67,7 +67,7 @@ function hitWord(p, rad) {
   return hit;
 }
 function emberShot(from, dir) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  const s = glowSprite(fireTex, { fog: false });
   s.scale.setScalar(0.55);
   s.position.copy(from);
   scene.add(s);
@@ -129,7 +129,7 @@ function shotLands(shot) {
 function shotHitsHero(shot) {
   const p = shot.s.position,
     reach = SHOT_REACH[shot.kind] || SHOT_REACH_ELSE;
-  if (shot.kind === 'rain' || Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z) >= reach) return false;
+  if (shot.kind === 'rain' || heroDist(p.x, p.z) >= reach) return false;
   if (p.y - hero.pos.y >= 2.2 || p.y <= hero.pos.y - 0.5) return false;
   let spent = false;
   if (shot.kind === 'blood' && hero.dodgeT <= 0 && (hero.dodgeIF || 0) <= 0) {

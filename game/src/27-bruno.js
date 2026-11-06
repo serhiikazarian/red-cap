@@ -32,9 +32,7 @@ function makeBruno(e, add, x, z) {
   const b = SHAPES.bruno.box,
     w = sizeOf('bruno', 3).w;
   e.mouth = new THREE.Vector3(((380 - b[0]) / (b[2] - b[0]) - 0.5) * w, (1 - (700 - b[1]) / (b[3] - b[1])) * 3, 0.1);
-  const glow = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 })
-  );
+  const glow = glowSprite(fireTex, { transparent: true, opacity: 0.55 });
   glow.scale.set(6, 4, 1);
   glow.position.y = 1.1;
   e.root.add(glow);

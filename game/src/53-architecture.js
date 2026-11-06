@@ -231,13 +231,7 @@ function webMesh({ pos, uv }) {
     side: THREE.DoubleSide,
     transparent: true,
     depthWrite: false,
-    blending: THREE.CustomBlending /* soft alpha: keep the target's alpha for the ink pass */,
-    blendEquation: THREE.AddEquation,
-    blendSrc: THREE.SrcAlphaFactor,
-    blendDst: THREE.OneMinusSrcAlphaFactor,
-    blendEquationAlpha: THREE.AddEquation,
-    blendSrcAlpha: THREE.ZeroFactor,
-    blendDstAlpha: THREE.OneFactor
+    ...KEEP_INK
   });
   return new THREE.Mesh(g, m);
 }

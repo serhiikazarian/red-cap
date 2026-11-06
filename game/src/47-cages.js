@@ -118,7 +118,7 @@ function breakCage(c, byHit) {
 function updateCages(dt) {
   for (const c of G.cages) {
     if (c.broken) continue;
-    const d = Math.hypot(hero.pos.x - c.x, hero.pos.z - c.z);
+    const d = heroDist(c.x, c.z);
     if (d < 5.5 && lineOfSight(hero.pos, new THREE.Vector3(c.x, 0, c.z))) {
       c.rattle += dt;
       c.g.position.x = c.x + rand(-0.08, 0.08);

@@ -70,7 +70,7 @@ function naggingTotems(J, dt) {
   if (!J || state !== 'play') return [];
   G.totemIdle = G.totemIdle == null ? TOTEM_NAG : G.totemIdle + dt; // never rung yet counts as long ago
   if (G.totemIdle < TOTEM_NAG && G.totemTaught) return [];
-  const away = t => Math.hypot(t.x - hero.pos.x, t.z - hero.pos.z);
+  const away = t => heroDist(t.x, t.z);
   return G.totems
     .filter(t => !t.mini && t.cd <= 0)
     .sort((a, b) => away(a) - away(b))

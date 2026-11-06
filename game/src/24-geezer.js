@@ -23,7 +23,7 @@ function makeGeezer(e, add) {
     w = sizeOf('geezer', H).w,
     eyeTex = own(glowTex('#f4f0ff', 'rgba(180,140,255,.7)'));
   e.eyes = [265, 450].map(px => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: eyeTex, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    const sp = glowSprite(eyeTex, { fog: false });
     sp.position.set(((px - b[0]) / (b[2] - b[0]) - 0.5) * w, 0.35 + (1 - (455 - b[1]) / (b[3] - b[1])) * H, 0.2);
     sp.visible = false;
     e.tilt.add(sp);
@@ -218,7 +218,7 @@ TALKERS.Y = {
     if (e.pressure >= 1.8 && (e.st === 'drift' || e.st === 'recover')) {
       e.pressure = 0;
       e.tilt.rotation.z = 0;
-      if (Math.random() < 0.45 && Math.hypot(hero.pos.x - e.pos.x, hero.pos.z - e.pos.z) < 4.6) {
+      if (Math.random() < 0.45 && heroDist(e.pos.x, e.pos.z) < 4.6) {
         e.st = 'sweep';
         e.tWind = e.t = rand(0.38, 0.5);
         e.lashes = 1;

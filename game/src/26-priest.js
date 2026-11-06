@@ -168,7 +168,7 @@ const PRIEST_STATES = {
   },
   spray(e, dt, dist, ux, uz, mv, seen) {
     e.tilt.rotation.x = lerp(e.tilt.rotation.x, 0.12, 0.2);
-    e.aim += angDiff(e.aim, Math.atan2(ux, uz)) * (1 - Math.exp(-1.6 * dt));
+    e.aim += angDiff(e.aim, Math.atan2(ux, uz)) * ease(1.6, dt);
     const sweep = e.aim + Math.sin((1.9 - e.t) * 4.2) * 0.38;
     e.emit += dt * 90;
     const mouth = e.mouth.clone().applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
@@ -199,7 +199,7 @@ function updateGhosts(e, dt) {
     const rr = g.rad + Math.sin(now * 2 + g.ph) * 0.4;
     g.m.position.set(e.pos.x + Math.cos(g.a) * rr, 0.55 + Math.sin(now * 3 + g.ph) * 0.3, e.pos.z + Math.sin(g.a) * rr);
     if (animTick) g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z);
-    if (Math.hypot(g.m.position.x - hero.pos.x, g.m.position.z - hero.pos.z) < 0.6) hurtHero(1, g.m.position);
+    if (heroDist(g.m.position.x, g.m.position.z) < 0.6) hurtHero(1, g.m.position);
   }
 }
 // a ghost hit by the yo-yo string or a pebble pops

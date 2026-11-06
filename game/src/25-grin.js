@@ -151,9 +151,7 @@ function makeGrin(e, add) {
   m.position.y = -0.8 - 1.7 * SHAPES.grin_fire.pad;
   e.body = m;
   e.t = rand(1, 2.5);
-  const gl = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: violetTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.75 })
-  );
+  const gl = glowSprite(violetTex, { transparent: true, opacity: 0.75 });
   gl.scale.set(2.8, 2.8, 1);
   gl.position.z = -0.2;
   gl.userData.sortRank = 0;
@@ -162,7 +160,7 @@ function makeGrin(e, add) {
   e.flames = Array.from({ length: 7 }, (_, k) => {
     const a = -Math.PI / 2 + (k / 7 - 0.5) * 3.6 + rand(-0.25, 0.25),
       r = rand(0.55, 0.95);
-    const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: violetTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    const f = glowSprite(violetTex, { transparent: true });
     f.userData = { a, r, s: rand(0.5, 1.1), ph: rand(0, 6), up: rand(0.2, 0.7), sortRank: 0 };
     e.tilt.add(f);
     return f;
@@ -331,7 +329,7 @@ function updateGrins(dt) {
       [0, 0.12, 0.24].forEach((at, k) => playTone({ f: 560 - k * 70, f2: 420 - k * 60, dur: 0.08, type: 'triangle', gain: 0.045, at }));
     }
     const target = Math.atan2(camera.position.x - g.p.x, camera.position.z - g.p.z);
-    g.yaw += angDiff(g.yaw, target) * (1 - Math.exp(-4 * dt));
+    g.yaw += angDiff(g.yaw, target) * ease(4, dt);
     if (animTick) {
       m.userData.jx = rand(-0.03, 0.03);
       m.userData.jy = rand(-0.025, 0.025);

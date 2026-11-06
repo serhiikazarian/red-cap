@@ -400,9 +400,7 @@ function burningStairs(rng) {
     g.rotation.y = yaw;
     G.group.add(g);
     g.add(new THREE.Mesh(mergeGeos(list), ironM));
-    const fire = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 })
-    );
+    const fire = glowSprite(fireTex, { transparent: true, opacity: 0.9 });
     fire.position.set(0, 14 * 0.32 + 1, 14 * 0.42);
     fire.scale.set(1.4, 2.2, 1);
     g.add(fire);
@@ -491,7 +489,7 @@ function blockCritters(rng) {
     G.anim.push((dt, t) => {
       if (state !== 'play' && state !== 'title') return;
       c.t -= dt;
-      const dh = Math.hypot(hero.pos.x - c.x, hero.pos.z - c.z);
+      const dh = heroDist(c.x, c.z);
       if (dh < 4.5) {
         c.tx = c.x + ((c.x - hero.pos.x) / dh) * 4;
         c.tz = c.z + ((c.z - hero.pos.z) / dh) * 4;

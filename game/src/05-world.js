@@ -60,6 +60,8 @@ function cellOf(x, z) {
 function cellMid(i) {
   return i * CELL + CELL / 2;
 }
+// how far (x, z) is from Red Cap on the ground
+const heroDist = (x, z) => Math.hypot(x - hero.pos.x, z - hero.pos.z);
 function cellAt(ix, iz) {
   if (!G || iz < 0 || iz >= G.h || ix < 0 || ix >= G.w) return '#';
   return G.map[iz][ix];

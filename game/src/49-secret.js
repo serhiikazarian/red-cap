@@ -12,9 +12,7 @@ function hideLivingDying() {
     m.position.set(x, 1.9, z);
     m.rotation.y = yaw;
     G.group.add(m);
-    const glow = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: glowRed, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.25 })
-    );
+    const glow = glowSprite(glowRed, { transparent: true, opacity: 0.25 });
     glow.position.set(x, 2.25, z);
     glow.scale.set(2.2, 1.4, 1);
     G.group.add(glow);
@@ -52,9 +50,7 @@ function spawnJaw(x, z) {
     m = j.g;
   m.position.set(x, 1, z);
   G.group.add(m);
-  const glow = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 })
-  );
+  const glow = glowSprite(fireTex, { transparent: true, opacity: 0.7 });
   glow.position.set(x, 1.4, z);
   glow.scale.setScalar(2);
   G.group.add(glow);
@@ -81,7 +77,7 @@ function jawPickup(dt, now) {
   j.m.position.y = 0.6 + Math.sin(now * 3) * 0.2;
   j.m.rotation.y += dt * 2;
   j.j.set(Math.abs(Math.sin(now * 13)) * 0.8);
-  if (Math.hypot(hero.pos.x - j.x, hero.pos.z - j.z) < 1.2) {
+  if (heroDist(j.x, j.z) < 1.2) {
     G.group.remove(j.m);
     G.group.remove(j.glow);
     G.jawPickup = null;

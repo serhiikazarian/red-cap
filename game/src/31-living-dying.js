@@ -66,9 +66,9 @@ function updateLivingDying(e, dt, dist, ux, uz, mv) {
   if (e.waiting) {
     const c = G.ld.center,
       a = now * 0.35 + e.seed;
-    e.pos.x = lerp(e.pos.x, c.x + Math.cos(a) * 5.5, 1 - Math.exp(-2 * dt));
-    e.pos.z = lerp(e.pos.z, c.z + Math.sin(a) * 5.5, 1 - Math.exp(-2 * dt));
-    e.fly = lerp(e.fly, 4.6 + Math.sin(now + e.seed) * 0.3, 1 - Math.exp(-2 * dt));
+    e.pos.x = lerp(e.pos.x, c.x + Math.cos(a) * 5.5, ease(2, dt));
+    e.pos.z = lerp(e.pos.z, c.z + Math.sin(a) * 5.5, ease(2, dt));
+    e.fly = lerp(e.fly, 4.6 + Math.sin(now + e.seed) * 0.3, ease(2, dt));
     e.tilt.position.y = e.fly;
     e.root.position.copy(e.pos);
     return STOP;
@@ -170,8 +170,8 @@ const HAIR_STATES = {
 // every strand sways; they reach out for the lash, pull in and bristle as it winds up; the wig spins
 function livingDyingHairSway(e, dt, now) {
   const H = e.hair;
-  H.reach = lerp(H.reach, e.st === 'lash' ? 2.4 : e.st === 'lashWind' ? 0.75 : 1, 1 - Math.exp(-(e.st === 'lash' ? 22 : 6) * dt));
-  H.bristle = lerp(H.bristle, e.st === 'lashWind' || e.st === 'snareWind' ? 1 : 0, 1 - Math.exp(-8 * dt));
+  H.reach = lerp(H.reach, e.st === 'lash' ? 2.4 : e.st === 'lashWind' ? 0.75 : 1, ease(e.st === 'lash' ? 22 : 6, dt));
+  H.bristle = lerp(H.bristle, e.st === 'lashWind' || e.st === 'snareWind' ? 1 : 0, ease(8, dt));
   for (const c of H.clumps) {
     c.g.rotation.z = Math.sin(now * 2.2 + c.ph) * 0.25 + H.bristle * 0.7;
     c.g.rotation.x = Math.sin(now * 1.7 + c.ph * 2) * 0.2;

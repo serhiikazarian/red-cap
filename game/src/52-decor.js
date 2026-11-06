@@ -39,9 +39,7 @@ function brazier(fx, y, fz, r) {
   coals.rotation.x = -Math.PI / 2;
   coals.position.y = 1.26;
   g.add(coals);
-  const glow = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: fireTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 })
-  );
+  const glow = glowSprite(fireTex, { transparent: true, opacity: 0.85 });
   glow.position.set(fx, y + 1.75, fz);
   glow.scale.set(2, 2.5, 1);
   G.group.add(glow);

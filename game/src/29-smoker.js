@@ -59,7 +59,7 @@ function updateSmoker(e, dt, dist, ux, uz, mv) {
   const seen = dist < 20 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
   const step = SMOKER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, seen);
-  e.alpha = lerp(e.alpha, e.hidden ? 0.08 : 1, 1 - Math.exp(-6 * dt));
+  e.alpha = lerp(e.alpha, e.hidden ? 0.08 : 1, ease(6, dt));
   e.fade.forEach(m => (m.opacity = e.alpha));
   e.shadow.visible = !e.hidden;
   e.tilt.position.y = e.fly;

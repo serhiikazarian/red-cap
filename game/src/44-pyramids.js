@@ -253,13 +253,7 @@ function pyrTieAndPool(cx, cz) {
     transparent: true, // half seen: glimpsed in the pyramid rather than stuck on it
     opacity: PYR_TIE_A,
     alphaTest: 0.5 * PYR_TIE_A, // the same cut-out as at full strength
-    blending: THREE.CustomBlending,
-    blendEquation: THREE.AddEquation,
-    blendSrc: THREE.SrcAlphaFactor,
-    blendDst: THREE.OneMinusSrcAlphaFactor,
-    blendEquationAlpha: THREE.AddEquation,
-    blendSrcAlpha: THREE.ZeroFactor,
-    blendDstAlpha: THREE.OneFactor
+    ...KEEP_INK
   });
   tie.position.set(cx, PYR.core - 0.12, cz);
   pool.renderOrder = -1; // drawn before see-through things: a fading pyramid covers it by its own alpha

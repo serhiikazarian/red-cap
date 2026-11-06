@@ -54,7 +54,7 @@ function trapBite(m) {
   cam.shake = Math.max(cam.shake, 0.3);
   const at = new THREE.Vector3(m.x, 0.5, m.z);
   burst(at, [0x3a3430, COL.paper, COL.ink], 10, 5, 0.14);
-  if (Math.hypot(hero.pos.x - m.x, hero.pos.z - m.z) < 1.55 && hurtHero(1, at, true)) {
+  if (heroDist(m.x, m.z) < 1.55 && hurtHero(1, at, true)) {
     hero.held = 0.5;
     hero.knock.set(0, 0);
     burst(hero.pos.clone().setY(0.4), [COL.tie, 0x7a1d14], 8, 3, 0.12);
@@ -96,7 +96,7 @@ const MINE_STATES = {
   // anything on foot near the pan sets it off
   armed(m) {
     const near =
-      Math.hypot(hero.pos.x - m.x, hero.pos.z - m.z) < 1.5 ||
+      heroDist(m.x, m.z) < 1.5 ||
       G.enemies.some(e => !e.dead && !e.dying && e.fly == null && !e.still && Math.hypot(e.pos.x - m.x, e.pos.z - m.z) < e.r + 1.1);
     if (!near) return;
     m.st = 'click';

@@ -30,7 +30,7 @@ function makeUsher(e, add) {
     [-0.233, 0.725],
     [0.349, 0.76]
   ].map(([x, y]) => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowRed, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    const sp = glowSprite(glowRed, { transparent: true });
     sp.position.set(x, y, 0.12);
     sp.scale.setScalar(0.38);
     sp.visible = false;
