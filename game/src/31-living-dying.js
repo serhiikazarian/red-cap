@@ -4,57 +4,47 @@
 const tmpS1 = new THREE.Vector3(),
   tmpS2 = new THREE.Vector3();
 
-// each piece: [painting, height, flying height, health, radius]; the jaw and the hair are models, the rest paper
+// each piece: its painting, height, flying height, health, radius and name; the jaw and the hair are models, the rest paper
+const LIVING_DYING_PIECES = {
+  whole: ['ld_whole', 4.2, 2.4, 99, 2, ''],
+  hair: ['ld_hair', 2.2, 3.1, 6, 1.7, ' — the Hair'],
+  eyeL: ['ld_eyeL', 1.15, 2.4, 3, 0.65, ' — an Eye'],
+  eyeR: ['ld_eyeR', 1.15, 2.4, 3, 0.65, ' — an Eye'],
+  jaw: ['jaw', 2, 0.95, 7, 1.3, ' — the Jaw'],
+  skull: ['ld_skull', 3.1, 2.3, 9, 1.6, ' — the Skull']
+};
 function makeLivingDying(e, add, x, z, part) {
-  const cfg = {
-    whole: ['ld_whole', 4.2, 2.4, 99, 2],
-    hair: ['ld_hair', 2.2, 3.1, 6, 1.7],
-    eyeL: ['ld_eyeL', 1.15, 2.4, 3, 0.65],
-    eyeR: ['ld_eyeR', 1.15, 2.4, 3, 0.65],
-    jaw: ['jaw', 2, 0.95, 7, 1.3],
-    skull: ['ld_skull', 3.1, 2.3, 9, 1.6]
-  }[part];
-  const names = {
-    whole: 'Livin’ / Dyin’',
-    hair: 'Livin’ / Dyin’ — the Hair',
-    eyeL: 'Livin’ / Dyin’ — an Eye',
-    eyeR: 'Livin’ / Dyin’ — an Eye',
-    jaw: 'Livin’ / Dyin’ — the Jaw',
-    skull: 'Livin’ / Dyin’ — the Skull'
-  };
+  const [art, h, fly, hp, r, name] = LIVING_DYING_PIECES[part];
   Object.assign(e, {
-    name: names[part],
+    name: 'Livin’ / Dyin’' + name,
     part,
-    hp: cfg[3],
-    maxHp: cfg[3],
-    r: cfg[4],
-    fly: cfg[2],
-    partH: cfg[1],
+    hp,
+    maxHp: hp,
+    r,
+    fly,
+    partH: h,
     boss: true,
     palette: [0xd8642a, 0x3a4a1c, COL.tie, COL.bile, 0x3a5ad8],
     daze: 0
   });
   if (part === 'jaw') {
-    const j = jawModel(cfg[1]);
-    j.g.position.y = -cfg[1] / 2;
+    const j = jawModel(h);
+    j.g.position.y = -h / 2;
     e.tilt.add(j.g);
     e.mats.push(j.up.userData.mat, j.lo.userData.mat);
     e.body = j.g;
     e.jaw = j;
-    e.t = rand(1, 2);
   } else if (part === 'hair') {
     const hm = hairModel();
     e.tilt.add(hm.g);
-    hm.mats.forEach(m => e.mats.push(m));
+    e.mats.push(...hm.mats);
     e.body = hm.g;
     e.hair = hm;
-    e.t = rand(1, 2);
   } else {
-    const m = add(paper(cfg[0], cfg[1], 0.14));
-    m.position.y = -cfg[1] / 2;
-    e.body = m;
-    e.t = rand(1, 2);
+    e.body = add(paper(art, h, 0.14));
+    e.body.position.y = -h / 2;
   }
+  e.t = rand(1, 2);
 }
 // a piece waiting its turn circles the arena out of reach; the others fight in their own way (LIVING_DYING_PARTS)
 function updateLivingDying(e, dt, dist, ux, uz, mv) {
@@ -472,47 +462,58 @@ function hairStrand(curve, r, seg, colour) {
   return t;
 }
 // the hair: a wild mop of crayon-orange strands in ten clumps, thick at the root and fine at the tip, inked like the drawing
+const HAIR_COLS = [0xc8642a, 0xa24a1e, 0xe08a3e, 0x7a3a18, 0xd8723a];
 function hairModel() {
   const g = new THREE.Group(),
-    cols = [0xc8642a, 0xa24a1e, 0xe08a3e, 0x7a3a18, 0xd8723a],
-    clumps = [];
-  const mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x220a02 }),
+    clumps = [],
+    mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x220a02 }),
     ink = new THREE.MeshBasicMaterial({ color: COL.ink, side: THREE.BackSide });
   for (let c = 0; c < 10; c++) {
-    const a0 = (c / 10) * TAU + rand(-0.15, 0.15),
-      clump = new THREE.Group();
-    clump.rotation.y = a0;
+    const clump = hairClump(c, mat, ink);
     g.add(clump);
-    const body = [],
-      line = [];
-    for (let k = 0; k < 8; k++) {
-      const pts = [],
-        up = rand(0.2, 1),
-        out = rand(1.1, 2),
-        curl = rand(3, 7),
-        ph = rand(0, 6),
-        sw = rand(0.1, 0.28),
-        r = rand(0.05, 0.085),
-        y0 = rand(-0.15, 0.35);
-      for (let i = 0; i <= 9; i++) {
-        const t = i / 9;
-        pts.push(
-          new THREE.Vector3(
-            0.3 + t * out,
-            y0 + Math.sin(t * Math.PI * 0.9) * up - t * t * 0.7 + Math.sin(t * curl + ph) * sw * t,
-            Math.cos(t * curl + ph) * sw * t + (k - 3.5) * 0.07
-          )
-        );
-      }
-      const curve = new THREE.CatmullRomCurve3(pts);
-      body.push([hairStrand(curve, r, 12, cols[(k + c) % cols.length]), new THREE.Matrix4()]);
-      line.push([new THREE.TubeGeometry(curve, 8, r + 0.03, 4, false), new THREE.Matrix4()]);
-    }
-    const bm = new THREE.Mesh(mergeGeos(body), mat),
-      lm = new THREE.Mesh(mergeGeos(line), ink);
-    clump.add(bm, lm);
     clumps.push({ g: clump, ph: rand(0, 6) });
   }
+  hairScalp(g, mat, ink);
+  return { g, mats: [mat], clumps, reach: 1, bristle: 0 };
+}
+// clump c of ten round the head: eight strands, merged into one mesh and one ink outline (a slightly fatter tube, back faces)
+function hairClump(c, mat, ink) {
+  const clump = new THREE.Group(),
+    body = [],
+    line = [];
+  clump.rotation.y = (c / 10) * TAU + rand(-0.15, 0.15);
+  for (let k = 0; k < 8; k++) {
+    const [curve, r] = hairCurve(k);
+    body.push([hairStrand(curve, r, 12, HAIR_COLS[(k + c) % HAIR_COLS.length]), new THREE.Matrix4()]);
+    line.push([new THREE.TubeGeometry(curve, 8, r + 0.03, 4, false), new THREE.Matrix4()]);
+  }
+  clump.add(new THREE.Mesh(mergeGeos(body), mat), new THREE.Mesh(mergeGeos(line), ink));
+  return clump;
+}
+// strand k of a clump: out from the scalp, arching up then drooping, curling as it goes; its curve and root radius
+function hairCurve(k) {
+  const pts = [],
+    up = rand(0.2, 1),
+    out = rand(1.1, 2),
+    curl = rand(3, 7),
+    ph = rand(0, 6),
+    sw = rand(0.1, 0.28),
+    r = rand(0.05, 0.085),
+    y0 = rand(-0.15, 0.35);
+  for (let i = 0; i <= 9; i++) {
+    const t = i / 9;
+    pts.push(
+      new THREE.Vector3(
+        0.3 + t * out,
+        y0 + Math.sin(t * Math.PI * 0.9) * up - t * t * 0.7 + Math.sin(t * curl + ph) * sw * t,
+        Math.cos(t * curl + ph) * sw * t + (k - 3.5) * 0.07
+      )
+    );
+  }
+  return [new THREE.CatmullRomCurve3(pts), r];
+}
+// the scalp, in the strands' material (so it flashes with them), and its ink
+function hairScalp(g, mat, ink) {
   const cg = new THREE.SphereGeometry(0.6, 14, 10),
     cc = new THREE.Color(0x5a2a12);
   cg.setAttribute(
@@ -524,11 +525,9 @@ function hairModel() {
   );
   const core = new THREE.Mesh(cg, mat);
   core.scale.set(1.25, 0.75, 1.25);
-  g.add(core); // the scalp, in the strands' material (so it flashes with them)
-  const coreInk = new THREE.Mesh(core.geometry, ink);
+  const coreInk = new THREE.Mesh(cg, ink);
   coreInk.scale.set(1.32, 0.82, 1.32);
-  g.add(coreInk);
-  return { g, mats: [mat], clumps, reach: 1, bristle: 0 };
+  g.add(core, coreInk);
 }
 // the strand that holds Red Cap, stretched from the hair to his legs, reeling him in until a dodge tears it
 function snareTick() {

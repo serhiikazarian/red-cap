@@ -41,8 +41,9 @@ function heroFigure() {
   head.m.scale.x = -1;
   hp.add(head.m);
   tilt.add(hp); // mirrored so the cap leads
-  const inks = [];
-  [body.m, head.m, ...legs.map(l => l.children[0])].forEach(m => inkCard(m, inks));
+  const inks = [],
+    cards = [body.m, head.m, ...legs.map(l => l.children[0])];
+  cards.forEach(m => inkCard(m, inks));
   hero.root = root;
   hero.parts = {
     face,
@@ -53,7 +54,7 @@ function heroFigure() {
     bodyY: body.y,
     headY: head.y + 0.1,
     inks,
-    mats: [body.m, head.m, ...legs.map(l => l.children[0])].map(m => m.userData.mat)
+    mats: cards.map(m => m.userData.mat)
   };
   return root;
 }

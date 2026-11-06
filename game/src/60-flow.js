@@ -330,6 +330,19 @@ function tune(live, done, expect) {
     setRung(L[mid]);
     n = late = 0;
   };
+  // a frame's verdict: still settling, or the try at rung mid passes (hi = mid) or fails (lo = mid + 1) once it is judged
+  const judge = gap => {
+    if (mid < 0) {
+      if (gap) gaps.push(gap);
+      if (settled(gaps)) next();
+      return;
+    }
+    if (++n > TRY_WARM && gap > lateAt) late++;
+    if (late <= TRY_LATE && n < TRY_WARM + TRY_FRAMES) return;
+    if (late > TRY_LATE) lo = mid + 1;
+    else hi = mid;
+    next();
+  };
   const frame = now => {
     if (over || !live()) return;
     try {
@@ -337,17 +350,7 @@ function tune(live, done, expect) {
       last = now;
       if (gap) pace = pace ? pace + (gap - pace) * 0.2 : gap;
       if (performance.now() - t0 > TUNE_MAX) return finish();
-      if (mid < 0) {
-        if (gap) gaps.push(gap);
-        if (settled(gaps)) next();
-      } else {
-        if (++n > TRY_WARM && gap > lateAt) late++;
-        if (late > TRY_LATE || n >= TRY_WARM + TRY_FRAMES) {
-          if (late > TRY_LATE) lo = mid + 1;
-          else hi = mid;
-          next();
-        }
-      }
+      judge(gap);
       if (over) return;
       expect(Math.min(TUNE_MAX - (performance.now() - t0), tuneLeft(pace, gaps.length, mid, n, hi - lo, pace < 0.8 * lateAt)));
       calibrationLook(views[k++ % views.length]);

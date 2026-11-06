@@ -456,22 +456,7 @@ function paperBirds(rng, fw, fh) {
 }
 // little painted blocks with eyes in the floor's far part: they wander, and scatter from Red Cap
 function blockCritters(rng) {
-  const eyeTex = canvasTex(64, 32, x => {
-    for (const ex of [16, 48]) {
-      x.fillStyle = HEX.paper;
-      x.beginPath();
-      x.arc(ex, 16, 12, 0, TAU);
-      x.fill();
-      x.lineWidth = 3;
-      x.strokeStyle = HEX.ink;
-      x.stroke();
-      x.fillStyle = HEX.ink;
-      x.beginPath();
-      x.arc(ex + 3, 18, 5, 0, TAU);
-      x.fill();
-    }
-  });
-  const eyeM = new THREE.MeshBasicMaterial({ map: eyeTex, transparent: true, alphaTest: 0.3 }),
+  const eyeM = new THREE.MeshBasicMaterial({ map: critterEyes(), transparent: true, alphaTest: 0.3 }),
     cols = ['t_blue', 't_lime', 't_orange', 't_ochre'];
   floorSpots(rng, 7, (x, z) => {
     if (z < 9 * CELL) return;
@@ -487,37 +472,60 @@ function blockCritters(rng) {
     G.group.add(g);
     const c = { x, z, tx: x, tz: z, t: 0, hop: rng() * 6 };
     G.anim.push((dt, t) => {
-      if (state !== 'play' && state !== 'title') return;
-      c.t -= dt;
-      const dh = heroDist(c.x, c.z);
-      if (dh < 4.5) {
-        c.tx = c.x + ((c.x - hero.pos.x) / dh) * 4;
-        c.tz = c.z + ((c.z - hero.pos.z) / dh) * 4;
-        c.t = 1;
-      } else if (c.t <= 0) {
-        c.tx = c.x + (Math.random() - 0.5) * 6;
-        c.tz = c.z + (Math.random() - 0.5) * 6;
-        c.t = 2 + Math.random() * 3;
-      }
-      const dx = c.tx - c.x,
-        dz = c.tz - c.z,
-        d = Math.hypot(dx, dz);
-      if (d > 0.2) {
-        const v = (dh < 4.5 ? 4 : 1.4) * dt,
-          nx = c.x + (dx / d) * v,
-          nz = c.z + (dz / d) * v,
-          [ix, iz] = cellOf(nx, nz);
-        if (!solid(ix, iz) && cellAt(ix, iz) !== 'g' && !propRadius(cellAt(ix, iz)) && iz >= 9 && critterRoom(nx, nz)) {
-          c.x = nx;
-          c.z = nz;
-        } else c.t = 0;
-        g.rotation.y = Math.atan2(dx, dz);
-        g.position.y = Math.abs(Math.sin(t * 9 + c.hop)) * 0.35;
-      } else g.position.y *= 0.8;
-      g.position.x = c.x;
-      g.position.z = c.z;
+      if (state === 'play' || state === 'title') critterStep(c, g, dt, t);
     });
   });
+}
+// two googly eyes, looking down and to one side
+function critterEyes() {
+  return canvasTex(64, 32, x => {
+    for (const ex of [16, 48]) {
+      x.fillStyle = HEX.paper;
+      x.beginPath();
+      x.arc(ex, 16, 12, 0, TAU);
+      x.fill();
+      x.lineWidth = 3;
+      x.strokeStyle = HEX.ink;
+      x.stroke();
+      x.fillStyle = HEX.ink;
+      x.beginPath();
+      x.arc(ex + 3, 18, 5, 0, TAU);
+      x.fill();
+    }
+  });
+}
+// it scatters 4 m away from Red Cap within 4.5 m, else wanders to a new spot every 2–5 s, hopping as it goes; it keeps to open
+// ground in the far part (row 9 on), off the gate and the props
+function critterStep(c, g, dt, t) {
+  c.t -= dt;
+  const dh = heroDist(c.x, c.z),
+    scared = dh < 4.5;
+  if (scared) {
+    c.tx = c.x + ((c.x - hero.pos.x) / dh) * 4;
+    c.tz = c.z + ((c.z - hero.pos.z) / dh) * 4;
+    c.t = 1;
+  } else if (c.t <= 0) {
+    c.tx = c.x + (Math.random() - 0.5) * 6;
+    c.tz = c.z + (Math.random() - 0.5) * 6;
+    c.t = 2 + Math.random() * 3;
+  }
+  const dx = c.tx - c.x,
+    dz = c.tz - c.z,
+    d = Math.hypot(dx, dz);
+  if (d > 0.2) {
+    const v = (scared ? 4 : 1.4) * dt,
+      nx = c.x + (dx / d) * v,
+      nz = c.z + (dz / d) * v,
+      [ix, iz] = cellOf(nx, nz);
+    if (!solid(ix, iz) && cellAt(ix, iz) !== 'g' && !propRadius(cellAt(ix, iz)) && iz >= 9 && critterRoom(nx, nz)) {
+      c.x = nx;
+      c.z = nz;
+    } else c.t = 0;
+    g.rotation.y = Math.atan2(dx, dz);
+    g.position.y = Math.abs(Math.sin(t * 9 + c.hop)) * 0.35;
+  } else g.position.y *= 0.8;
+  g.position.x = c.x;
+  g.position.z = c.z;
 }
 // 40 pastel motes drifting on the air around Red Cap
 function pastelMotes(fw, fh) {
