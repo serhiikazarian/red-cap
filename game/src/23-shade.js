@@ -41,7 +41,7 @@ function updateShade(e, dt, dist, ux, uz, mv) {
     hero.spook = 1.6;
     e.st = 'flee';
     e.t = 2.6;
-    floatWord('BOO!', e.pos.clone().setY(e.fly + 1.2), '#d8d4cc', 0.9);
+    floatWord('BOO!', e.pos.clone().setY((e.gy || 0) + e.fly + 1.2), '#d8d4cc', 0.9);
     playTone({ f: 700, f2: 180, dur: 0.45, type: 'sine', gain: 0.08 });
     playNoise({ dur: 0.4, f: 900, f2: 300, type: 'bandpass', gain: 0.12 });
     if (hero.ammo > 0) {

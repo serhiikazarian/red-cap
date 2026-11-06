@@ -379,3 +379,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   they are: `clearOfWalls` (was `lineOfSight`), `clearOfCover` (was `losCover`).
 - A Grin on raised ground spits its fireball from where it is drawn (was from 1.5 m lower, as if on the floor below):
   `grinSpit`.
+- On raised ground, these come from where the talker is drawn too (were 1.5 m low): a Grin's HAAA, a Shade's BOO!, a
+  Smoker's PSST and *COUGH*, the hidden boss's red orbs, laughs, NOT YET and its snaring strand (floor three is flat: no
+  change there today).
