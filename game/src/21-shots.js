@@ -1,6 +1,6 @@
 // Talkers' shots: a Grin's fireball, the Priest's blood (drops and rain), the red orbs, Bruno's insults and embers.
 // kind: 'fire' and 'word' hurt and burst; 'blood' soaks and falls; 'rain' (the Priest's) falls from above. On a floor with strayShots
-// (floor two) they also hurt the small talkers they hit by accident (shotHitsTalker).
+// (floor two) fire and blood also hurt the small talkers they hit by accident (shotHitsTalker); insults fly past them.
 const shots = [];
 function fireball(from, dir, by) {
   const s = glowSprite(violetTex, { fog: false });
@@ -97,7 +97,7 @@ function updateShots(dt) {
     if (shotHitsScenery(shot)) dead = true;
     if (shotLands(shot)) dead = true;
     if (!dead && shotHitsHero(shot)) dead = true;
-    if (!dead && G.F.strayShots && shotHitsTalker(shot)) dead = true;
+    if (!dead && G.F.strayShots && shot.kind !== 'word' && shotHitsTalker(shot)) dead = true; // insults (Bruno's) fly past talkers
     if (dead) {
       endShot(shot);
       shots.splice(i, 1);
