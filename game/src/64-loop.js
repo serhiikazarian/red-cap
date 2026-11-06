@@ -11,12 +11,14 @@ function frame(now) {
   const raw = now - last;
   let dt = Math.min(raw / 1000, 0.05);
   last = now;
+  // both count down in unslowed time, so a hit-stop inside slow motion (a bomb, the finale) lasts as long as anywhere else
+  const step = dt;
   if (slowT > 0) {
-    slowT -= dt;
+    slowT -= step;
     dt *= 0.2;
   }
   if (hitStop > 0) {
-    hitStop -= dt;
+    hitStop -= step;
     dt *= 0.04;
   }
   adaptResolution(raw);

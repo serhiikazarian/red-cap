@@ -1,7 +1,8 @@
 // HUD: hints at the bottom (toast), talkers left, the big centred words, the boss bar, attack warnings, Red Cap's ties.
 // Each talker's boss-bar status and warning come from its own file (TALKERS[type].bar / .warn).
 let toastT = null;
-// a hint at the bottom of the screen; longer ones stay longer (ms: exactly this long)
+// a hint at the bottom of the screen; longer ones stay longer (ms: exactly this long). Screen time (setTimeout), not later():
+// hints also show on the title and menus, where later() does not run
 function toast(msg, ms) {
   const t = $('#toast');
   t.textContent = msg;

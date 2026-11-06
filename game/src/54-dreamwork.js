@@ -396,6 +396,12 @@ function dreamMouth(rng, fw, fh) {
 }
 // Floor 3: paper birds overhead, little block critters that scatter, pastel motes on the air
 function dreamBlocks(rng, fw, fh) {
+  paperBirds(rng, fw, fh);
+  blockCritters(rng);
+  pastelMotes(fw, fh);
+}
+// 14 paper birds circling high over the floor's middle, flapping (two instanced wings each)
+function paperBirds(rng, fw, fh) {
   const wingM = new THREE.MeshBasicMaterial({ color: COL.paper, side: THREE.DoubleSide }),
     wingG = new THREE.BufferGeometry();
   wingG.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, -0.25, 0, 0, 0.25, 0.9, 0, 0.05]), 3));
@@ -429,6 +435,9 @@ function dreamBlocks(rng, fw, fh) {
       wings.instanceMatrix.needsUpdate = true;
     });
   }
+}
+// little painted blocks with eyes in the floor's far part: they wander, and scatter from Red Cap
+function blockCritters(rng) {
   const eyeTex = canvasTex(64, 32, x => {
     for (const ex of [16, 48]) {
       x.fillStyle = HEX.paper;
@@ -491,6 +500,9 @@ function dreamBlocks(rng, fw, fh) {
       g.position.z = c.z;
     });
   });
+}
+// 40 pastel motes drifting on the air around Red Cap
+function pastelMotes(fw, fh) {
   const moteCols = [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.paper],
     moteIM = instPool(new THREE.PlaneGeometry(0.09, 0.09), 40, G.group);
   const motes = Array.from({ length: 40 }, (_, k) => {
