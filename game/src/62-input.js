@@ -266,8 +266,8 @@ function padPlay(B, hit, ax, mx, my, dt) {
   if (PAD.active || PAD.sel) padClear(); // a menu opened later starts on its own main button
   PAD.move.x = clamp(mx, -1, 1);
   PAD.move.y = clamp(-my, -1, 1);
-  cam.yaw -= ax(2) * 2.6 * dt;
-  cam.pitch = clamp(cam.pitch + ax(3) * 1.6 * dt, -0.22, 0.8);
+  cam.yaw -= ax(2) * CAM_TURN * dt;
+  cam.pitch = clamp(cam.pitch + ax(3) * CAM_TILT * dt, -0.22, 0.8);
   if (B(7) || B(5) || B(2)) {
     initAudio();
     yoyo();

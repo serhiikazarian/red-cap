@@ -307,7 +307,14 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Every branch brought up to date with `main`.
 - Title label `v1.37`.
 
-## 1.38 (6 Nov 2026), no change to play or looks
+## 1.38 (6 Nov 2026)
+- Shout rings (the Grump's and the totems'): their inside (seen from within, or the far half through the near one) is the
+  band in plain yellow, so the words never read mirrored (`RING_INSIDE_GLSL`, `ringInsideCompile`, `totemRingMat`; the
+  totem ring's shader has its stand-in in `warmSet`).
+- A snappier camera (`CAM_EASE`, `CAM_TURN`, `CAM_TILT` in 63-camera): turning with the keys, a stick or the screen's edge
+  3.2 rad/s (was 2.4–2.6), a stick's tilt 2.0 (1.6); it keeps up with his height (ease 20, was 12) and the shoulder offset
+  (18, was 12), and after a wall pulls back out sooner (0.2 s, was 0.35) and faster (10, was 6).
+- The rest of this version is a code clean-up, play unchanged:
 - Plain names: 124 cryptic top-level names spelled out across the code and tests (`upd*` → `update*`, `sTone`/`sNoise` →
   `playTone`/`playNoise`, `ch` → `cellAt`, `los` → `lineOfSight`, `post` → `inkPass`, `AU` → `AUDIO`, `EL` → `HUD`, `tmus*` →
   `titleMusic*`, `ld*` → `livingDying*`, `*_ST` → `*_STATES`, …), renamed by scope (locals and fields untouched).

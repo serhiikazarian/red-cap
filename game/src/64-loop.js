@@ -9,7 +9,7 @@ let last = performance.now(),
 const SLOW_MO = 0.2, // the final blow's slow motion: time runs at this share
   HIT_STOP = 0.04, // the yo-yo's hit-stop
   ANIM_STEP = 1 / 12, // the stop-motion tick
-  EDGE_TURN = { edge: 0.09, speed: 2.4 }; // the mouse within this share of the screen's side turns the camera (rad/s at the very edge)
+  EDGE_TURN = { edge: 0.09, speed: CAM_TURN }; // the mouse within this share of the screen's side turns the camera (rad/s at the very edge)
 
 function frame(now) {
   requestAnimationFrame(frame);

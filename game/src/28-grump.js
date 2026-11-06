@@ -372,7 +372,7 @@ function waveCompile(sh) {
     'uniform float uWT;\nuniform sampler2D uWall;\nuniform vec4 uSh[' +
     WAVE_SH_N +
     '];\n' +
-    sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n' + waveTearGLSL());
+    sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>' + RING_INSIDE_GLSL + '\n' + waveTearGLSL());
 }
 // keep (how much of the ring is left), rim (its burning torn edge) and hot (that edge's yellow), from the wall and the blocks
 function waveTearGLSL() {

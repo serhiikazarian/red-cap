@@ -1,11 +1,16 @@
 // The camera: over Red Cap's shoulder (the shoulder side shrinks against a wall), never inside a wall or a raised floor, held
 // off see-through things, shaking on big blows and dipping when he is hurt.
+// how quickly it keeps up (ease rates, per second): its height on ramps and raised ground, the shoulder offset near a wall, the
+// arm drawing in against a wall, and back out once the way has stayed clear for CAM_EASE.hold s
+const CAM_EASE = { height: 20, shoulder: 18, armIn: 22, armOut: 10, hold: 0.2 },
+  CAM_TURN = 3.2, // rad/s: turning with the keys, a stick at full tilt, or the mouse at the screen's edge
+  CAM_TILT = 2.0; // rad/s: a stick looking up or down
 const camPivot = new THREE.Vector3(), // reused vectors: no garbage every frame
   camArm = new THREE.Vector3(),
   camProbe = new THREE.Vector3();
 
 function updateCamera(dt) {
-  cam.hy = cam.hy == null ? hero.pos.y : lerp(cam.hy, hero.pos.y, ease(12, dt));
+  cam.hy = cam.hy == null ? hero.pos.y : lerp(cam.hy, hero.pos.y, ease(CAM_EASE.height, dt));
   const fx = -Math.sin(cam.yaw),
     fz = -Math.cos(cam.yaw),
     pivot = pushOffWall(camPivotAt(dt), 0.6, 0.62);
@@ -43,7 +48,7 @@ function camPivotAt(dt) {
   let shWant = camera.aspect < 1 ? 0.3 : 0.65;
   for (let k = 0; k < 5 && shWant > 0 && wallDist(hero.pos.x + rx * shWant, hero.pos.z + rz * shWant) < 0.4; k++) shWant -= 0.15;
   shWant = Math.max(0, shWant);
-  cam.sh = cam.sh == null ? shWant : lerp(cam.sh, shWant, ease(12, dt));
+  cam.sh = cam.sh == null ? shWant : lerp(cam.sh, shWant, ease(CAM_EASE.shoulder, dt));
   return camPivot.set(hero.pos.x + rx * cam.sh, 1.75 + cam.hy, hero.pos.z + rz * cam.sh);
 }
 // closer than `near` to a wall: slide out along the wall's normal to `to`, never through it (moves p; returns it)
@@ -83,11 +88,11 @@ function camReach(pivot, arm) {
 // the arm's length follows the reach (cam.cur)
 function camEase(hit, dt) {
   // in fast but not in one jump; back out only once the way has stayed clear for a moment, so a flickering probe can't make it drift
-  if (cam.cur != null && hit < cam.cur - 0.05) cam.hold = 0.35;
+  if (cam.cur != null && hit < cam.cur - 0.05) cam.hold = CAM_EASE.hold;
   else cam.hold = Math.max(0, (cam.hold || 0) - dt);
   if (cam.cur == null) cam.cur = hit;
-  else if (hit < cam.cur) cam.cur = Math.min(lerp(cam.cur, hit, ease(22, dt)), hit + 0.15);
-  else if (cam.hold <= 0) cam.cur = lerp(cam.cur, hit, ease(6, dt));
+  else if (hit < cam.cur) cam.cur = Math.min(lerp(cam.cur, hit, ease(CAM_EASE.armIn, dt)), hit + 0.15);
+  else if (cam.hold <= 0) cam.cur = lerp(cam.cur, hit, ease(CAM_EASE.armOut, dt));
 }
 // when the camera is pressed right up behind him, Red Cap goes see-through instead of filling the screen
 function heroFade() {

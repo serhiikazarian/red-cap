@@ -39,10 +39,7 @@ function hitTotem(p, rad) {
         if (mate) mate.cd = Math.max(mate.cd, TOTEM_CD);
       }
       burst(new THREE.Vector3(t.x, t.mini ? 1 : 1.5, t.z), [COL.bile, 0x4fa9df, 0x9bd12c], 10, 4, 0.16);
-      const m = new THREE.Mesh(
-        t.mini ? TOTEM_MINI_GEO : TOTEM_GEO,
-        new THREE.MeshBasicMaterial({ map: waveTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false })
-      );
+      const m = new THREE.Mesh(t.mini ? TOTEM_MINI_GEO : TOTEM_GEO, totemRingMat());
       m.position.set(t.x, t.mini ? 1.6 : 0.9, t.z);
       m.scale.set(0.8, 1, 0.8);
       G.group.add(m);
