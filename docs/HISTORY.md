@@ -306,3 +306,30 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Docs: the ink pass's highp depth sampler (1.36), force-pushing `prerelease` allowed in the settings (only that branch).
 - Every branch brought up to date with `main`.
 - Title label `v1.37`.
+
+## 1.38 (6 Nov 2026)
+- Shout rings (the Grump's and the totems'): their inside (seen from within, or the far half through the near one) is the
+  band in plain yellow, so the words never read mirrored (`RING_INSIDE_GLSL`, `ringInsideCompile`, `totemRingMat`; the
+  totem ring's shader has its stand-in in `warmSet`).
+- A snappier camera (`CAM_EASE`, `CAM_TURN`, `CAM_TILT` in 63-camera): turning with the keys, a stick or the screen's edge
+  3.2 rad/s (was 2.4–2.6), a stick's tilt 2.0 (1.6); it keeps up with his height (ease 20, was 12) and the shoulder offset
+  (18, was 12), and after a wall pulls back out sooner (0.2 s, was 0.35) and faster (10, was 6).
+- The yo-yo's chain goes on only at a fast pace: the next throw within `YOYO_CHAIN` (0.85 s, press to press; was 1.1 s),
+  else it starts over with a light first throw, so the slow heavy third comes only from three quick throws
+  (`yoyoChained`; a throw at play time 0 no longer counts as never thrown).
+- The rest of this version is a code clean-up, play unchanged:
+- Plain names: 124 cryptic top-level names spelled out across the code and tests (`upd*` → `update*`, `sTone`/`sNoise` →
+  `playTone`/`playNoise`, `ch` → `cellAt`, `los` → `lineOfSight`, `post` → `inkPass`, `AU` → `AUDIO`, `EL` → `HUD`, `tmus*` →
+  `titleMusic*`, `ld*` → `livingDying*`, `*_ST` → `*_STATES`, …), renamed by scope (locals and fields untouched).
+- Long functions split into named steps: shots (`flyShot`, `shotHitsScenery`, `shotLands`, `shotHitsHero`, `endShot`),
+  `collide`, the frame loop (`slowedDt`, `edgeTurn`), pebbles, aiming (one `offer` for talkers, parts and pyramids), the yo-yo
+  throw, bystanders, totems, Bruno's fire and model, `clearLevel`, raised ground, baking, the title music, smoke draws.
+- State machines as tables, one step per state, like the talkers': bear traps (`MINE_STATES`), the Grump (`GRUMP_STATES`), the
+  Jester's slabs (`SLAB_STATES`), the hidden boss's jaw and hair (`JAW_STATES`, `HAIR_STATES`).
+- Bare numbers named where they were touched (`SHOT_REACH`, `STEP_MAX`, `RING`, `AIM`, `SLOW_MO`, `HIT_STOP`, `GRUMP_*`, …);
+  the Grump ring's shader in three named GLSL pieces (its text byte-identical).
+- Also split: `newFloor` (`floorState`, `floorLight`, `floorGround`), the loading's per-frame verdict (`judge` in `tune`),
+  block critters, the hair model, the hidden boss's pieces (one `LIVING_DYING_PIECES` table, names included).
+- Repeated code folded into shared helpers: `heroDist` (27 places), `ease` (21), `glowSprite` (12), `figureRig` (Red Cap,
+  talkers, onlookers), `KEEP_INK` (the blending that leaves the picture's alpha alone).
+- Title label `v1.38`.

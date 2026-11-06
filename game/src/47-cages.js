@@ -12,7 +12,7 @@ function buildCages(F) {
     g.position.set(cx, heightAt(cx, cz), cz);
     G.group.add(g);
     const parts = type === 'Z' ? brunoStake(e, g) : { roof: ironCage(g) };
-    e.cage = { g, ...parts, e, x: cx, z: cz, rattle: 0, broken: false }; // its own cage, for updCaged
+    e.cage = { g, ...parts, e, x: cx, z: cz, rattle: 0, broken: false }; // its own cage, for updateCaged
     G.cages.push(e.cage);
     keepOut(cx, cz, 1.7);
   }
@@ -90,12 +90,12 @@ function breakCage(c, byHit) {
     c.pole.rotation.set((Math.random() - 0.5) * 0.12, 0, (Math.random() - 0.5) * 0.12);
     G.group.add(c.pole);
     G.stakes.push({ x: wp.x, z: wp.z, r: 0.27 });
-    sNoise({ dur: 0.3, f: 1800, f2: 600, q: 2, gain: 0.25 });
+    playNoise({ dur: 0.3, f: 1800, f2: 600, q: 2, gain: 0.25 });
     burst(new THREE.Vector3(c.x, 1.3 + c.g.position.y, c.z), [0x9a7a4a, 0x6a4a2a, COL.hot], 26, 6, 0.2);
     cam.shake = Math.max(cam.shake, 0.25);
   } else {
     SFX.boom();
-    sTone({ f: 260, f2: 35, dur: 0.35, type: 'square', gain: 0.12 });
+    playTone({ f: 260, f2: 35, dur: 0.35, type: 'square', gain: 0.12 });
     cam.shake = Math.max(cam.shake, 0.35);
     burst(new THREE.Vector3(c.x, 1.4 + c.g.position.y, c.z), [0x2a2522, 0x7a281b, 0xe8c628], 30, 9, 0.26);
   }
@@ -115,15 +115,15 @@ function breakCage(c, byHit) {
   }
 }
 // rattling while Red Cap is near and in sight; it gives after 0.9 s of it
-function updCages(dt) {
+function updateCages(dt) {
   for (const c of G.cages) {
     if (c.broken) continue;
-    const d = Math.hypot(hero.pos.x - c.x, hero.pos.z - c.z);
-    if (d < 5.5 && los(hero.pos, new THREE.Vector3(c.x, 0, c.z))) {
+    const d = heroDist(c.x, c.z);
+    if (d < 5.5 && lineOfSight(hero.pos, new THREE.Vector3(c.x, 0, c.z))) {
       c.rattle += dt;
       c.g.position.x = c.x + rand(-0.08, 0.08);
       c.g.position.z = c.z + rand(-0.08, 0.08);
-      if (Math.random() < dt * 8) sTone({ f: rand(300, 500), dur: 0.05, type: 'square', gain: 0.05 });
+      if (Math.random() < dt * 8) playTone({ f: rand(300, 500), dur: 0.05, type: 'square', gain: 0.05 });
       if (c.rattle > 0.9) breakCage(c, false);
     } else {
       c.rattle = Math.max(0, c.rattle - dt);

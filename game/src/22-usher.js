@@ -30,7 +30,7 @@ function makeUsher(e, add) {
     [-0.233, 0.725],
     [0.349, 0.76]
   ].map(([x, y]) => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowRed, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    const sp = glowSprite(glowRed, { transparent: true });
     sp.position.set(x, y, 0.12);
     sp.scale.setScalar(0.38);
     sp.visible = false;
@@ -50,7 +50,7 @@ function makeUsher(e, add) {
 }
 // idle until he sees Red Cap (brows down), then chase; at range he aims (the tell) and charges in a straight line,
 // close up he winds up and lunges. A charge into a wall stuns him (BONK). Bigger Ushers (e.k) are slower, longer and harder.
-function updUsher(e, dt, dist, ux, uz, mv) {
+function updateUsher(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   e.chargeCd -= dt;
   const K = e.k || 1,
@@ -59,7 +59,7 @@ function updUsher(e, dt, dist, ux, uz, mv) {
     e.st = 'aim';
     e.t = 0.42 + (K - 1) * 0.4;
     SFX.growl();
-    sTone({ f: 90 / K, f2: 55 / K, dur: 0.5 * K, type: 'sawtooth', gain: 0.12, filt: [500, 160] });
+    playTone({ f: 90 / K, f2: 55 / K, dur: 0.5 * K, type: 'sawtooth', gain: 0.12, filt: [500, 160] });
     floatWord('!!', e.pos.clone().setY(3 * K), HEX.tie, 0.9 * K);
   };
   if (e.rage > 0) e.rage -= dt;
@@ -70,7 +70,7 @@ function updUsher(e, dt, dist, ux, uz, mv) {
     aim();
     e.t = 0.32;
   }
-  const step = USHER_ST[e.st];
+  const step = USHER_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, K, cs, aim);
   if (e.st !== 'aim' && e.st !== 'idle' && animTick)
     e.brows.forEach(b => {
@@ -85,11 +85,11 @@ function updUsher(e, dt, dist, ux, uz, mv) {
   if (dist < e.r + hero.r + 0.15 && e.stagger <= 0 && hurtHero(e.st === 'charge' || (K > 1 && (e.st === 'lunge' || e.mom > 0)) ? 2 : 1, e.pos))
     hero.knock.multiplyScalar(K); // a big one's charge and lunge take two hearts
 }
-// his states, one step each (updUsher runs the one he is in)
-const USHER_ST = {
+// his states, one step each (updateUsher runs the one he is in)
+const USHER_STATES = {
   idle(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (animTick) e.head.rotation.z = Math.sin(performance.now() / 400 + e.seed) * 0.1;
-    if ((dist < (e.sight || 20) && los(e.pos, hero.pos)) || dist < 8) {
+    if ((dist < (e.sight || 20) && lineOfSight(e.pos, hero.pos)) || dist < 8) {
       e.brows.forEach(b => (b.visible = true));
       if (losCover(e.pos, hero.pos, e.r + 0.15)) aim();
       else {
@@ -135,7 +135,7 @@ const USHER_ST = {
       e.cx0 = e.pos.x;
       e.cz0 = e.pos.z;
       e.tilt.position.set(0, 0, 0);
-      sTone({ f: 140 / K, f2: 60 / K, dur: 0.4 * K, type: 'sawtooth', gain: 0.1 * Math.sqrt(K), filt: [700, 200] });
+      playTone({ f: 140 / K, f2: 60 / K, dur: 0.4 * K, type: 'sawtooth', gain: 0.1 * Math.sqrt(K), filt: [700, 200] });
       if (K > 1) cam.shake = Math.max(cam.shake, 0.08 * K);
     }
   },
@@ -242,7 +242,7 @@ function tuneUshers(F) {
 }
 TALKERS.B = {
   make: makeUsher,
-  update: updUsher,
+  update: updateUsher,
   warn: e =>
     e.st === 'aim'
       ? { c: HEX.tie, k: clamp(1 - e.t / (0.42 + ((e.k || 1) - 1) * 0.4), 0, 1), cue: 'B' }

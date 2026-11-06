@@ -3,7 +3,7 @@
 // a new game from floor one (later: through the ink veil, from the title)
 function startGame(later) {
   if (state === 'leave' || state === 'build') return; // already on the way into a floor
-  auInit();
+  initAudio();
   if (later !== true) slidesOn(false); // otherwise the slides go once the ink has covered them
   hero.ammo = START_AMMO;
   hero.hp = hero.maxHp;
@@ -38,6 +38,7 @@ function warmSet() {
   wm.userData.uWall = { value: waveOpen() };
   wm.onBeforeCompile = waveCompile;
   WARM.add(new THREE.Mesh(g, wm)); // the Grump's rings
+  WARM.add(new THREE.Mesh(g, totemRingMat())); // the totems' rings
   WARM.add(new THREE.Mesh(g, holoMat(fireTex))); // the niche holograms
   const gc = share(new THREE.PlaneGeometry(0.01, 0.01)); // coloured like the trail's scraps (their colours are part of the shader)
   gc.setAttribute('color', new THREE.Float32BufferAttribute(new Array(gc.attributes.position.count * 3).fill(1), 3));
@@ -65,17 +66,17 @@ function warmUp() {
   renderer.compile(scene, camera);
   seeWarm();
   for (const [w, c] of [...WORDS_SEED, ...(WORDS_FLOOR[floorIdx] || []), ...(WORDS_USED[floorIdx] || new Map()).values()]) texs.add(wordTex(w, c));
-  renderer.compile(postScene, postCam);
+  renderer.compile(inkScene, postCam);
   if (floorIdx === 2) texs.add(maskGlow());
   for (const t of G.texs) texs.add(t);
   for (const t of texs) if (t && t.image) renderer.initTexture(t);
-  renderer.setRenderTarget(rt);
+  renderer.setRenderTarget(sceneTarget);
   renderer.render(scene, camera);
   renderer.setRenderTarget(null); // hidden behind the card; the first real frame draws over it
   for (const o of culled) o.frustumCulled = true;
   scene.remove(WARM);
 }
-let floorTok = 0; // a newer enterFloor cancels a build still waiting to run
+let floorBuildId = 0; // a newer enterFloor cancels a build still waiting to run
 // to floor i: Red Cap's ties and pebbles are those he came in with (a retry restores them); later: through the veil and the
 // scrap, else at once
 function enterFloor(i, later) {
@@ -83,10 +84,10 @@ function enterFloor(i, later) {
   stats.npc[i] = 0;
   floorSupplies(i);
   hero.stun = 0;
-  updAmmo();
+  updateAmmo();
   floorIdx = i;
-  const tok = ++floorTok,
-    live = () => tok === floorTok;
+  const tok = ++floorBuildId,
+    live = () => tok === floorBuildId;
   if (later !== true) {
     floorBuilt(i);
     floorShow(i);
@@ -245,13 +246,13 @@ function floorBuilt(i) {
   warmUp();
 }
 // Behind the scrap (under the ink), the floor's drawing settings are found from real frames of it, one each animation frame
-// (the page never stalls, so the scissors stay smooth), from its opening view and CAL_VIEWS more spread over it in turn.
+// (the page never stalls, so the scissors stay smooth), from its opening view and CALIBRATION_VIEWS more spread over it in turn.
 // First the frames settle: drawn at the screen's full ratio until their pace stops changing (the GPU has finished what the
 // build left it). Then settings of resLadder are tried, the best first, then halving the rungs, and the best whose frames pass the
 // controller's own test (02-render: a frame over LATE_AT screen frames is late) is kept, so play starts as sharp as it will
 // stay; RES_MIN with single ink lines is taken as passing. Anything failing, or the whole taking over TUNE_MAX ms, ends it
 // at the best setting found so far. The heaviest moments (thick smoke, the fog wall) are left to the controller.
-const CAL_VIEWS = 4,
+const CALIBRATION_VIEWS = 4,
   SETTLE_MIN = 12, // frames: settling takes at least this many
   SETTLE_RUN = 6, // until the mean gap of the last this-many frames is within SETTLE_TOL of the run before
   SETTLE_TOL = 0.15,
@@ -262,19 +263,19 @@ const CAL_VIEWS = 4,
   TUNE_MAX = 3000, // ms: the controller (02-render) goes on from the best setting found by then
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
   FIRST_SCRAP_MS = 1400; // and before floor one (its first build is the longest)
-// the views drawn while a floor loads, each a camera place and turn: the floor's opening view first, then CAL_VIEWS more
-function calViewsAll() {
-  updCamera(1 / 60);
-  return [[camera.position.clone(), camera.quaternion.clone()], ...calViews(CAL_VIEWS)];
+// the views drawn while a floor loads, each a camera place and turn: the floor's opening view first, then CALIBRATION_VIEWS more
+function calibrationViewsAll() {
+  updateCamera(1 / 60);
+  return [[camera.position.clone(), camera.quaternion.clone()], ...calibrationViews(CALIBRATION_VIEWS)];
 }
-function calLook([p, q]) {
+function calibrationLook([p, q]) {
   camera.position.copy(p);
   camera.quaternion.copy(q);
   camera.updateMatrixWorld();
 }
 // a drawing setting: [ratio, single ink lines (1) or double (0)]
 function setRung([r, lite]) {
-  post.uniforms.lite.value = lite;
+  inkPass.uniforms.lite.value = lite;
   resScale = r;
   resize();
 }
@@ -282,10 +283,10 @@ function setRung([r, lite]) {
 // then the ratio RES_UP at a time to RES_MIN
 function resLadder() {
   const out = [
-    [resCap(), 0],
-    [resCap(), 1]
+    [resolutionCap(), 0],
+    [resolutionCap(), 1]
   ];
-  for (let r = resCap(); r > RES_MIN + 1e-3; ) out.push([(r = Math.max(RES_MIN, Math.round((r - RES_UP) * 100) / 100)), 1]);
+  for (let r = resolutionCap(); r > RES_MIN + 1e-3; ) out.push([(r = Math.max(RES_MIN, Math.round((r - RES_UP) * 100) / 100)), 1]);
   return out;
 }
 // settled: enough frames, and the pace of the last SETTLE_RUN agrees with the run before (or SETTLE_MAX frames)
@@ -302,7 +303,7 @@ function settled(gaps) {
 // expects still to take (the frames left at the pace so far; while settling, one try when the frames are well inside the
 // late-frame rule, else as many as halving the rungs takes), within TUNE_MAX
 function tune(live, done, expect) {
-  const views = calViewsAll(),
+  const views = calibrationViewsAll(),
     L = resLadder(),
     t0 = performance.now(),
     lateAt = LATE_AT * clamp(RES.frame || 1000 / 60, 1000 / 60, 20.1),
@@ -320,8 +321,8 @@ function tune(live, done, expect) {
     if (over || !live()) return;
     over = true;
     setRung(L[hi]);
-    calLook(views[0]);
-    resFresh();
+    calibrationLook(views[0]);
+    resolutionFresh();
     done();
   };
   const next = () => {
@@ -330,6 +331,19 @@ function tune(live, done, expect) {
     setRung(L[mid]);
     n = late = 0;
   };
+  // a frame's verdict: still settling, or the try at rung mid passes (hi = mid) or fails (lo = mid + 1) once it is judged
+  const judge = gap => {
+    if (mid < 0) {
+      if (gap) gaps.push(gap);
+      if (settled(gaps)) next();
+      return;
+    }
+    if (++n > TRY_WARM && gap > lateAt) late++;
+    if (late <= TRY_LATE && n < TRY_WARM + TRY_FRAMES) return;
+    if (late > TRY_LATE) lo = mid + 1;
+    else hi = mid;
+    next();
+  };
   const frame = now => {
     if (over || !live()) return;
     try {
@@ -337,20 +351,10 @@ function tune(live, done, expect) {
       last = now;
       if (gap) pace = pace ? pace + (gap - pace) * 0.2 : gap;
       if (performance.now() - t0 > TUNE_MAX) return finish();
-      if (mid < 0) {
-        if (gap) gaps.push(gap);
-        if (settled(gaps)) next();
-      } else {
-        if (++n > TRY_WARM && gap > lateAt) late++;
-        if (late > TRY_LATE || n >= TRY_WARM + TRY_FRAMES) {
-          if (late > TRY_LATE) lo = mid + 1;
-          else hi = mid;
-          next();
-        }
-      }
+      judge(gap);
       if (over) return;
       expect(Math.min(TUNE_MAX - (performance.now() - t0), tuneLeft(pace, gaps.length, mid, n, hi - lo, pace < 0.8 * lateAt)));
-      calLook(views[k++ % views.length]);
+      calibrationLook(views[k++ % views.length]);
       render();
     } catch {
       return finish(); /* a fault while trying: play starts at the best setting known, the controller takes it from there */
@@ -373,7 +377,7 @@ function tuneLeft(pace, settled, mid, n, span, fast) {
 }
 // n views spread over the floor for calibrate: from open cells taken evenly through the map, Red Cap's eye height above the
 // ground, looking down the longest clear run of cells
-function calViews(n) {
+function calibrationViews(n) {
   const cells = [],
     out = [];
   for (let z = 1; z < G.h - 1; z++) for (let x = 1; x < G.w - 1; x++) if (G.map[z][x] === '.') cells.push([x, z]);
@@ -436,7 +440,7 @@ function beginFloor() {
 }
 $('#card').addEventListener('pointerdown', e => {
   e.preventDefault();
-  auInit();
+  initAudio();
   beginFloor();
 });
 function nextFloor() {
@@ -449,12 +453,12 @@ function nextFloor() {
 }
 let deadStill = false; // the death screen is up: the world is no longer drawn (the main loop)
 function die() {
-  post.uniforms.psy.value = 0;
+  inkPass.uniforms.psy.value = 0;
   state = 'dead';
   deadStill = false;
-  const ex = sPlay('death_exhale'); // cut short with a fade
+  const ex = playClip('death_exhale'); // cut short with a fade
   if (ex) {
-    const t = AU.ctx.currentTime;
+    const t = AUDIO.ctx.currentTime;
     ex.g.gain.setValueAtTime(VOL.death_exhale, t + 0.7);
     ex.g.gain.linearRampToValueAtTime(0, t + 1);
     ex.s.stop(t + 1.05);
@@ -523,8 +527,8 @@ function toTitle() {
   $('#card').classList.remove('enter');
   slidesOn(true);
   droneStop();
-  auInit();
-  tmusWant(true); // every visit after the first (back from a game): music on
+  initAudio();
+  titleMusicWant(true); // every visit after the first (back from a game): music on
   showOnly('title');
   $('#hud').hidden = true;
   $('#touch').hidden = true;
@@ -540,11 +544,11 @@ const SLIDES = [
   ['slide_4', [1.12, 1.05, 1, -1, -1, 0.6]],
   ['slide_5', [1.05, 1.12, 0, -1.4, 0, 1]]
 ];
-const SL = { els: [], i: -1, timer: 0 };
+const SLIDE_SHOW = { els: [], i: -1, timer: 0 };
 function slideNext() {
   const box = $('#slides');
-  if (!SL.els.length)
-    SL.els = SLIDES.map(([k, [s0, s1, x0, y0, x1, y1]]) => {
+  if (!SLIDE_SHOW.els.length)
+    SLIDE_SHOW.els = SLIDES.map(([k, [s0, s1, x0, y0, x1, y1]]) => {
       const d = document.createElement('div');
       d.className = 'sl';
       d.style.backgroundImage = `url(${ASSETS[k]})`;
@@ -552,13 +556,13 @@ function slideNext() {
       box.prepend(d);
       return d;
     });
-  const prev = SL.els[SL.i];
-  SL.i = (SL.i + 1) % SL.els.length;
-  const el = SL.els[SL.i];
+  const prev = SLIDE_SHOW.els[SLIDE_SHOW.i];
+  SLIDE_SHOW.i = (SLIDE_SHOW.i + 1) % SLIDE_SHOW.els.length;
+  const el = SLIDE_SHOW.els[SLIDE_SHOW.i];
   if (prev) {
     prev.classList.remove('top');
     setTimeout(() => {
-      if (SL.els[SL.i] !== prev) prev.classList.remove('show');
+      if (SLIDE_SHOW.els[SLIDE_SHOW.i] !== prev) prev.classList.remove('show');
     }, 2600);
   } // the old one stays under the new one until it has faded in
   el.classList.remove('show');
@@ -567,8 +571,8 @@ function slideNext() {
 }
 function slidesOn(on) {
   $('#slides').hidden = !on;
-  clearInterval(SL.timer);
+  clearInterval(SLIDE_SHOW.timer);
   if (!on) return;
   slideNext();
-  SL.timer = setInterval(slideNext, 9000);
+  SLIDE_SHOW.timer = setInterval(slideNext, 9000);
 }

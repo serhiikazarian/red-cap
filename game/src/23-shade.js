@@ -9,7 +9,7 @@ function makeShade(e, add) {
 }
 // bobs and flickers; once it sees Red Cap it weaves toward him; touching him frightens him (he slows) and steals a pebble,
 // then it flees for a while
-function updShade(e, dt, dist, ux, uz, mv) {
+function updateShade(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   const now = playT;
   e.fly = 1.6 + Math.sin(now * 2.3 + e.seed) * 0.35;
@@ -17,7 +17,7 @@ function updShade(e, dt, dist, ux, uz, mv) {
   e.y1 = e.fly + 0.7;
   e.tilt.position.y = e.fly;
   if (e.st === 'idle') {
-    if (dist < 12 && los(e.pos, hero.pos)) {
+    if (dist < 12 && lineOfSight(e.pos, hero.pos)) {
       e.st = 'drift';
       floatWord('boo', e.pos.clone().setY(2.8), '#d8d4cc', 0.6);
     }
@@ -42,19 +42,19 @@ function updShade(e, dt, dist, ux, uz, mv) {
     e.st = 'flee';
     e.t = 2.6;
     floatWord('BOO!', e.pos.clone().setY(e.fly + 1.2), '#d8d4cc', 0.9);
-    sTone({ f: 700, f2: 180, dur: 0.45, type: 'sine', gain: 0.08 });
-    sNoise({ dur: 0.4, f: 900, f2: 300, type: 'bandpass', gain: 0.12 });
+    playTone({ f: 700, f2: 180, dur: 0.45, type: 'sine', gain: 0.08 });
+    playNoise({ dur: 0.4, f: 900, f2: 300, type: 'bandpass', gain: 0.12 });
     if (hero.ammo > 0) {
       hero.ammo--;
       e.stolen = (e.stolen || 0) + 1; // given back when it pops
-      updAmmo();
+      updateAmmo();
       floatWord('-1 PEBBLE', hero.pos.clone().setY(hero.pos.y + 2.3), '#d8d4cc', 0.6);
     }
   }
 }
 TALKERS.q = {
   make: makeShade,
-  update: updShade,
+  update: updateShade,
   pops: true,
   harmless: true,
   tornWord: 'POPPED',

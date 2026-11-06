@@ -39,10 +39,7 @@ function hitTotem(p, rad) {
         if (mate) mate.cd = Math.max(mate.cd, TOTEM_CD);
       }
       burst(new THREE.Vector3(t.x, t.mini ? 1 : 1.5, t.z), [COL.bile, 0x4fa9df, 0x9bd12c], 10, 4, 0.16);
-      const m = new THREE.Mesh(
-        t.mini ? TOTEM_MINI_GEO : TOTEM_GEO,
-        new THREE.MeshBasicMaterial({ map: waveTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false })
-      );
+      const m = new THREE.Mesh(t.mini ? TOTEM_MINI_GEO : TOTEM_GEO, totemRingMat());
       m.position.set(t.x, t.mini ? 1.6 : 0.9, t.z);
       m.scale.set(0.8, 1, 0.8);
       G.group.add(m);
@@ -53,67 +50,78 @@ function hitTotem(p, rad) {
   }
   return false;
 }
-function updTotems(dt) {
+const RING = { speed: 8, reach: 11, miniReach: 7 }; // a shout ring's spread (m/s) and how far it runs
+function updateTotems(dt) {
   const J = jester(),
-    now = performance.now() / 1000;
-  let nag = [];
-  if (J && state === 'play') {
-    G.totemIdle = G.totemIdle == null ? TOTEM_NAG : G.totemIdle + dt; // never rung yet counts as long ago
-    if (G.totemIdle >= TOTEM_NAG || !G.totemTaught)
-      nag = G.totems
-        .filter(t => !t.mini && t.cd <= 0)
-        .sort((a, b) => Math.hypot(a.x - hero.pos.x, a.z - hero.pos.z) - Math.hypot(b.x - hero.pos.x, b.z - hero.pos.z))
-        .slice(0, 2);
-  }
+    now = performance.now() / 1000,
+    nag = naggingTotems(J, dt);
   for (const t of G.totems) {
     t.cd -= dt;
-    const flash = nag.includes(t),
-      fk = flash ? 0.5 + 0.5 * Math.sin(now * 9) : 0;
-    t.m.userData.mat.color.setHex(t.cd > 0 ? 0x5a5a5a : 0xffffff);
-    if (t.m.userData.mat.emissive) t.m.userData.mat.emissive.copy(totemGlow.setRGB(0.95, 0.8, 0.15).multiplyScalar(fk * 0.85));
-    if (flash && Math.random() < dt * 6)
-      burst(new THREE.Vector3(t.x + rand(-0.6, 0.6), rand(0.6, 2.6), t.z + rand(-0.6, 0.6)), [COL.bile, 0xfff2a0, COL.paper], 2, 2, 0.14, {
-        g: -2,
-        life: 0.8
-      });
-    if (flash && !t.nagged) floatWord('RING ME', new THREE.Vector3(t.x, 3.6, t.z), HEX.bile, 0.9);
-    t.nagged = flash;
-    const base = t.mini ? 0.7 : 1;
-    if (t.mini)
-      t.m.rotation.y += dt * 0.25; // the little ones keep turning
-    else if (animTick) t.m.rotation.y = Math.atan2(camera.position.x - t.x, camera.position.z - t.z);
-    if (animTick) t.m.scale.setScalar(base * (t.cd > 0 ? 1 : 1 + Math.sin(now * 6) * 0.03 + fk * 0.08));
-    const maxR = t.mini ? 7 : 11;
-    for (let i = t.waves.length - 1; i >= 0; i--) {
-      const w = t.waves[i];
-      w.r += dt * 8;
-      w.m.scale.set(w.r, 1, w.r);
-      w.m.material.opacity = clamp(1.3 - w.r / (maxR - 1), 0, 1);
-      if (J && !w.hit && Math.abs(Math.hypot(J.pos.x - t.x, J.pos.z - t.z) - w.r) < J.r * 0.8 + 0.4) {
-        w.hit = true;
-        const was = J.masked;
-        jesterStruck(J, t.x, t.z);
-        if (was && !J.masked) G.totemTaught = true; // the player has seen what the totems are for
-      }
-      // the ring dazes what it reaches (a big one's: only the flying heads); a Smoker is shaken out of his smoke
-      for (const e of G.enemies) {
-        if (e.dead || e.dying || e.away || e.caged || e.waiting || TALKERS[e.type].totemProof || w.struck.has(e)) continue;
-        if (!t.mini && e.fly == null) continue;
-        if (Math.abs(Math.hypot(e.pos.x - t.x, e.pos.z - t.z) - w.r) < e.r * 0.8 + 0.4) {
-          w.struck.add(e);
-          const T = TALKERS[e.type];
-          e.dazedT = Math.max(e.dazedT || 0, T.totemDaze || TOTEM_DAZE);
-          e.flash = 0.2;
-          if (T.hushed) T.hushed(e);
-          floatWord(pick(['SHH', 'HUSH', 'QUIET']), e.pos.clone().setY(hitHeight(e) + 1.4), HEX.bile, 0.8);
-        }
-      }
-      if (w.r > maxR) {
-        G.group.remove(w.m);
-        w.m.material.dispose();
-        t.waves.splice(i, 1);
-      }
-    }
+    totemLook(t, nag.includes(t), now, dt);
+    for (let i = t.waves.length - 1; i >= 0; i--) if (spreadRing(t, t.waves[i], J, dt)) t.waves.splice(i, 1);
   }
   if (J) J.maskMat.color.setHex(J.cracks >= 1 ? 0xb3a698 : 0xffffff);
+}
+// in the Jester's fight: the two ready big totems nearest Red Cap, until he has learnt them and again after TOTEM_NAG s idle
+function naggingTotems(J, dt) {
+  if (!J || state !== 'play') return [];
+  G.totemIdle = G.totemIdle == null ? TOTEM_NAG : G.totemIdle + dt; // never rung yet counts as long ago
+  if (G.totemIdle < TOTEM_NAG && G.totemTaught) return [];
+  const away = t => heroDist(t.x, t.z);
+  return G.totems
+    .filter(t => !t.mini && t.cd <= 0)
+    .sort((a, b) => away(a) - away(b))
+    .slice(0, 2);
+}
+// grey while resting; a nagging one flashes, sparks and says so once; big ones face the camera, small ones keep turning
+function totemLook(t, flash, now, dt) {
+  const mat = t.m.userData.mat,
+    fk = flash ? 0.5 + 0.5 * Math.sin(now * 9) : 0;
+  mat.color.setHex(t.cd > 0 ? 0x5a5a5a : 0xffffff);
+  if (mat.emissive) mat.emissive.copy(totemGlow.setRGB(0.95, 0.8, 0.15).multiplyScalar(fk * 0.85));
+  if (flash && Math.random() < dt * 6)
+    burst(new THREE.Vector3(t.x + rand(-0.6, 0.6), rand(0.6, 2.6), t.z + rand(-0.6, 0.6)), [COL.bile, 0xfff2a0, COL.paper], 2, 2, 0.14, {
+      g: -2,
+      life: 0.8
+    });
+  if (flash && !t.nagged) floatWord('RING ME', new THREE.Vector3(t.x, 3.6, t.z), HEX.bile, 0.9);
+  t.nagged = flash;
+  if (t.mini) t.m.rotation.y += dt * 0.25;
+  else if (animTick) t.m.rotation.y = Math.atan2(camera.position.x - t.x, camera.position.z - t.z);
+  if (animTick) t.m.scale.setScalar((t.mini ? 0.7 : 1) * (t.cd > 0 ? 1 : 1 + Math.sin(now * 6) * 0.03 + fk * 0.08));
+}
+// does totem t's ring w (radius w.r) pass over who right now?
+const ringOn = (t, w, who) => Math.abs(Math.hypot(who.pos.x - t.x, who.pos.z - t.z) - w.r) < who.r * 0.8 + 0.4;
+// one shout ring grows and fades; it strikes the Jester once and dazes what it reaches; true once it has run its course
+function spreadRing(t, w, J, dt) {
+  const reach = t.mini ? RING.miniReach : RING.reach;
+  w.r += dt * RING.speed;
+  w.m.scale.set(w.r, 1, w.r);
+  w.m.material.opacity = clamp(1.3 - w.r / (reach - 1), 0, 1);
+  if (J && !w.hit && ringOn(t, w, J)) {
+    w.hit = true;
+    const was = J.masked;
+    jesterStruck(J, t.x, t.z);
+    if (was && !J.masked) G.totemTaught = true; // the player has seen what the totems are for
+  }
+  for (const e of G.enemies) if (ringDazes(t, w, e)) dazeByRing(e, w);
+  if (w.r <= reach) return false;
+  G.group.remove(w.m);
+  w.m.material.dispose();
+  return true;
+}
+// a big totem's ring dazes only the flying heads, a small one's anything awake it reaches (once each)
+function ringDazes(t, w, e) {
+  if (e.dead || e.dying || e.away || e.caged || e.waiting || TALKERS[e.type].totemProof || w.struck.has(e)) return false;
+  if (!t.mini && e.fly == null) return false;
+  return ringOn(t, w, e);
+}
+// a Smoker is shaken out of his smoke (his hushed hook)
+function dazeByRing(e, w) {
+  const T = TALKERS[e.type];
+  w.struck.add(e);
+  e.dazedT = Math.max(e.dazedT || 0, T.totemDaze || TOTEM_DAZE);
+  e.flash = 0.2;
+  if (T.hushed) T.hushed(e);
+  floatWord(pick(['SHH', 'HUSH', 'QUIET']), e.pos.clone().setY(hitHeight(e) + 1.4), HEX.bile, 0.8);
 }

@@ -25,7 +25,17 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const pick = a => a[(Math.random() * a.length) | 0];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
+const ease = (rate, dt) => 1 - Math.exp(-rate * dt); // how much of the way a smooth follow at this rate closes in dt s
 // the shortest signed turn from angle a to angle b
+// a figure's three nested parts: root (where it stands) > face (where it turns) > tilt (its wobble)
+function figureRig() {
+  const root = new THREE.Group(),
+    face = new THREE.Group(),
+    tilt = new THREE.Group();
+  root.add(face);
+  face.add(tilt);
+  return { root, face, tilt };
+}
 const angDiff = (a, b) => {
   let d = (b - a) % TAU;
   if (d > Math.PI) d -= TAU;

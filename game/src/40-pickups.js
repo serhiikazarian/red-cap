@@ -15,8 +15,8 @@ function openSpot(x, z) {
   const [ix, iz] = cellOf(x, z);
   return (
     !solid(ix, iz) &&
-    !propR(ch(ix, iz)) &&
-    ch(ix, iz) !== 'g' &&
+    !propRadius(cellAt(ix, iz)) &&
+    cellAt(ix, iz) !== 'g' &&
     wallDist(x, z) > 0.6 &&
     !G.clutter.some(c => Math.hypot(c.x - x, c.z - z) < c.r + 0.6)
   );
@@ -34,7 +34,7 @@ function heartRoom(x, z, big) {
       const a = (k / n) * TAU,
         px = x + Math.cos(a) * r,
         pz = z + Math.sin(a) * r;
-      if (ok(px, pz) && los(from, { x: px, z: pz })) return [px, pz];
+      if (ok(px, pz) && lineOfSight(from, { x: px, z: pz })) return [px, pz];
     }
   return [x, z];
 }
@@ -60,7 +60,7 @@ function dropHeart(x, z, big) {
     bd = 15;
   for (let iz = 1; iz < G.h - 1; iz++)
     for (let ix = 1; ix < G.w - 1; ix++) {
-      const c = ch(ix, iz),
+      const c = cellAt(ix, iz),
         cx = cellMid(ix),
         cz = cellMid(iz),
         d = Math.hypot(cx - x, cz - z);
@@ -91,10 +91,10 @@ function hideHearts(n, piles = 0) {
     got = [];
   for (let z = 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) {
-      if (ch(x, z) !== '.' || kindAt(x, z) === 2) continue;
+      if (cellAt(x, z) !== '.' || kindAt(x, z) === 2) continue;
       const px = cellMid(x),
         pz = cellMid(z);
-      if (!clearOf(px, pz, 0.8) || Math.hypot(px - hero.pos.x, pz - hero.pos.z) < 12) continue;
+      if (!clearOf(px, pz, 0.8) || heroDist(px, pz) < 12) continue;
       if (G.enemies.some(e => Math.hypot(e.pos.x - px, e.pos.z - pz) < 6)) continue;
       const walls = DIRS4.filter(([a, b]) => solid(x + a, z + b)).length;
       cand.push({ x: px, z: pz, w: walls });
@@ -103,7 +103,7 @@ function hideHearts(n, piles = 0) {
     let best = null,
       bestS = -1;
     for (const c of cand) {
-      const d = Math.min(Math.hypot(c.x - hero.pos.x, c.z - hero.pos.z), ...got.map(g => Math.hypot(c.x - g.x, c.z - g.z)));
+      const d = Math.min(heroDist(c.x, c.z), ...got.map(g => Math.hypot(c.x - g.x, c.z - g.z)));
       const sc = Math.min(d, 24) + c.w * 4 + rng() * 3;
       if (sc > bestS) {
         bestS = sc;
@@ -174,12 +174,12 @@ function spawnPickup(x, z, big) {
   G.pickups.push({ g, glow, ph: rand(0, 6), by: big ? by - 0.45 : by, big });
 }
 // ties (hearts) bob and are taken when Red Cap needs one; the room heart appears when he is low; pebble piles glow and are taken
-function updPickups(dt) {
+function updatePickups(dt) {
   const now = performance.now() / 1000;
   if (G.F.roomHeart && !G.roomHeartGiven && hero.hp <= 2) {
     const rx = cellMid(G.F.roomHeart[0]),
       rz = cellMid(G.F.roomHeart[1]);
-    if (Math.hypot(hero.pos.x - rx, hero.pos.z - rz) < 7) {
+    if (heroDist(rx, rz) < 7) {
       G.roomHeartGiven = true;
       spawnPickup(rx, rz);
       burst(new THREE.Vector3(rx, 1, rz), [COL.tie, COL.bile, COL.paper], 12, 3, 0.14);
@@ -190,7 +190,7 @@ function updPickups(dt) {
     p.g.position.y = (p.by || 0) + 0.9 + Math.sin(now * 3 + p.ph) * 0.15;
     p.g.rotation.y += dt * 2.2;
     p.glow.material.opacity = 0.45 + Math.sin(now * 5 + p.ph) * 0.2;
-    if (Math.hypot(p.g.position.x - hero.pos.x, p.g.position.z - hero.pos.z) < 1.1 && hero.hp < hero.maxHp) {
+    if (heroDist(p.g.position.x, p.g.position.z) < 1.1 && hero.hp < hero.maxHp) {
       p.taken = true;
       G.group.remove(p.g);
       G.group.remove(p.glow);
@@ -209,7 +209,7 @@ function updPickups(dt) {
       p.glow.scale.setScalar(1.3 + 0.35 * k);
     }
   for (const p of G.piles)
-    if (!p.taken && hero.ammo < hero.maxAmmo && Math.hypot(p.x - hero.pos.x, p.z - hero.pos.z) < 1.1) {
+    if (!p.taken && hero.ammo < hero.maxAmmo && heroDist(p.x, p.z) < 1.1) {
       p.taken = true;
       G.group.remove(p.m);
       G.group.remove(p.glow);

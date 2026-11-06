@@ -60,21 +60,23 @@ function cellOf(x, z) {
 function cellMid(i) {
   return i * CELL + CELL / 2;
 }
-function ch(ix, iz) {
+// how far (x, z) is from Red Cap on the ground
+const heroDist = (x, z) => Math.hypot(x - hero.pos.x, z - hero.pos.z);
+function cellAt(ix, iz) {
   if (!G || iz < 0 || iz >= G.h || ix < 0 || ix >= G.w) return '#';
   return G.map[iz][ix];
 }
 function solid(ix, iz) {
-  const c = ch(ix, iz);
+  const c = cellAt(ix, iz);
   return c === '#' || (c === 'g' && G.gateClosed);
 }
 // how far a pillar or prop in a cell reaches from the cell's centre (0: nothing to bump into)
-function propR(c) {
+function propRadius(c) {
   return c === 'T' ? (G && G.F.deco === 'mouth' ? PYR_R : 0.5) : c === 'o' ? (G && G.F.deco === 'mouth' ? 0 : 0.6) : 0;
 }
 // line of sight that also counts pillars and props as cover
 function losCover(a, b, pad = 0.3) {
-  if (!los(a, b)) return false;
+  if (!lineOfSight(a, b)) return false;
   const dx = b.x - a.x,
     dz = b.z - a.z,
     d = Math.hypot(dx, dz),
@@ -84,7 +86,7 @@ function losCover(a, b, pad = 0.3) {
       x = a.x + dx * t,
       z = a.z + dz * t,
       [ix, iz] = cellOf(x, z),
-      pr = propR(ch(ix, iz));
+      pr = propRadius(cellAt(ix, iz));
     if (pr && Math.hypot(x - cellMid(ix), z - cellMid(iz)) < pr + pad) return false;
   }
   return true;
@@ -96,7 +98,7 @@ function kindAt(ix, iz) {
   return G.hk[ix + iz * G.w];
 }
 // the ground's height in a cell at a point (clamped into the cell)
-function cellH(ix, iz, x, z) {
+function cellHeight(ix, iz, x, z) {
   const k = kindAt(ix, iz);
   if (k === 1) return LIFT;
   if (k !== 2) return 0;
@@ -108,10 +110,10 @@ function cellH(ix, iz, x, z) {
 function heightAt(x, z) {
   if (!G || !G.hk) return 0;
   const [ix, iz] = cellOf(x, z);
-  return cellH(ix, iz, x, z);
+  return cellHeight(ix, iz, x, z);
 }
 // can a walker go from one cell to its neighbour (not up or down a drop)?
-function stepOK(ax, az, bx, bz) {
+function canStep(ax, az, bx, bz) {
   const ka = kindAt(ax, az),
     kb = kindAt(bx, bz);
   const rampOK = (rx, rz, ox, oz, ko) => {
@@ -166,8 +168,37 @@ function nearRaised(x, z) {
 function buildRaised(F) {
   if (!F.raise) return;
   const top = new THREE.MeshLambertMaterial({ map: texRepeat(F.floor, 0.6, 0.6), color: 0xd8d0c4 }),
-    side = new THREE.MeshLambertMaterial({ map: TEX[F.walls[0]], color: 0x9a9a9a });
-  const rail = new THREE.MeshLambertMaterial({ color: F.deco === 'mouth' ? 0x4a1a12 : 0x2a2418 });
+    side = new THREE.MeshLambertMaterial({ map: TEX[F.walls[0]], color: 0x9a9a9a }),
+    rail = new THREE.MeshLambertMaterial({ color: F.deco === 'mouth' ? 0x4a1a12 : 0x2a2418 }),
+    wedge = rampGeometry();
+  for (let z = 0; z < G.h; z++)
+    for (let x = 0; x < G.w; x++) {
+      const k = kindAt(x, z);
+      if (k === 1) raisedBlock(x, z, [side, side, top, side, side, side], rail);
+      else if (k === 2) {
+        const m = new THREE.Mesh(wedge, [side, top]);
+        m.position.set(cellMid(x), 0, cellMid(z));
+        m.rotation.y = { E: 0, W: Math.PI, N: Math.PI / 2, S: -Math.PI / 2 }[G.rd[x + z * G.w]];
+        G.group.add(still(m));
+      }
+    }
+}
+// a block LIFT high filling cell (x, z), with a rail along every side that drops to low ground
+function raisedBlock(x, z, mats, rail) {
+  const cx = cellMid(x),
+    cz = cellMid(z),
+    b = new THREE.Mesh(new THREE.BoxGeometry(CELL, LIFT, CELL), mats);
+  b.position.set(cx, LIFT / 2, cz);
+  G.group.add(still(b));
+  for (const [dx, dz] of DIRS4) {
+    if (solid(x + dx, z + dz) || kindAt(x + dx, z + dz) !== 0) continue;
+    const r = new THREE.Mesh(dx ? new THREE.BoxGeometry(0.12, 0.9, CELL) : new THREE.BoxGeometry(CELL, 0.9, 0.12), rail);
+    r.position.set(cx + dx * (CELL / 2 - 0.06), LIFT + 0.45, cz + dz * (CELL / 2 - 0.06));
+    G.group.add(still(r));
+  }
+}
+// one cell's ramp, rising toward +x: the slope (material 1) and its two triangular sides (material 0)
+function rampGeometry() {
   const h = CELL / 2,
     P3 = [],
     UV = [],
@@ -177,10 +208,11 @@ function buildRaised(F) {
         UV.push(v[3], v[4]);
       }
     };
+  // each corner: x, y, z, u, v
   const A = [-h, 0, -h, 0, 0],
     B = [-h, 0, h, 0, 1],
     C = [h, LIFT, h, 1, 1],
-    D = [h, LIFT, -h, 1, 0]; // the slope, rising toward +x
+    D = [h, LIFT, -h, 1, 0];
   tri(A, B, C);
   tri(A, C, D);
   const s0 = [-h, 0, h, 0, 0],
@@ -190,103 +222,89 @@ function buildRaised(F) {
     n1 = [h, 0, -h, 1, 0],
     n2 = [h, LIFT, -h, 1, LIFT / CELL];
   tri(s0, s1, s2);
-  tri(n0, n2, n1); // the two triangular sides
+  tri(n0, n2, n1);
   const wedge = new THREE.BufferGeometry();
   wedge.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3));
   wedge.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2));
   wedge.computeVertexNormals();
   wedge.addGroup(0, 6, 1);
   wedge.addGroup(6, 6, 0);
-  for (let z = 0; z < G.h; z++)
-    for (let x = 0; x < G.w; x++) {
-      const k = kindAt(x, z),
-        cx = cellMid(x),
-        cz = cellMid(z);
-      if (k === 1) {
-        const b = new THREE.Mesh(new THREE.BoxGeometry(CELL, LIFT, CELL), [side, side, top, side, side, side]);
-        b.position.set(cx, LIFT / 2, cz);
-        G.group.add(still(b));
-        for (const [dx, dz] of DIRS4)
-          if (!solid(x + dx, z + dz) && kindAt(x + dx, z + dz) === 0) {
-            // a rail along every drop
-            const r = new THREE.Mesh(dx ? new THREE.BoxGeometry(0.12, 0.9, CELL) : new THREE.BoxGeometry(CELL, 0.9, 0.12), rail);
-            r.position.set(cx + dx * (CELL / 2 - 0.06), LIFT + 0.45, cz + dz * (CELL / 2 - 0.06));
-            G.group.add(still(r));
-          }
-      } else if (k === 2) {
-        const m = new THREE.Mesh(wedge, [side, top]);
-        m.position.set(cx, 0, cz);
-        m.rotation.y = { E: 0, W: Math.PI, N: Math.PI / 2, S: -Math.PI / 2 }[G.rd[x + z * G.w]];
-        G.group.add(still(m));
-      }
-    }
+  return wedge;
 }
 // pushes a circle (centre p, radius r) out of walls, cells at another height (when y is given), props, pyramids and stakes
+// in the 3×3 cells around it; who (a talker, or none) may be drawn wider than it walks
+const STEP_MAX = 0.6; // metres of ground height a walker at height y can step onto
 function collide(p, r, y, who) {
   const [cx, cz] = cellOf(p.x, p.z);
   for (let iz = cz - 1; iz <= cz + 1; iz++)
     for (let ix = cx - 1; ix <= cx + 1; ix++) {
-      const nx0 = clamp(p.x, ix * CELL + 0.001, ix * CELL + CELL - 0.001),
-        nz0 = clamp(p.z, iz * CELL + 0.001, iz * CELL + CELL - 0.001);
-      if (solid(ix, iz) || (y != null && G.hk && Math.abs(cellH(ix, iz, nx0, nz0) - y) > 0.6)) {
-        const nx = clamp(p.x, ix * CELL, ix * CELL + CELL),
-          nz = clamp(p.z, iz * CELL, iz * CELL + CELL);
-        const dx = p.x - nx,
-          dz = p.z - nz,
-          d = Math.hypot(dx, dz);
-        if (d < r) {
-          if (d > 1e-4) {
-            p.x = nx + (dx / d) * r;
-            p.z = nz + (dz / d) * r;
-          } else {
-            // inside a solid cell: leave by the nearest open side, never by marching on through the wall
-            let bs = null,
-              bd = 1e9;
-            for (const [ax, az] of DIRS4) {
-              if (solid(ix + ax, iz + az)) continue;
-              const e = ax > 0 ? ix * CELL + CELL - p.x : ax < 0 ? p.x - ix * CELL : az > 0 ? iz * CELL + CELL - p.z : p.z - iz * CELL;
-              if (e < bd) {
-                bd = e;
-                bs = [ax, az];
-              }
-            }
-            if (bs) {
-              if (bs[0]) p.x = bs[0] > 0 ? ix * CELL + CELL + r : ix * CELL - r;
-              else p.z = bs[1] > 0 ? iz * CELL + CELL + r : iz * CELL - r;
-            }
-          }
-        }
-      } else if (pyrAt(ix, iz)) pyrPush(p, Math.max(r, (who && who.drawnR) || 0), pyrAt(ix, iz));
+      if (blocksWalker(ix, iz, p, y)) pushOutOfCell(p, r, ix, iz);
+      else if (pyrAt(ix, iz)) pyrPush(p, Math.max(r, (who && who.drawnR) || 0), pyrAt(ix, iz));
       else {
-        const pr = propR(ch(ix, iz));
-        if (pr) {
-          const px = cellMid(ix),
-            pz = cellMid(iz),
-            dx = p.x - px,
-            dz = p.z - pz,
-            d = Math.hypot(dx, dz),
-            rr = r + pr;
-          if (d < rr && d > 1e-4) {
-            p.x = px + (dx / d) * rr;
-            p.z = pz + (dz / d) * rr;
-          }
-        }
+        const reach = propRadius(cellAt(ix, iz));
+        if (reach) pushOffRound(p, cellMid(ix), cellMid(iz), r + reach);
       }
     }
-  for (const st of G.stakes) {
-    const dx = p.x - st.x,
-      dz = p.z - st.z,
-      d = Math.hypot(dx, dz),
-      rr = Math.max(r, (who && who.wide) || 0) + st.r;
-    if (d < rr && d > 1e-4) {
-      const out = rr - d > 0.25 ? 0.05 : rr - d;
-      p.x += (dx / d) * out;
-      p.z += (dz / d) * out;
+  for (const st of G.stakes) pushOffStake(p, st, Math.max(r, (who && who.wide) || 0) + st.r);
+}
+// a wall, or (y given, on a floor with heights) a cell whose ground nearest p is more than a step from y
+function blocksWalker(ix, iz, p, y) {
+  if (solid(ix, iz)) return true;
+  if (y == null || !G.hk) return false;
+  const x = clamp(p.x, ix * CELL + 0.001, ix * CELL + CELL - 0.001),
+    z = clamp(p.z, iz * CELL + 0.001, iz * CELL + CELL - 0.001);
+  return Math.abs(cellHeight(ix, iz, x, z) - y) > STEP_MAX;
+}
+// out of a blocked cell's square, away from its nearest point
+function pushOutOfCell(p, r, ix, iz) {
+  const nx = clamp(p.x, ix * CELL, ix * CELL + CELL),
+    nz = clamp(p.z, iz * CELL, iz * CELL + CELL),
+    dx = p.x - nx,
+    dz = p.z - nz,
+    d = Math.hypot(dx, dz);
+  if (d >= r) return;
+  if (d > 1e-4) {
+    p.x = nx + (dx / d) * r;
+    p.z = nz + (dz / d) * r;
+  } else escapeCell(p, r, ix, iz);
+}
+// inside a blocked cell: leave by the nearest open side, never by marching on through the wall
+function escapeCell(p, r, ix, iz) {
+  let best = null,
+    bestGap = 1e9;
+  for (const [ax, az] of DIRS4) {
+    if (solid(ix + ax, iz + az)) continue;
+    const gap = ax > 0 ? ix * CELL + CELL - p.x : ax < 0 ? p.x - ix * CELL : az > 0 ? iz * CELL + CELL - p.z : p.z - iz * CELL;
+    if (gap < bestGap) {
+      bestGap = gap;
+      best = [ax, az];
     }
   }
+  if (!best) return;
+  if (best[0]) p.x = best[0] > 0 ? ix * CELL + CELL + r : ix * CELL - r;
+  else p.z = best[1] > 0 ? iz * CELL + CELL + r : iz * CELL - r;
+}
+// out to distance rr from a round trunk at (x, z), at once
+function pushOffRound(p, x, z, rr) {
+  const dx = p.x - x,
+    dz = p.z - z,
+    d = Math.hypot(dx, dz);
+  if (d >= rr || d <= 1e-4) return;
+  p.x = x + (dx / d) * rr;
+  p.z = z + (dz / d) * rr;
+}
+// off a stake to distance rr: a slight overlap at once, a deep one (more than 0.25 m) 5 cm a frame
+function pushOffStake(p, st, rr) {
+  const dx = p.x - st.x,
+    dz = p.z - st.z,
+    d = Math.hypot(dx, dz);
+  if (d >= rr || d <= 1e-4) return;
+  const out = rr - d > 0.25 ? 0.05 : rr - d;
+  p.x += (dx / d) * out;
+  p.z += (dz / d) * out;
 }
 // a clear straight line between two points (walls only)
-function los(a, b) {
+function lineOfSight(a, b) {
   const dx = b.x - a.x,
     dz = b.z - a.z,
     d = Math.hypot(dx, dz),
@@ -313,7 +331,7 @@ function flowField() {
     for (const [ax, az] of DIRS4) {
       const nx = x + ax,
         nz = z + az;
-      if (solid(nx, nz) || !stepOK(x, z, nx, nz)) continue;
+      if (solid(nx, nz) || !canStep(x, z, nx, nz)) continue;
       const j = nx + nz * G.w;
       if (D[j] > D[i] + 1) {
         D[j] = D[i] + 1;
@@ -330,7 +348,7 @@ function avoidProps(e, vx, vz) {
   AVOID.x = AVOID.z = 0;
   for (let iz = cz - 1; iz <= cz + 1; iz++)
     for (let ix = cx - 1; ix <= cx + 1; ix++) {
-      const pr = pyrAt(ix, iz) ? PYR.foot * Math.SQRT2 : propR(ch(ix, iz));
+      const pr = pyrAt(ix, iz) ? PYR.foot * Math.SQRT2 : propRadius(cellAt(ix, iz));
       if (pr) avoidOne(e, vx, vz, cellMid(ix), cellMid(iz), pr, ix + iz * 999);
     }
   for (let k = 0; k < G.stakes.length; k++) {
@@ -394,7 +412,7 @@ function steerRaw(e, target) {
   for (const [ax, az] of DIRS4) {
     const nx = x + ax,
       nz = z + az;
-    if (solid(nx, nz) || !stepOK(x, z, nx, nz)) continue;
+    if (solid(nx, nz) || !canStep(x, z, nx, nz)) continue;
     const v = G.dist[nx + nz * G.w];
     if (v < best) {
       best = v;

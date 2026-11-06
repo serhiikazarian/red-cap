@@ -219,6 +219,8 @@ function wordTex(text, color = HEX.tie, stroke = HEX.ink) {
   const t = new THREE.CanvasTexture(c);
   return (canvasTexCache[key] = t);
 }
+// a sprite that glows: its light adds to what is behind, and it writes no depth (extra: more of the material's settings)
+const glowSprite = (map, extra) => new THREE.Sprite(new THREE.SpriteMaterial({ map, blending: THREE.AdditiveBlending, depthWrite: false, ...extra }));
 // a soft round glow
 function glowTex(inner, outer) {
   const c = document.createElement('canvas');
@@ -265,6 +267,21 @@ function makeWaveTex() {
   t.wrapS = THREE.RepeatWrapping;
   t.repeat.set(3, 1);
   return t;
+}
+// a shout ring's inside (its back faces: seen from within, or its far half through the near one) is the band in plain yellow,
+// so the words never read mirrored; the band keeps its shape (the texture's alpha). Both rings' shaders add it (waveCompile,
+// ringInsideCompile).
+const RING_INSIDE_GLSL = (c => `\n  if (!gl_FrontFacing) diffuseColor.rgb = vec3(${c.r.toFixed(4)}, ${c.g.toFixed(4)}, ${c.b.toFixed(4)});`)(
+  new THREE.Color(COL.bile)
+);
+function ringInsideCompile(sh) {
+  sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>' + RING_INSIDE_GLSL);
+}
+// a totem's shout ring (the Grump's has its own shader, waveCompile)
+function totemRingMat() {
+  const m = new THREE.MeshBasicMaterial({ map: waveTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false });
+  m.onBeforeCompile = ringInsideCompile;
+  return m;
 }
 // a texture drawn by draw(ctx, w, h); it belongs to the floor
 function canvasTex(w, h, draw) {

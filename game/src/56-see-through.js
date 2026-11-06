@@ -1,24 +1,24 @@
 // See-through: what stands between the camera and the fight fades. Pillars, props, totems, onlookers and the floating things
 // over each floor are registered while the floor is built (seeThru). Each gets
 // simple shapes: a standing column (x, z, r, y0..y1) for things on the ground, spheres that follow the moving ones. The camera keeps SEE_PAD
-// off them, and one that stands across the line from the camera to Red Cap, the locked target or a boss in the fight fades to SEE_A, drawn
+// off them, and one that stands across the line from the camera to Red Cap, the locked target or a boss in the fight fades to SEE_ALPHA, drawn
 // without writing depth (what is behind keeps its ink). Baked things are baked per thing, so each fades alone; an instanced box is hidden
 // and drawn by a stand-in while it fades. how: 'hard' (onlookers, easels) only keeps the camera off (never fades, baked with the rest);
 // 'pillar' (floor one) and 'pyramid' (floor two) follow seeSolid's rules (a pillar with a bold contour while it hides Red Cap, a pyramid
 // without); 'plain' (floor three's totems and chamber stacks, floor one's floaters) fades evenly without a contour; anything else (floors
 // two and three's floaters) fades evenly with a bold contour. The contours come from the mask pass: pillars on layer 1 (SEE_MAT), floaters
 // on layer 2 (SEE_DYN_MAT).
-const SEE_A = 0.25,
+const SEE_ALPHA = 0.25,
   SEE_PAD = 0.3,
   // pillars and pyramids: one kind of thing ('solid'), one set of rules (seeSolid); what differs: their shapes, and whether the camera
   // right at one fades it (a 7 m pillar could fill the view; a pyramid stands below the camera and would only vanish as Red Cap passes)
   // line: a thick contour while it hides Red Cap; slow: its fades take this many times SOLID_T
   SOLID = { pillar: { lens: true, line: true, slow: 1 }, pyramid: { lens: false, line: false, slow: 1.5 } },
-  SOLID_FOOT = [1.4, 3.0], // on a 7 m pillar: solid to this height above its foot, faded to SEE_A or SOLID_EVEN_A from this one (a shorter
+  SOLID_FOOT = [1.4, 3.0], // on a 7 m pillar: solid to this height above its foot, faded to SEE_ALPHA or SOLID_EVEN_A from this one (a shorter
   // thing in proportion to its height)
   SOLID_NEAR = 3, // metres: an enemy it hides fades it only while Red Cap is this near its side
   SOLID_LENS = 0.8, // metres: the camera this near it fades it too (no contour)
-  SOLID_EVEN_A = 1 - (1 - SEE_A) * 0.63 * 0.82, // without a contour: a little less see-through
+  SOLID_EVEN_A = 1 - (1 - SEE_ALPHA) * 0.63 * 0.82, // without a contour: a little less see-through
   SOLID_T = { in: 1, out: 1, hold: 0.6, swap: 0.6 }, // seconds: to fade, to come back, a reason kept after it ends, contour on <-> off
   // pillars: red where they stand (times their contour's strength, lvl), their distance from the camera in alpha (times red)
   SEE_MAT = share(
@@ -194,7 +194,7 @@ function seeShapes() {
       s.y0 = p.y + c.at[2];
       s.y1 = p.y + c.at[3];
     }
-    c.near = c.dyn || Math.hypot(c.w[0].x - hero.pos.x, c.w[0].z - hero.pos.z) < cam.dist + c.w[0].r + 4;
+    c.near = c.dyn || heroDist(c.w[0].x, c.w[0].z) < cam.dist + c.w[0].r + 4;
     if (!c.dyn) continue;
     if (c.inst) {
       const s = c.w[0],
@@ -268,7 +268,7 @@ function seeMat(orig) {
   const m = orig.clone();
   m.transparent = true;
   m.depthWrite = false;
-  if (m.alphaTest) m.alphaTest = Math.round(orig.alphaTest * SEE_A * 100) / 100; // a fixed value: a new one would build a new shader
+  if (m.alphaTest) m.alphaTest = Math.round(orig.alphaTest * SEE_ALPHA * 100) / 100; // a fixed value: a new one would build a new shader
   // solid at its foot, fading upwards: alpha falls from 1 at seeY0 to seeA at seeY1 (world heights)
   const u = (m.userData.seeU = { seeA: { value: 1 }, seeY0: { value: 0 }, seeY1: { value: 1 } });
   m.onBeforeCompile = sh => {
@@ -290,7 +290,7 @@ const seeLayer = c => (c.dyn ? 2 : 1);
 // what a thing is drawn with while faded (its meshes, and its instanced boxes' stand-ins)
 const seeDrawn = c => [...c.meshes, ...c.items.map(it => it.see).filter(Boolean)];
 // a thing's contour strength into the mask, just before the mask pass draws it
-const seeLvl = c => (r, sc, cm, g, mat) => {
+const seeLevel = c => (r, sc, cm, g, mat) => {
   if (mat !== SEE_MAT) return;
   mat.uniforms.lvl.value = c.lvl;
   mat.uniformsNeedUpdate = true;
@@ -298,7 +298,7 @@ const seeLvl = c => (r, sc, cm, g, mat) => {
 function seeOn(c, on) {
   c.on = on;
   c.ln = on && c.line && !c.solid; // drawn into the mask: has a contour now (a pillar: seeTick decides)
-  c.obr = c.obr || seeLvl(c);
+  c.obr = c.obr || seeLevel(c);
   for (const m of c.meshes) {
     if (on) {
       const o = m.material;
@@ -335,7 +335,7 @@ function seeOn(c, on) {
   }
 }
 // Pillars and pyramids: solid by default; faded (keeping a solid foot, SOLID_FOOT) to
-// SEE_A while it stands between the camera and Red Cap (a pillar with a contour, which never lies on anyone in front of it: SOLID_GAP), to
+// SEE_ALPHA while it stands between the camera and Red Cap (a pillar with a contour, which never lies on anyone in front of it: SOLID_GAP), to
 // SOLID_EVEN_A without a contour while it hides an enemy in the fight near him or (a pillar) stands right at the camera. "In the way" and
 // "right at the camera" use the thing's own shape (a pillar's column, a pyramid's two frustums: seeCross, seeIn). A reason is kept
 // SOLID_T.hold after it ends and every change is eased, so nothing flickers. Sets c.g (hiding Red Cap 1, else 0, eased) and returns the
@@ -365,7 +365,7 @@ function seeSolid(c, dt, cp, fo) {
   c.hf = front || lens || foe ? SOLID_T.hold : Math.max(0, (c.hf || 0) - dt); // faded
   c.hg = front ? SOLID_T.hold : Math.max(0, (c.hg || 0) - dt); // hiding Red Cap
   c.g = clamp(c.g + (c.hg > 0 ? dt : -dt) / SOLID_T.swap, 0, 1);
-  return c.hg > 0 ? SEE_A : c.hf > 0 ? SOLID_EVEN_A : 1;
+  return c.hg > 0 ? SEE_ALPHA : c.hf > 0 ? SOLID_EVEN_A : 1;
 }
 function seeTick(dt) {
   SEE.on = SEE.gr = SEE.dyn = false;
@@ -378,8 +378,8 @@ function seeTick(dt) {
     // in over ~0.15 s, back over ~0.3 s; a pillar or pyramid over SOLID_T
     c.a =
       want < c.a
-        ? Math.max(want, c.a - dt * (c.solid ? (1 - SEE_A) / (SOLID_T.in * SOLID[c.solid].slow) : 5))
-        : Math.min(want, c.a + dt * (c.solid ? (1 - SEE_A) / (SOLID_T.out * SOLID[c.solid].slow) : 2.5));
+        ? Math.max(want, c.a - dt * (c.solid ? (1 - SEE_ALPHA) / (SOLID_T.in * SOLID[c.solid].slow) : 5))
+        : Math.min(want, c.a + dt * (c.solid ? (1 - SEE_ALPHA) / (SOLID_T.out * SOLID[c.solid].slow) : 2.5));
     if (c.a < 0.999 && !c.on) seeOn(c, true);
     else if (c.a >= 0.999 && c.on) seeOn(c, false);
     if (!c.on) continue;
@@ -409,15 +409,15 @@ function seeWant(c, dt, cp, fo) {
   else if (!c.gone && c.near)
     for (const s of c.w) {
       // right in front of the lens (or brushing it), it would fill the screen
-      if (seeIn(cp, s, 0.8)) want = SEE_A;
-      else for (const f of fo) if (seeCross(cp, f, s)) want = SEE_A;
+      if (seeIn(cp, s, 0.8)) want = SEE_ALPHA;
+      else for (const f of fo) if (seeCross(cp, f, s)) want = SEE_ALPHA;
       if (want < 1) break;
     }
   return want;
 }
 // a pillar's contour: only while it hides Red Cap, as strong as it has faded; in the mask only while there is one
 function seeLine(c) {
-  c.lvl = (c.g * (1 - c.a)) / (1 - SEE_A);
+  c.lvl = (c.g * (1 - c.a)) / (1 - SEE_ALPHA);
   const ln = c.lvl > 0.01;
   if (ln !== c.ln)
     for (const o of seeDrawn(c)) {
@@ -486,12 +486,12 @@ function seeBounds(out) {
     for (const m of c.meshes) if (m.isInstancedMesh || !add(m.geometry, m.matrixWorld)) return out.set(-1, -1, 2, 2);
     for (const it of c.items) if (it.see && !add(it.see.geometry, it.see.matrixWorld)) return out.set(-1, -1, 2, 2);
   }
-  const sp = post.uniforms.spx.value; // one mask pixel; the samples reach 2.8 of them, bilinear filtering one more
+  const sp = inkPass.uniforms.spx.value; // one mask pixel; the samples reach 2.8 of them, bilinear filtering one more
   return out.set(x0 * 0.5 + 0.5 - 5 * sp.x, y0 * 0.5 + 0.5 - 5 * sp.y, x1 * 0.5 + 0.5 + 5 * sp.x, y1 * 0.5 + 0.5 + 5 * sp.y);
 }
 // the mask: only the see-through things, white on black, at half size
 function seeMask() {
-  seeBounds(post.uniforms.seeBox.value);
+  seeBounds(inkPass.uniforms.seeBox.value);
   const bg = scene.background,
     cc = renderer.getClearColor(seeCol).getHex(),
     ca = renderer.getClearAlpha();
@@ -499,7 +499,7 @@ function seeMask() {
   scene.background = null;
   scene.overrideMaterial = SEE_MAT;
   renderer.setClearColor(0x000000, 0);
-  renderer.setRenderTarget(seeRT);
+  renderer.setRenderTarget(seeTarget);
   renderer.clear();
   renderer.autoClear = false;
   if (SEE.gr) {

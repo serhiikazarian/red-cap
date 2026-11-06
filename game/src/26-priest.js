@@ -55,15 +55,15 @@ function makePriest(e, add) {
     };
   });
 }
-function updPriest(e, dt, dist, ux, uz, mv) {
+function updatePriest(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
   if (e.reelGhosts) {
     e.reelGhosts = false;
     e.reelHits = null;
     e.ghosts.forEach(g => (g.m.visible = g.wait <= 0));
   }
-  const seen = dist < 20 && !hero.inSmoke && los(e.pos, hero.pos);
-  const step = PRIEST_ST[e.st];
+  const seen = dist < 20 && !hero.inSmoke && lineOfSight(e.pos, hero.pos);
+  const step = PRIEST_STATES[e.st];
   if (step) step(e, dt, dist, ux, uz, mv, seen);
   if (dist < e.r + hero.r + 0.1) hurtHero(1, e.pos);
   e.rainCd -= dt;
@@ -78,15 +78,15 @@ function updPriest(e, dt, dist, ux, uz, mv) {
       burst(e.pos.clone().setY(1.2), [0xd8d4cc, 0x6c6a66, COL.ink], 6, 3, 0.12);
     }
     floatWord('RISE', e.pos.clone().setY(3.6), '#d8d4cc', 1);
-    sTone({ f: 200, f2: 600, dur: 0.4, gain: 0.1 });
+    playTone({ f: 200, f2: 600, dur: 0.4, gain: 0.1 });
   }
   e.shield.visible = shielded;
   e.shield.material.opacity = e.shieldFlash > 0 ? 0.8 : 0.3;
   if (animTick) e.shield.rotation.z += 0.3;
-  updGhosts(e, dt);
+  updateGhosts(e, dt);
 }
-// his states, one step each (updPriest runs the one he is in)
-const PRIEST_ST = {
+// his states, one step each (updatePriest runs the one he is in)
+const PRIEST_STATES = {
   idle(e, dt, dist, ux, uz, mv, seen) {
     if (seen || dist < 10) {
       e.st = 'walk';
@@ -168,7 +168,7 @@ const PRIEST_ST = {
   },
   spray(e, dt, dist, ux, uz, mv, seen) {
     e.tilt.rotation.x = lerp(e.tilt.rotation.x, 0.12, 0.2);
-    e.aim += angDiff(e.aim, Math.atan2(ux, uz)) * (1 - Math.exp(-1.6 * dt));
+    e.aim += angDiff(e.aim, Math.atan2(ux, uz)) * ease(1.6, dt);
     const sweep = e.aim + Math.sin((1.9 - e.t) * 4.2) * 0.38;
     e.emit += dt * 90;
     const mouth = e.mouth.clone().applyAxisAngle(UP, e.face.rotation.y).add(e.pos);
@@ -188,7 +188,7 @@ const PRIEST_ST = {
   }
 };
 // the ghosts circle him, bobbing; touching one hurts
-function updGhosts(e, dt) {
+function updateGhosts(e, dt) {
   const now = playT;
   for (const g of e.ghosts) {
     if (g.wait > 0) {
@@ -199,7 +199,7 @@ function updGhosts(e, dt) {
     const rr = g.rad + Math.sin(now * 2 + g.ph) * 0.4;
     g.m.position.set(e.pos.x + Math.cos(g.a) * rr, 0.55 + Math.sin(now * 3 + g.ph) * 0.3, e.pos.z + Math.sin(g.a) * rr);
     if (animTick) g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z);
-    if (Math.hypot(g.m.position.x - hero.pos.x, g.m.position.z - hero.pos.z) < 0.6) hurtHero(1, g.m.position);
+    if (heroDist(g.m.position.x, g.m.position.z) < 0.6) hurtHero(1, g.m.position);
   }
 }
 // a ghost hit by the yo-yo string or a pebble pops
@@ -223,7 +223,7 @@ function hitGhost(p, rad) {
 }
 TALKERS.R = {
   make: makePriest,
-  update: updPriest,
+  update: updatePriest,
   // the soft lock aims at his ghosts one by one, while he stands and they are out
   aimParts: (e, aim) => {
     for (const g of e.ghosts) if (!(g.wait > 0 || e.dazedT > 0)) aim(g.m.position, g.tgt);
