@@ -418,3 +418,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   keys, Enter still toggles it). Behind it a second fault: the focus that follows the mouse took the button back when its
   icon swapped under the pointer; it now moves only when the mouse reaches another button (`hoverBtn`, 61-menus).
 - Title label `v1.44`.
+
+## 1.45 (6 Nov 2026)
+- The title's music button stays red while the mouse is on it (after a click the focus goes to Start, which took its red
+  away): `#musicBtn:hover` in style.css, on screens with a mouse only.
+- Title label `v1.45`.
