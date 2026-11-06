@@ -25,7 +25,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - `img/<name>.webp` → `ASSETS[name]`; every one becomes `TEX[name]` except the title's `slide_*`; `t_*` are wall and floor
   paintings (mirror-repeated). `shapes.json` (one cut-out per line) → `SHAPES[name]`: `{ aspect, pts }`, the painting's
   outline as 0..1 points, which `paper(name, …)` cuts and extrudes. `sfx/<name>.mp3` → `SOUNDS[name]`, played with
-  `sPlay(name, gain)`. `fonts/*.woff2`, declared in `game/fonts.css`. A new painting: drop its webp in `img/`, add an
+  `playClip(name, gain)`. `fonts/*.woff2`, declared in `game/fonts.css`. A new painting: drop its webp in `img/`, add an
   outline to `shapes.json` if it is a cut-out, and check it is uploaded during loading (`warmUp`).
 - Made outside this repository: the source pictures, the pyramid model and the scripts that drew the jaw and the Grin's fire
   and mouth were in Serj's older project folders; they are not here.
@@ -48,7 +48,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Sorting: `renderer.setTransparentSort` draws far to near, but a figure of parts in a set order (a Grin: `userData.sortRank`,
   `sortZ` from `sortUnits()` each frame) sorts as one thing. Words keep `renderOrder` 10 (always on top).
 - Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). Under the ink during loading, `tune()`
-  (60-flow) draws real frames from the opening view and `CAL_VIEWS` more spread over the floor (`calViews`): `settle` until
+  (60-flow) draws real frames from the opening view and `CALIBRATION_VIEWS` more spread over the floor (`calibrationViews`): `settle` until
   their times stop changing, then `calibrate` (GPU-timed: from the screen's full ratio, when the second-slowest view is over
   `CAL_MS` it switches to `lite`, single ink lines, then lowers the ratio), then `climb` (`tryRung`: frames at better
   settings, judged by the controller's own late-frame rule, halving the rungs of `resLadder` each try), so play starts at
@@ -84,21 +84,21 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   `struck`, `hurt`, `escape`, `torn`, `drops`, `gone`, `trapped`, `bounce`, `hushed`, `aimParts`, `holo`) and traits
   (`stagger`, `knock`, `pops`, `tornWord`, `rim`, `harmless`, `loud`, `noCover`, `totemProof`, `totemDaze`), all listed at the
   top of 20-talkers.js; shared code never asks `e.type`; shared `damage`, `kill` call them in a fixed order
-  (keep it: the dice rolls must stay in the same order). Long fights run one step per state (`JESTER_ST[e.st]` …).
+  (keep it: the dice rolls must stay in the same order). Long fights run one step per state (`JESTER_STATES[e.st]` …).
   Each talker's file holds its build, fight and helpers, tuning at the top. Attack warnings: a talker's `warn(e)` (07-hud
-  `warnOf`, `updWarn`).
+  `warnOf`, `updateWarn`).
 - `e.mats` are brought back to no tint (or the hit flash's red) every frame, written only where the colour differs
   (`HIT_RED`, `NO_TINT`): another writer's colour (the Jester's blink) is undone the next frame, so coloured parts use
   textures or vertex colours. A caged talker's cage is `e.cage`.
 
 ## Sound (01-audio)
-- Synth: `sTone`, `sNoise`, `SFX.*`. Recorded clips: `sPlay(name)` → `{ s, g }` (null before decoding; `AU.buf` is filled
-  by `auInit` on the first click). Clips live in `game/assets/sfx/`.
+- Synth: `playTone`, `playNoise`, `SFX.*`. Recorded clips: `playClip(name)` → `{ s, g }` (null before decoding; `AUDIO.buf` is filled
+  by `initAudio` on the first click). Clips live in `game/assets/sfx/`.
 - Loudness: `VOL[name]` (an `SFX` entry's name or a clip's file name; left out = 1) is the one place to turn a sound up or
-  down. Each `SFX` entry runs with `AU.vol` set to its share (nested entries multiply), `sTone`/`sNoise` scale by it, and
-  `sPlay` starts a clip at its share.
-- Where a sound comes from: `AU.at`; the loop sets it to each talker's position around its update, and sounds scale by
-  `auK(AU.at)`. `hurtHero` clears it, so Red Cap's own sounds never fade. A long clip that follows its source keeps `.at`
+  down. Each `SFX` entry runs with `AUDIO.vol` set to its share (nested entries multiply), `playTone`/`playNoise` scale by it, and
+  `playClip` starts a clip at its share.
+- Where a sound comes from: `AUDIO.at`; the loop sets it to each talker's position around its update, and sounds scale by
+  `distanceGain(AUDIO.at)`. `hurtHero` clears it, so Red Cap's own sounds never fade. A long clip that follows its source keeps `.at`
   (`sprayFollow`). The Jester's laugh and the Grump are never distance-faded.
 
 ## Loading and flow (60-flow, 61-menus, 64-loop)
@@ -107,7 +107,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   `enterFloor(i)` still build at once.
 - Loading does real work: `warmUp` pre-draws `WORDS_SEED` + `WORDS_FLOOR[floor]` + words used this session and every `TEX`;
   `warmSet` compiles every material/shader variant from stand-ins; then `calibrate()`.
-- The death screen stops drawing the world (`deadStill`). HUD elements are cached in `EL`; write to the DOM only on change.
+- The death screen stops drawing the world (`deadStill`). HUD elements are cached in `HUD`; write to the DOM only on change.
   Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms)`.
   The boss bar (`bossBar`) shows a talker's `bar(e)`: `[text, lit, word]`, where `word` (EXPOSED, UNMASKED, WINDED) flashes
   as a big word with "Attack him!" once as the opening begins, and the small line under the name stays empty meanwhile.
