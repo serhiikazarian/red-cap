@@ -4,23 +4,31 @@
 
 // frees everything of the floor that ends, and puts back what lives outside it (particles, shots, words, Red Cap's state)
 function clearLevel() {
-  if (G) {
-    scene.remove(G.group);
-    const keep = new Set([hero.root, yoyoMesh, stringMesh, yoyoTrail]);
-    const free = o => {
-      if (keep.has(o)) return;
-      o.children.forEach(free);
-      if (o.geometry && !o.isSprite && !SHARED.has(o.geometry)) o.geometry.dispose();
-      const ud = o.userData || {};
-      for (const m of new Set([o.material, ud.seeMat, ud.seeOrig].flat().filter(Boolean))) {
-        if (SHARED.has(m)) continue;
-        if (m.map && OWN.has(m.map)) m.map.dispose();
-        m.dispose();
-      }
-    };
-    free(G.group);
-    for (const c of G.see) for (const it of c.items || []) if (it.seeMat) it.seeMat.dispose();
-  }
+  if (G) freeFloor();
+  resetHeroForFloor();
+  clearEffects();
+  sprayStop();
+}
+// the floor's group, its geometry, materials and own textures (never Red Cap's, nor anything shared)
+function freeFloor() {
+  scene.remove(G.group);
+  const keep = new Set([hero.root, yoyoMesh, stringMesh, yoyoTrail]);
+  const free = o => {
+    if (keep.has(o)) return;
+    o.children.forEach(free);
+    if (o.geometry && !o.isSprite && !SHARED.has(o.geometry)) o.geometry.dispose();
+    const ud = o.userData || {};
+    for (const m of new Set([o.material, ud.seeMat, ud.seeOrig].flat().filter(Boolean))) {
+      if (SHARED.has(m)) continue;
+      if (m.map && OWN.has(m.map)) m.map.dispose();
+      m.dispose();
+    }
+  };
+  free(G.group);
+  for (const c of G.see) for (const it of c.items || []) if (it.seeMat) it.seeMat.dispose();
+}
+// nothing in hand, nothing burning or spooking him, no chain or hit-stop carried over
+function resetHeroForFloor() {
   hero.heat = 0;
   hero.spook = 0;
   slingT = 0;
@@ -30,6 +38,9 @@ function clearLevel() {
   hero.yoyoQ = false;
   hero.mix = 0;
   hero.mixLast = null;
+}
+// things that live in the scene, outside the floor's group: particles, blood, smoke, shots, words, the trail, debris, pebbles
+function clearEffects() {
   parts.forEach(p => {
     PMESH.setMatrixAt(p.i, ZERO_M);
     p.life = 0;
@@ -37,7 +48,6 @@ function clearLevel() {
   parts.length = 0;
   PMESH.instanceMatrix.needsUpdate = true;
   bloodFreeAll();
-  // things that live in the scene, outside the floor's group
   const drop = list => {
     for (const x of list) {
       scene.remove(x.s);
@@ -58,7 +68,6 @@ function clearLevel() {
   slabs.length = 0;
   coverDebris.length = 0;
   pebbles.length = 0;
-  sprayStop();
 }
 function buildLevel(i) {
   clearLevel();

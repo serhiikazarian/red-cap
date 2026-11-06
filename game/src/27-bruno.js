@@ -162,61 +162,72 @@ function brunoInsults(e, ux, uz) {
 // his fire: a flickering glow, the heat disc, tongues of flame round him and the scorch circle at the edge of his heat, none
 // of it beyond a wall; embers over the burning ground; his heat zone follows him (heroHeat)
 function brunoFire(e, dt, now) {
-  if (animTick) {
-    e.glow.material.opacity = 0.7 + Math.random() * 0.3;
-    e.glow.scale.set(8 + Math.random() * 1.6, 5.2 + Math.random() * 1.2, 1);
-    e.tilt.rotation.z = Math.sin(now * 9) * 0.03;
-    e.heat.material.opacity = 0.65 + Math.random() * 0.25;
-    e.scorch.material.opacity = 0.24 + Math.random() * 0.12;
-    // each tongue sways round him and flickers; one that a wall cuts off from him is not drawn
-    for (const f of e.flames) {
-      const u = f.userData,
-        a = u.a + now * 0.35,
-        fx = Math.cos(a) * u.r,
-        fz = Math.sin(a) * u.r,
-        lick = 0.75 + 0.25 * Math.sin(now * 7 + u.ph) + Math.random() * 0.15;
-      tmpW.set(e.pos.x + fx, 0, e.pos.z + fz);
-      f.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && lineOfSight(e.pos, tmpW);
-      f.position.set(fx, (u.h * lick) / 2, fz);
-      f.scale.set(u.h * 0.62 * (0.85 + Math.random() * 0.3), u.h * lick, 1);
-      f.material.opacity = 0.9;
-    }
-  }
-  // embers all over the ground he burns, never beyond a wall
-  if (Math.random() < dt * 45) {
-    const a = rand(0, TAU),
-      r = Math.sqrt(Math.random()) * BRUNO_SCORCH;
-    tmpW.set(e.pos.x + Math.cos(a) * r, 0, e.pos.z + Math.sin(a) * r);
-    if (lineOfSight(e.pos, tmpW))
-      burst(tmpW.clone().setY(e.pos.y + rand(0.1, 0.6)), [COL.hot, COL.bile, COL.tie, 0xfff2a0], 1, 1.6, 0.24, { g: -5, life: 0.9 });
-  }
+  if (animTick) brunoFlicker(e, now);
+  brunoEmbers(e, dt);
   e.hot.x = e.pos.x;
   e.hot.z = e.pos.z;
   e.hot.r = BRUNO_SCORCH;
   e.scorch.visible = true;
-  if (!e.fireRing) {
-    e.fireRing = new THREE.Group();
-    const mat = new THREE.MeshBasicMaterial({ color: COL.tie, transparent: true, depthWrite: false, side: THREE.DoubleSide });
-    for (let k = 0; k < BRUNO_RING_N; k++) {
-      const seg = new THREE.Mesh(BRUNO_RING_GEO, mat);
-      seg.rotation.set(-Math.PI / 2, 0, (k / BRUNO_RING_N) * TAU);
-      seg.userData.a = ((k + 0.5) / BRUNO_RING_N) * TAU;
-      e.fireRing.add(seg);
-    }
-    G.group.add(e.fireRing);
-  }
-  e.fireRing.position.set(e.pos.x, e.pos.y + 0.07, e.pos.z);
-  e.fireRing.children[0].material.opacity = 0.55 + Math.sin(now * 6) * 0.35;
-  if (animTick)
-    for (const seg of e.fireRing.children) {
-      tmpW.set(e.pos.x + Math.cos(seg.userData.a) * BRUNO_SCORCH, 0, e.pos.z - Math.sin(seg.userData.a) * BRUNO_SCORCH);
-      seg.visible = !solid(...cellOf(tmpW.x, tmpW.z)) && lineOfSight(e.pos, tmpW);
-    }
+  brunoRing(e, now);
   if (Math.random() < dt * 50)
     burst(fxAt(e.pos, rand(-1, 1), rand(0.1, 1.2), rand(-1, 1)), [COL.hot, COL.bile, COL.tie], 1, 2, 0.28, {
       g: -5,
       life: 0.8
     });
+}
+// is the ground at (x, z) open and in his sight (no wall between)? Leaves the point in tmpW
+function brunoReaches(e, x, z) {
+  tmpW.set(x, 0, z);
+  return !solid(...cellOf(x, z)) && lineOfSight(e.pos, tmpW);
+}
+// at the stop-motion tick: the glow, heat disc and scorch flicker; each tongue sways round him (none beyond a wall)
+function brunoFlicker(e, now) {
+  e.glow.material.opacity = 0.7 + Math.random() * 0.3;
+  e.glow.scale.set(8 + Math.random() * 1.6, 5.2 + Math.random() * 1.2, 1);
+  e.tilt.rotation.z = Math.sin(now * 9) * 0.03;
+  e.heat.material.opacity = 0.65 + Math.random() * 0.25;
+  e.scorch.material.opacity = 0.24 + Math.random() * 0.12;
+  for (const f of e.flames) {
+    const u = f.userData,
+      a = u.a + now * 0.35,
+      fx = Math.cos(a) * u.r,
+      fz = Math.sin(a) * u.r,
+      lick = 0.75 + 0.25 * Math.sin(now * 7 + u.ph) + Math.random() * 0.15;
+    f.visible = brunoReaches(e, e.pos.x + fx, e.pos.z + fz);
+    f.position.set(fx, (u.h * lick) / 2, fz);
+    f.scale.set(u.h * 0.62 * (0.85 + Math.random() * 0.3), u.h * lick, 1);
+    f.material.opacity = 0.9;
+  }
+}
+// embers all over the ground he burns, never beyond a wall
+function brunoEmbers(e, dt) {
+  if (Math.random() >= dt * 45) return;
+  const a = rand(0, TAU),
+    r = Math.sqrt(Math.random()) * BRUNO_SCORCH;
+  tmpW.set(e.pos.x + Math.cos(a) * r, 0, e.pos.z + Math.sin(a) * r);
+  if (lineOfSight(e.pos, tmpW))
+    burst(tmpW.clone().setY(e.pos.y + rand(0.1, 0.6)), [COL.hot, COL.bile, COL.tie, 0xfff2a0], 1, 1.6, 0.24, { g: -5, life: 0.9 });
+}
+// the burning circle at the edge of his heat (made the first time): it pulses, and a segment beyond a wall is not drawn
+function brunoRing(e, now) {
+  if (!e.fireRing) e.fireRing = makeFireRing();
+  e.fireRing.position.set(e.pos.x, e.pos.y + 0.07, e.pos.z);
+  e.fireRing.children[0].material.opacity = 0.55 + Math.sin(now * 6) * 0.35;
+  if (animTick)
+    for (const seg of e.fireRing.children)
+      seg.visible = brunoReaches(e, e.pos.x + Math.cos(seg.userData.a) * BRUNO_SCORCH, e.pos.z - Math.sin(seg.userData.a) * BRUNO_SCORCH);
+}
+function makeFireRing() {
+  const ring = new THREE.Group(),
+    mat = new THREE.MeshBasicMaterial({ color: COL.tie, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+  for (let k = 0; k < BRUNO_RING_N; k++) {
+    const seg = new THREE.Mesh(BRUNO_RING_GEO, mat);
+    seg.rotation.set(-Math.PI / 2, 0, (k / BRUNO_RING_N) * TAU);
+    seg.userData.a = ((k + 0.5) / BRUNO_RING_N) * TAU;
+    ring.add(seg);
+  }
+  G.group.add(ring);
+  return ring;
 }
 TALKERS.Z = {
   make: makeBruno,

@@ -78,58 +78,66 @@ function waveWalls(x, z) {
 // He never moves: he catches his breath (pause), inflates (GRRR) and shouts four rings in a row.
 function updateGrump(e, dt, dist, ux, uz, mv) {
   faceCam(e, dt);
-  const near = dist < 33;
   if (!e.wearOn && (e.engaged || dist < 16)) e.wearOn = true; // from here on, shouting wears the blocks down
-  if (e.st === 'pause') {
+  GRUMP_STATES[e.st](e, dist);
+  updateWaves(e, dt, dist, ux, uz);
+  if (dist < e.r + hero.r) pushOffGrump(e, ux, uz);
+}
+const GRUMP_HEARS = 33, // m: Red Cap nearer than this sets him off again after a pause
+  GRUMP_INFLATE = 0.55, // s to fill his lungs
+  GRUMP_RINGS = 4, // rings in a row
+  GRUMP_RING_GAP = 0.42, // s between them
+  GRUMP_PAUSE = 2.3; // s of catching his breath after
+const GRUMP_STATES = {
+  pause(e, dist) {
     if (animTick) {
       e.body.scale.y = lerp(e.body.scale.y, 0.94, 0.3);
       e.body.scale.x = lerp(e.body.scale.x, 1.04, 0.3);
       e.tilt.position.set(0, 0, 0);
     }
-    if (e.t <= 0 && near) {
-      e.st = 'inflate';
-      e.t = 0.55;
-      SFX.growl();
-      floatWord('GRRR', e.pos.clone().setY(8.8), HEX.tie, 2);
-    }
-  } else if (e.st === 'inflate') {
-    const k = 1 - e.t / 0.55;
+    if (e.t > 0 || dist >= GRUMP_HEARS) return;
+    e.st = 'inflate';
+    e.t = GRUMP_INFLATE;
+    SFX.growl();
+    floatWord('GRRR', e.pos.clone().setY(8.8), HEX.tie, 2);
+  },
+  inflate(e) {
+    const k = 1 - e.t / GRUMP_INFLATE;
     if (animTick) {
       e.body.scale.set(1 + k * 0.12, 1 + k * 0.14, 1 + k * 0.5);
       shake(e.tilt, 0.05 * k);
     }
-    if (e.t <= 0) {
-      e.st = 'shout';
-      e.waveCount = 4;
-      e.t = 0;
-    }
-  } else if (e.st === 'shout') {
+    if (e.t > 0) return;
+    e.st = 'shout';
+    e.waveCount = GRUMP_RINGS;
+    e.t = 0;
+  },
+  shout(e) {
     if (animTick) shake(e.tilt, 0.08);
-    if (e.t <= 0) {
-      if (e.waveCount > 0) {
-        e.waveCount--;
-        e.t = 0.42;
-        emitWave(e);
-        e.body.scale.set(1.2, 1.18, 1.6);
-      } else {
-        e.st = 'pause';
-        e.t = 2.3;
-      }
-    } else if (animTick) e.body.scale.lerp(GRUMP_SWELL, 0.4);
+    if (e.t > 0) {
+      if (animTick) e.body.scale.lerp(GRUMP_SWELL, 0.4);
+    } else if (e.waveCount > 0) {
+      e.waveCount--;
+      e.t = GRUMP_RING_GAP;
+      emitWave(e);
+      e.body.scale.set(1.2, 1.18, 1.6);
+    } else {
+      e.st = 'pause';
+      e.t = GRUMP_PAUSE;
+    }
   }
-  updateWaves(e, dt, dist, ux, uz);
-  if (dist < e.r + hero.r) {
-    // pushed back out of his bulk on your own side, never through the gate wall behind him
-    const nx = e.pos.x + ux * (e.r + hero.r),
-      nz = e.pos.z + uz * (e.r + hero.r),
-      ok = (x, z) => !solid(...cellOf(x, z));
-    if (ok(nx, nz)) {
-      hero.pos.x = nx;
-      hero.pos.z = nz;
-    } else if (ok(nx, hero.pos.z)) hero.pos.x = nx;
-    else if (ok(hero.pos.x, nz)) hero.pos.z = nz;
-    collide(hero.pos, hero.r);
-  }
+};
+// Red Cap is pushed back out of his bulk on his own side (ux, uz: from the Grump to him), never through the gate wall behind
+function pushOffGrump(e, ux, uz) {
+  const nx = e.pos.x + ux * (e.r + hero.r),
+    nz = e.pos.z + uz * (e.r + hero.r),
+    open = (x, z) => !solid(...cellOf(x, z));
+  if (open(nx, nz)) {
+    hero.pos.x = nx;
+    hero.pos.z = nz;
+  } else if (open(nx, hero.pos.z)) hero.pos.x = nx;
+  else if (open(hero.pos.x, nz)) hero.pos.z = nz;
+  collide(hero.pos, hero.r);
 }
 // the rings roll out: past GRUMP_REACH they fade and do nothing; each one that reaches Red Cap hurts by how much gets through
 // (two hearts up close in the open, one further back; nothing behind a whole block; a worn block leaks)
