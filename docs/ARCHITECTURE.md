@@ -144,6 +144,9 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   `warmSet` compiles every material/shader variant from stand-ins; then `calibrate()`.
 - The death screen stops drawing the world (`deadStill`). HUD elements are cached in `HUD`; write to the DOM only on change.
   Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms)`.
+  The hint is a yellow caption box sliding in from the left (`.on`) and off to the right (`toastOff()`, `.out`): clear it
+  only with `toastOff`. It moves by CSS transitions, not keyframes: test pictures jump transitions to their end but hold
+  keyframe animations at their start, where the box is off-screen.
   The boss bar (`bossBar`) shows a talker's `bar(e)`: `[text, lit, word]`, where `word` (EXPOSED, UNMASKED, WINDED) flashes
   as a big word with "Attack him!" once as the opening begins, and the small line under the name stays empty meanwhile.
 - Talkers left: `updateLeft` (on each talker gone) calls 1 TALKER LEFT (`lastCall`) when the count drops to one. A Smoker

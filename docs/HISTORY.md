@@ -442,5 +442,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   black marker lettering, a thick ink border, a hard shadow, a slight tilt. Each new hint slides in from the left with a
   small overshoot and leaves off to the right (`toastOff` in 07-hud, used wherever the hint is cleared); the same hint
   again only stays longer. Plain fade under reduced motion. Done with CSS transitions, not keyframes: the test pictures
-  jump transitions to their end, so the box shows settled there (picture remade: jester).
+  jump transitions to their end, so the box shows settled there (pictures remade: jester, f3-fight).
 - Title label `v1.48`.
