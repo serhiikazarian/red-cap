@@ -94,7 +94,6 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
   background: radial-gradient(ellipse at center, rgba(13,11,10,0) 40%, rgba(13,11,10,.85) 100%), radial-gradient(circle, rgba(236,230,218,.07) 0 1.2px, transparent 1.7px) 0 0 / 6px 6px, var(--ink); }
 #veil.on { opacity: 1; pointer-events: auto; transition: opacity .35s ease-in; }
 #cutting { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; }
-#cutting.out { opacity: 0; transition: opacity .35s ease-out; } /* as the card fades in (scrapOut, SCRAP_OUT_MS in 60-flow) */
 #cutting .scrap { background: var(--paper); color: var(--ink); padding: 16px 26px 22px; transform: rotate(-1.6deg); box-shadow: 6px 8px 0 rgba(0,0,0,.5); text-align: center;
   clip-path: polygon(0 3%, 6% 0, 14% 2%, 23% 0, 35% 3%, 47% 0, 58% 2%, 70% 0, 82% 3%, 93% 0, 100% 2%, 99% 97%, 90% 100%, 78% 97%, 64% 100%, 50% 98%, 37% 100%, 24% 97%, 11% 100%, 1% 98%); }
 #cutting .num { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; }
@@ -109,9 +108,9 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 @keyframes chopA { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(14deg); } }
 @keyframes chopB { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-14deg); } }
 @keyframes snip { 0% { transform: translateX(0); opacity: 0; } 4% { opacity: 1; } 100% { transform: translateX(176px); opacity: 1; } } /* once, left to right at one speed (its length and pace: 60-flow snipRun); the floor shows as it ends */
-#card.enter .sheet { animation: cardIn .5s ease-out both; }
+#card.enter .sheet { animation: cardIn .5s .12s ease-out both; }
 @keyframes cardIn { from { opacity: 0; transform: translateY(-14px) rotate(-1deg); } to { opacity: 1; transform: rotate(1deg); } }
-@media (prefers-reduced-motion: reduce) { #cutting .snip, #card.enter .sheet { animation: none; } #cutting.out { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #cutting .snip, #card.enter .sheet { animation: none; } }
 
 /* Screens */
 .screen { position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto; overflow-x: hidden; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(13,11,10,.8); } /* never sideways: a tilted sheet's corner and shadow poke out a few px, and phones drew a grey scrollbar under the menu */
