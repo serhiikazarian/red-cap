@@ -74,7 +74,7 @@ const GEEZER_STATES = {
       e.t = 1.8;
       SFX.growl();
       floatWord('YOUNG MAN', e.pos.clone().setY(5.3), HEX.paper, 1.2);
-      toast('Avoid Geezer’s gaze.');
+      toast('Avoid his gaze.');
     }
   },
   drift(e, dt, dist, ux, uz, mv, now, p2, seenK) {
