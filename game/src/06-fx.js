@@ -114,6 +114,9 @@ function wordRect(pos, scale) {
     h = ((0.8 * scale) / (2 * d * Math.tan((camera.fov * Math.PI) / 360))) * innerHeight;
   return { x: (v.x * 0.5 + 0.5) * innerWidth, y: (-v.y * 0.5 + 0.5) * innerHeight, w: h * 2.875, h, behind: v.z > 1 };
 }
+// a floating word's material; the loading screen keeps a stand-in of it (WARM_WORD, 60-flow), so its shader is built before
+// play and never thrown away when the last word on screen fades
+const wordMat = map => new THREE.SpriteMaterial({ map, transparent: true, depthTest: false, depthWrite: false, fog: false });
 const wordsMeet = (a, b) => !a.behind && !b.behind && Math.abs(a.x - b.x) < (a.w + b.w) / 2 && Math.abs(a.y - b.y) < (a.h + b.h) / 2;
 function floatWord(text, pos, color, scale = 1.2, must, life = 0.9, rise = 1.1) {
   const now = performance.now();
@@ -128,9 +131,7 @@ function floatWord(text, pos, color, scale = 1.2, must, life = 0.9, rise = 1.1) 
     for (const f of over) f.life = Math.min(f.life, 0.12);
   }
   lastWord[text] = now;
-  const s = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: wordTex(text, color), transparent: true, depthTest: false, depthWrite: false, fog: false })
-  );
+  const s = new THREE.Sprite(wordMat(wordTex(text, color)));
   s.position.copy(pos);
   s.scale.set(2.3 * scale, 0.8 * scale, 1);
   s.renderOrder = 10;

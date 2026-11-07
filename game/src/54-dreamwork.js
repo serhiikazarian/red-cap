@@ -136,22 +136,22 @@ function chairParts(list, m) {
 function dreamwork(F, rng) {
   const fw = G.w * CELL,
     fh = G.h * CELL;
-  if (F.deco === 'corridor') dreamCorridor(rng, fw, fh);
+  if (F.deco === 'newsroom') dreamNewsroom(rng, fw, fh);
   else if (F.deco === 'mouth') dreamMouth(rng, fw, fh);
   else dreamBlocks(rng, fw, fh);
 }
 // Floor 1: red curtains, chevron floors, doorways that never end, a parlour on the ceiling
-function dreamCorridor(rng, fw, fh) {
-  corridorCurtains(rng);
-  corridorDroste(rng);
-  const chevM = corridorChevron(rng);
-  corridorStairs(rng);
-  corridorTrees(rng);
-  corridorParlours(rng, chevM);
-  corridorSpirals(rng);
+function dreamNewsroom(rng, fw, fh) {
+  newsroomCurtains(rng);
+  newsroomDroste(rng);
+  const chevM = newsroomChevron(rng);
+  newsroomStairs(rng);
+  newsroomTrees(rng);
+  newsroomParlours(rng, chevM);
+  newsroomSpirals(rng);
 }
 // red curtains hung along the walls
-function corridorCurtains(rng) {
+function newsroomCurtains(rng) {
   const curtainGeo = new THREE.PlaneGeometry(2.6, 3.6, 26, 1);
   {
     const p = curtainGeo.attributes.position;
@@ -167,7 +167,7 @@ function corridorCurtains(rng) {
   });
 }
 // gilt-framed doorways on the walls that never end: a doorway inside a doorway, each turned a little further
-function corridorDroste(rng) {
+function newsroomDroste(rng) {
   const droste = drosteTex(),
     drosteM = new THREE.MeshBasicMaterial({ map: droste });
   wallFaces(rng, 0.025, (x, z, yaw, dx, dz) => {
@@ -191,7 +191,7 @@ function corridorDroste(rng) {
   });
 }
 // chevron floors; returns their material (the parlours' rugs share it)
-function corridorChevron(rng) {
+function newsroomChevron(rng) {
   const chevM = new THREE.MeshLambertMaterial({
     map: (() => {
       const t = chevronTex();
@@ -216,7 +216,7 @@ function corridorChevron(rng) {
   return chevM;
 }
 // stairs that climb out of the walls into the dark
-function corridorStairs(rng) {
+function newsroomStairs(rng) {
   const stairM = new THREE.MeshLambertMaterial({ color: 0x4a3524, emissive: 0x1c120a }),
     voidM = new THREE.MeshBasicMaterial({ color: COL.tie });
   for (const [x, z] of openSpots(rng, 3, 15)) {
@@ -231,7 +231,7 @@ function corridorStairs(rng) {
   }
 }
 // ink trees growing off the tops of the walls
-function corridorTrees(rng) {
+function newsroomTrees(rng) {
   const inkM = new THREE.MeshLambertMaterial({ color: COL.ink });
   for (const [x, z] of wallTops(rng, 5, 10)) {
     const m = still(new THREE.Mesh(treeGeo(rng, 5, 2.2, 0.14), inkM));
@@ -242,7 +242,7 @@ function corridorTrees(rng) {
   }
 }
 // a parlour hanging upside down from a ceiling that is not there
-function corridorParlours(rng, chevM) {
+function newsroomParlours(rng, chevM) {
   const wood = new THREE.MeshLambertMaterial({ color: 0x4a3524 }),
     red = new THREE.MeshLambertMaterial({ color: 0x8a1018 }),
     shade = new THREE.MeshBasicMaterial({ color: 0xf6dc9a });
@@ -279,7 +279,7 @@ function corridorParlours(rng, chevM) {
   }
 }
 // gold boards curling up into a spiral, smaller and smaller, forever
-function corridorSpirals(rng) {
+function newsroomSpirals(rng) {
   for (const [x, z] of openSpots(rng, 2, 18)) {
     const g = new THREE.Group();
     g.position.set(x, 3.6, z);
