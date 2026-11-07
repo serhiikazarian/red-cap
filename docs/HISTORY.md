@@ -465,4 +465,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   Priest; "Immune" (was "Masked — immune"), then "Unmasked" for the Jester; "Winded" for the Geezer while he is out of breath
   (it was empty). The open-to-attack lines are orange (`--orange` `#ff8a1f`, `bar(e)`'s lit = `'orange'`); Grump's and the
   Smoker's lit lines stay yellow. The big EXPOSED / UNMASKED call-outs stay; the Geezer's big MISSED is gone.
+- The waking-up page's headline reads "Wake up! Grab a brush" (was "Wake up. Damn!").
 - Title label `v1.49`.
