@@ -457,4 +457,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Floors two and three open with a yellow-box hint a second after the card: "You can talk the talk..." and "Can you walk
   the walk?.." (`FLOORS` field `opening`; once a game, not on a retry, like floor one's "How did I get here?": `openingsSaid`
   in 60-flow).
+- Shades never say F#CK when hit: their own words SH#T!, SHUT IT, STFU (`TALKERS.q.curses`; the others keep `CURSES` in
+  20-talkers, the same one dice roll).
 - Title label `v1.49`.
