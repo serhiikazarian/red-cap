@@ -447,7 +447,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 
 ## 1.49 (7 Nov 2026)
 - The onlooker hint ("They will remember that.", on hitting one) is back to the old look: white outlined marker lettering
-  that fades in place, no yellow box, no slide (`toast(msg, ms, true)`, `#toast.plain`), so it does not pass for a hint
+  that fades in place, no yellow box, no slide (`#toast.plain`), so it does not pass for a hint
   that matters.
 - Minor hints never cut an important one: the onlooker line, the bear trap ("Lure the enemy onto one") and "Soaked." are
   skipped while an important hint shows (the door lines, bosses, talkers' tricks) and come back the next time they happen
