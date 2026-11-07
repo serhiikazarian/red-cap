@@ -168,10 +168,7 @@ function hitNpc(p, rad) {
     npcVoice(n, 0.5);
     burst(n.pos.clone().setY(n.pos.y + n.h * 0.6), [COL.paper, COL.smoke, COL.ink], 8, 3, 0.14);
     giveAmmo(hitPebbles(n.kind), n.pos);
-    if (!G.npcHint) {
-      G.npcHint = true;
-      toast('They will remember that.', 0, true);
-    }
+    if (!G.npcHint) G.npcHint = toast('They will remember that.', 0, 'aside');
     return true;
   }
   return false;

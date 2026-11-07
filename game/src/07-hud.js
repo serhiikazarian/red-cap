@@ -1,21 +1,27 @@
 // HUD: hints at the bottom (toast), talkers left, the big centred words, the boss bar, attack warnings, Red Cap's ties.
 // Each talker's boss-bar status and warning come from its own file (TALKERS[type].bar / .warn).
-let toastT = null;
+let toastT = null,
+  toastKey = false; /* the hint on screen is an important one */
 // a hint at the bottom of the screen; longer ones stay longer (ms: exactly this long). Screen time (setTimeout), not later():
 // hints also show on the title and menus, where later() does not run. A new hint slides in afresh; the same one again
-// while it shows only stays longer. plain: no yellow box and no slide, just outlined lettering fading in (a side remark,
-// like an onlooker's grudge, so it doesn't look like the hints that matter)
-function toast(msg, ms, plain = false) {
-  const t = $('#toast');
+// while it shows only stays longer. how: '' an important hint (doors, bosses, talkers' tricks); 'minor' a side tip that never
+// cuts an important hint on screen (it is skipped: returns false, so the caller tries again next time); 'aside' a minor
+// remark drawn plain, without the yellow box or the slide (an onlooker's grudge). Returns whether it showed.
+function toast(msg, ms, how = '') {
+  const t = $('#toast'),
+    key = !how;
+  if (!key && toastKey && t.classList.contains('on')) return false;
   if (!(t.classList.contains('on') && t.textContent === msg)) {
     t.textContent = msg;
     t.classList.remove('on', 'out');
-    t.classList.toggle('plain', plain);
+    t.classList.toggle('plain', how === 'aside');
     void t.offsetWidth; /* back off the left edge at once (no transition there), then slide in */
     t.classList.add('on');
   }
+  toastKey = key;
   clearTimeout(toastT);
   toastT = setTimeout(toastOff, ms || Math.max(3000, 1200 + msg.length * 45));
+  return true;
 }
 // the hint slides off to the right (only if it is showing)
 function toastOff() {

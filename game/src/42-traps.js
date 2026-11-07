@@ -96,10 +96,7 @@ const MINE_STATES = {
     m.st = 'click';
     m.t = 0.4;
     SFX.click();
-    if (!G.mineHint) {
-      G.mineHint = true;
-      toast('Bear trap. Lure the enemy onto one.');
-    }
+    if (!G.mineHint) G.mineHint = toast('Bear trap. Lure the enemy onto one.', 0, 'minor');
   },
   // the pan sinks, the jaws shiver: a moment to get out
   click(m, dt) {
