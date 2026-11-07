@@ -76,7 +76,7 @@ const CATALOGUE = [
   ['npc_spike', 'Spike', 'Onlooker', 'Cannot keep still. Giggles when you pass.', 'spared'],
   ['npc_hair', 'Long Hair', 'Onlooker', 'Exhales smoke and opinions.', 'spared']
 ];
-// the two smokers share a paintin': the small one drawn smaller, the big one bigger (scale of the picture, from its foot)
+// the two smokers share a painting: the small one drawn smaller, the big one bigger (scale of the picture, from its foot)
 const CAT_PIC_SCALE = { Smoker: 0.88, 'Brainless the Second': 1.12 };
 const CAT_KEY = 'redcap.catalogue.v1';
 let catalogueSeen = (() => {

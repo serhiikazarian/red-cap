@@ -295,7 +295,7 @@ function padMenu(gp, hit, mx, my, dt) {
   }
   if (nav || gp.buttons.some((_, i) => hit(i))) PAD.active = true; // any controller input in a menu: show the selection
   if (!bs.includes(PAD.sel)) {
-    // the page's main button, else "next"; the catalogue is for readin': "next" first, as with the keyboard
+    // the page's main button, else "next"; the catalogue is for reading: "next" first, as with the keyboard
     const main = bs.find(b => !b.classList.contains('ghost') && !b.closest('.pnav')),
       next = bs.find(b => b.classList.contains('pnext'));
     PAD.sel = ($('#catalogue').hidden ? main || next : next || main) || bs[0] || null;
