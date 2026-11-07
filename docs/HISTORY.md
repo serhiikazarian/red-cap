@@ -502,3 +502,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   word, floor one's "How did I get here?" 0.6 s in, and thrown away whenever the last word faded, so built again at the next.
   The loading screen now builds it with a stand-in that is never disposed (`WARM_WORD`; the words' material is `wordMat`, 06-fx).
 - Title label `v1.53`.
+
+## 1.54 (7 Nov 2026)
+- The loading scrap hands over to the floor card in a crossfade: it fades out (`scrapOut`, `#cutting.out`, `SCRAP_OUT_MS`
+  0.35 s) as the card fades in, now with no delay (`cardIn` lost its 0.12 s). Before, the scrap vanished at once and the
+  card came 0.12 s later, so the bare ink veil showed alone for a moment.
+- Title label `v1.54`.

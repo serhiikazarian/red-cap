@@ -137,14 +137,15 @@ function floorCut(i, live) {
   $('#cutNum').textContent = FLOORS[i].num;
   const run = snipPlan(i);
   $('#cutting .snip').style.animationDuration = run + 'ms';
+  $('#cutting').classList.remove('out');
   $('#cutting').hidden = false;
   const t0 = performance.now(),
     snip = snipRun(run, live, () => {
-      // in: the veil dissolves into the new floor and the card fades in with it
-      $('#cutting').hidden = true;
+      // in: the veil dissolves into the new floor, and the scrap fades out as the card fades in (never an empty veil)
+      scrapOut(live);
       floorShow(i);
       $('#card').classList.add('enter');
-      veilOff();
+      $('#veil').classList.remove('on');
     });
   // two painted frames and a moment of snipping before the build holds the page, so the scissors are always seen moving
   requestAnimationFrame(() =>
@@ -252,6 +253,17 @@ function snipRun(run, live, arrive) {
 function veilOff() {
   $('#veil').classList.remove('on');
   $('#cutting').hidden = true;
+}
+// the scrap fades out (#cutting.out in style.css, SCRAP_OUT_MS), then is hidden, unless a newer floor entry has taken it over
+const SCRAP_OUT_MS = 350;
+function scrapOut(live) {
+  const c = $('#cutting');
+  c.classList.add('out');
+  setTimeout(() => {
+    if (!live()) return;
+    c.hidden = true;
+    c.classList.remove('out');
+  }, SCRAP_OUT_MS);
 }
 function floorBuilt(i) {
   buildLevel(i);
