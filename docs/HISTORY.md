@@ -478,4 +478,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Bruno's insult bark is heard: it was low (50–210 Hz, which phone speakers hardly play) and faded with distance while he
   insults only from 7 m out, about 22 dB under what it is now at 10 m. Now the same snap an octave up, at full loudness
   wherever Red Cap is (`SFX.bark`, `AUDIO.at = null`), as loud as a hit landing (`VOL.bark` 1.95).
+- Striking down one of Bruno's insults cracks knuckles: six dry clicks, each with a little bony pop, over 0.17 s
+  (`SFX.knuckles`, `KNUCKLE_CRACKS`, a fixed rhythm with no dice); it was a hiss and a glassy tink. The pyramids keep their glass.
 - Title label `v1.50`.

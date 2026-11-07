@@ -3,6 +3,15 @@
 const AUDIO = { ctx: null, master: null, muted: false, drone: [], at: null, vol: 1 }, // vol: the VOL share of the SFX entry playing
   MASTER_GAIN = 0.75,
   SOUND_NEAR = 4; // full volume within this many metres
+// the knuckle cracks of a struck-down insult: [when, click pitch, loudness], a little uneven like real fingers
+const KNUCKLE_CRACKS = [
+  [0, 2600, 0.55],
+  [0.031, 3300, 0.45],
+  [0.055, 2200, 0.5],
+  [0.092, 3000, 0.4],
+  [0.118, 2500, 0.45],
+  [0.162, 1900, 0.35]
+];
 // how loud each named sound plays: an SFX entry by its name, a recorded clip by its file's (1, or left out: as it is made). The
 // one place to turn a sound up or down
 const VOL = {
@@ -177,6 +186,14 @@ const SFX = {
     playNoise({ dur: 0.1, f: 2400, f2: 900, q: 1.2, gain: 0.32 });
     playTone({ f: 150, f2: 90, dur: 0.14, gain: 0.28 });
     AUDIO.at = at;
+  },
+  knuckles() {
+    // one of Bruno's insults struck down: knuckles cracked fast (dry clicks, each with a little bony pop), not the
+    // pyramids' glass; a fixed rhythm, so it rolls no dice
+    for (const [t, f, g] of KNUCKLE_CRACKS) {
+      playNoise({ dur: 0.016, f, q: 1.6, gain: g, at: t, a: 0.001 });
+      playTone({ f: f / 3, f2: f / 10, dur: 0.022, gain: g * 0.45, at: t, a: 0.001 });
+    }
   },
   growl() {
     playTone({ f: 70, f2: 55, dur: 0.8, type: 'sawtooth', gain: 0.2, filt: [400, 200] });
