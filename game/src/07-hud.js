@@ -2,13 +2,23 @@
 // Each talker's boss-bar status and warning come from its own file (TALKERS[type].bar / .warn).
 let toastT = null;
 // a hint at the bottom of the screen; longer ones stay longer (ms: exactly this long). Screen time (setTimeout), not later():
-// hints also show on the title and menus, where later() does not run
+// hints also show on the title and menus, where later() does not run. A new hint slides in afresh; the same one again
+// while it shows only stays longer
 function toast(msg, ms) {
   const t = $('#toast');
-  t.textContent = msg;
-  t.style.opacity = 1;
+  if (!(t.classList.contains('on') && t.textContent === msg)) {
+    t.textContent = msg;
+    t.classList.remove('on', 'out');
+    void t.offsetWidth; /* back off the left edge at once (no transition there), then slide in */
+    t.classList.add('on');
+  }
   clearTimeout(toastT);
-  toastT = setTimeout(() => (t.style.opacity = 0), ms || Math.max(3000, 1200 + msg.length * 45));
+  toastT = setTimeout(toastOff, ms || Math.max(3000, 1200 + msg.length * 45));
+}
+// the hint slides off to the right (only if it is showing)
+function toastOff() {
+  clearTimeout(toastT);
+  $('#toast').classList.replace('on', 'out');
 }
 function updateLeft() {
   if (!G) return;
@@ -22,8 +32,7 @@ function updateLeft() {
 function quietScreen() {
   $('#bigWord').classList.remove('on');
   $('#lastCall').classList.remove('on');
-  clearTimeout(toastT);
-  $('#toast').style.opacity = 0;
+  toastOff();
 }
 // a big word in the middle of the screen (HOT, MISSED, FRENZY ...), with an optional smaller line under it
 function bigWord(text, color, size = 1, under = '', underColor = '') {

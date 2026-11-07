@@ -437,3 +437,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   a nearly faded word no longer tints the page round it. Pictures remade (f1-fight, f2-fight, f3-fight, f3-start, jester).
 - Title label `v1.47`.
 
+## 1.48 (7 Nov 2026)
+- The hints at the bottom (`toast`: "Dodge sideways.", "Avoid Geezer's gaze." ...) sit in a yellow comic caption box:
+  black marker lettering, a thick ink border, a hard shadow, a slight tilt. Each new hint slides in from the left with a
+  small overshoot and leaves off to the right (`toastOff` in 07-hud, used wherever the hint is cleared); the same hint
+  again only stays longer. Plain fade under reduced motion. Done with CSS transitions, not keyframes: the test pictures
+  jump transitions to their end, so the box shows settled there (pictures remade: jester, f3-fight).
+- Title label `v1.48`.
