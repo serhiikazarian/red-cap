@@ -444,3 +444,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   again only stays longer. Plain fade under reduced motion. Done with CSS transitions, not keyframes: the test pictures
   jump transitions to their end, so the box shows settled there (pictures remade: jester, f3-fight).
 - Title label `v1.48`.
+
+## 1.49 (7 Nov 2026)
+- The onlooker hint ("They will remember that.", on hitting one) is back to the old look: white outlined marker lettering
+  that fades in place, no yellow box, no slide (`toast(msg, ms, true)`, `#toast.plain`), so it does not pass for a hint
+  that matters.
+- Title label `v1.49`.

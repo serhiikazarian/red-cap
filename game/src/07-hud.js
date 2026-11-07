@@ -3,12 +3,14 @@
 let toastT = null;
 // a hint at the bottom of the screen; longer ones stay longer (ms: exactly this long). Screen time (setTimeout), not later():
 // hints also show on the title and menus, where later() does not run. A new hint slides in afresh; the same one again
-// while it shows only stays longer
-function toast(msg, ms) {
+// while it shows only stays longer. plain: no yellow box and no slide, just outlined lettering fading in (a side remark,
+// like an onlooker's grudge, so it doesn't look like the hints that matter)
+function toast(msg, ms, plain = false) {
   const t = $('#toast');
   if (!(t.classList.contains('on') && t.textContent === msg)) {
     t.textContent = msg;
     t.classList.remove('on', 'out');
+    t.classList.toggle('plain', plain);
     void t.offsetWidth; /* back off the left edge at once (no transition there), then slide in */
     t.classList.add('on');
   }

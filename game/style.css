@@ -67,6 +67,7 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #toast.on { opacity: 1; transform: translateY(-2vh) rotate(-1.5deg); transition: transform .42s cubic-bezier(.2, 1.35, .45, 1), opacity .12s; }
 #toast.out { opacity: 0; transform: translate(60vw, -2vh) rotate(3deg); transition: transform .3s ease-in, opacity .1s .2s; }
 @media (prefers-reduced-motion: reduce) { #toast, #toast.out { transform: translateY(-2vh) rotate(-1.5deg); } #toast.on, #toast.out { transition: opacity .4s; } }
+#toast.plain { background: none; border-color: transparent; box-shadow: none; padding: 0; color: var(--paper); font-size: clamp(1.45rem, 4.6vw, 2.5rem); line-height: 1.25; text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink); transform: translateY(-2vh); transition: opacity .4s; } /* toast(msg, ms, true): the old hint, outlined lettering that fades */
 .hud-bottom { display: flex; justify-content: flex-end; align-items: end; gap: 16px; }
 #weapons { display: flex; gap: 10px; font-family: var(--display); font-size: .95rem; text-shadow: 2px 2px 0 var(--ink); }
 #weapons span { padding: 2px 8px; border: 2px solid var(--paper); transform: rotate(-1deg); }

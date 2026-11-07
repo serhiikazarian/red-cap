@@ -170,7 +170,7 @@ function hitNpc(p, rad) {
     giveAmmo(hitPebbles(n.kind), n.pos);
     if (!G.npcHint) {
       G.npcHint = true;
-      toast('They will remember that.');
+      toast('They will remember that.', 0, true);
     }
     return true;
   }
