@@ -113,7 +113,7 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 @media (prefers-reduced-motion: reduce) { #cutting .snip, #card.enter .sheet { animation: none; } }
 
 /* Screens */
-.screen { position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(13,11,10,.8); }
+.screen { position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto; overflow-x: hidden; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(13,11,10,.8); } /* never sideways: a tilted sheet's corner and shadow poke out a few px, and phones drew a grey scrollbar under the menu */
 .sheet { position: relative; width: min(760px, 100%); background: var(--paper); color: var(--ink); padding: clamp(20px, 4vw, 40px); transform: rotate(-.7deg); box-shadow: 8px 10px 0 rgba(0,0,0,.55); }
 .sheet::before { content: ""; position: absolute; left: 6%; right: 6%; top: -9px; height: 18px; background: repeating-linear-gradient(90deg, transparent 0 22px, var(--muted) 22px 30px); border-radius: 4px; }
 .sheet h1 { font-family: var(--display); font-weight: 400; font-size: clamp(3rem, 12vw, 6.4rem); line-height: .9; margin: 0; color: var(--cap); text-wrap: balance; letter-spacing: .01em; }

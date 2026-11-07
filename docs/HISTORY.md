@@ -473,4 +473,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   mouse already did; it picked "Back" (`padMenu`: on the catalogue `pnext` comes before the main button).
 - In the catalogue the Smoker's picture is drawn smaller (0.88) and Brainless the Second's bigger (1.12): `CAT_PIC_SCALE`,
   CSS `--s` on `.cat-card img`, scaled from the picture's foot so the cards and pages lay out as before.
+- Menus on phones lost the grey line along the bottom: a tilted sheet's corner and shadow stuck out of the screen by a few
+  pixels, so the menu scrolled sideways and the phone drew its scrollbar there (`.screen` `overflow-x: hidden`).
 - Title label `v1.50`.
