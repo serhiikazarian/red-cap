@@ -5,7 +5,8 @@ const JESTER_DEEP = 0.3, // his laugh deepens once he is down to this share of h
   JESTER_FACES = [3, 4, 5], // masks per drop as the fight goes on
   SLAB_MAX = 10, // masks on the floor at once, falling or lying
   FIN_LEN = 1.6, // seconds of the finale's shock ring
-  JESTER_REMIND = 35; // s without a blow that hurts him before UNMASKED / Attack him! is called again (always the first time)
+  JESTER_REMIND = 35, // s without a blow that hurts him before UNMASKED / Attack him! is called again (always the first time)
+  JESTER_WARN = 0.8; // s: his "!" (white on black) before a charge pulses faster through this last stretch of the wind-up (shorter ones start fast)
 const FACE_RING_GEO = share(new THREE.RingGeometry(1.1, 1.4, 28)); // a falling face's mark
 const slabs = [];
 let slabBoomT = 0;
@@ -585,6 +586,8 @@ function updateSlabs(dt) {
 TALKERS.M = {
   make: makeJester,
   update: updateJester,
+  // a white "!" on black while he winds up to charge (a feint shows it too)
+  warn: e => (e.st === 'wind' ? { c: HEX.ink, k: clamp(1 - e.t / JESTER_WARN, 0, 1), cue: 'M' } : null),
   totemProof: true,
   bar: e => (e.masked ? ['Immune', false] : ['Unmasked', 'orange', e.callOut ? 'UNMASKED' : null]),
   struck: jesterBlow,
