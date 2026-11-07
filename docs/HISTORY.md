@@ -467,3 +467,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   Smoker's lit lines stay yellow. The big EXPOSED / UNMASKED call-outs stay; the Geezer's big MISSED is gone.
 - The waking-up page's headline reads "Wake up! Grab a brush" (was "Wake up. Damn!").
 - Title label `v1.49`.
+
+## 1.50 (7 Nov 2026)
+- The catalogue opened with a controller (from the ending or the title) picks the "next page" button, as the keyboard and
+  mouse already did; it picked "Back" (`padMenu`: on the catalogue `pnext` comes before the main button).
+- In the catalogue the Smoker's picture is drawn smaller (0.88) and Brainless the Second's bigger (1.12): `CAT_PIC_SCALE`,
+  CSS `--s` on `.cat-card img`, scaled from the picture's foot so the cards and pages lay out as before.
+- Title label `v1.50`.
