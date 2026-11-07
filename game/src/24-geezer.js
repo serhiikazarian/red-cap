@@ -74,7 +74,7 @@ const GEEZER_STATES = {
       e.t = 1.8;
       SFX.growl();
       floatWord('YOUNG MAN', e.pos.clone().setY(5.3), HEX.paper, 1.2);
-      toast('Avoid Geezer’s gaze.');
+      toast('Avoid his gaze.');
     }
   },
   drift(e, dt, dist, ux, uz, mv, now, p2, seenK) {
@@ -127,10 +127,7 @@ const GEEZER_STATES = {
           hero.iframe = 0;
           hurtHero(far ? 1 : 2, e.pos);
         }
-      } else if (hero.stun <= 0) {
-        e.missed = true;
-        bigWord('MISSED', HEX.paper);
-      }
+      } else if (hero.stun <= 0) e.missed = true; /* a miss leaves him winded (his boss bar says so) */
       e.flashes--;
       if (e.flashes > 0) {
         // another flash, after a gap you cannot count on
@@ -213,6 +210,7 @@ const GEEZER_STATES = {
 TALKERS.Y = {
   make: makeGeezer,
   update: updateGeezer,
+  bar: e => (e.exhaust > 0 ? ['Winded', 'orange'] : ['', false]),
   warn: e =>
     e.st === 'gaze'
       ? { c: '#b48cff', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'Y' + e.flashes }

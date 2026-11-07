@@ -143,12 +143,17 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   (a word with `\n` breaks there; `spacedWord` puts thin spaces between letters: the Jester's NOT FUNNY);
   `warmSet` compiles every material/shader variant from stand-ins; then `calibrate()`.
 - The death screen stops drawing the world (`deadStill`). HUD elements are cached in `HUD`; write to the DOM only on change.
-  Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms)`.
+  Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms, how)`.
   The hint is a yellow caption box sliding in from the left (`.on`) and off to the right (`toastOff()`, `.out`): clear it
   only with `toastOff`. It moves by CSS transitions, not keyframes: test pictures jump transitions to their end but hold
-  keyframe animations at their start, where the box is off-screen.
-  The boss bar (`bossBar`) shows a talker's `bar(e)`: `[text, lit, word]`, where `word` (EXPOSED, UNMASKED, WINDED) flashes
-  as a big word with "Attack him!" once as the opening begins, and the small line under the name stays empty meanwhile.
+  keyframe animations at their start, where the box is off-screen. `how`: '' important; `'minor'` never cuts an important
+  hint on screen (it returns false, so its caller keeps its once-flag unset and tries again next time); `'aside'` minor and
+  plain (`#toast.plain`: the old outlined lettering, fading in place). A floor's `opening` (FLOORS) is an important hint
+  a second after its card, once a game (`openingsSaid`, 60-flow).
+  The boss bar (`bossBar`) shows a talker's `bar(e)`: `[text, lit, word]`. lit: true lights the line yellow, `'orange'`
+  marks a boss open to attack (Unprotected, Winded, Unmasked: `--orange`); `word` (EXPOSED, UNMASKED) flashes as a big
+  word with "Attack him!" once as the opening begins. A blow sometimes knocks a curse out of a talker: its `curses`, else
+  `CURSES` (20-talkers).
 - Talkers left: `updateLeft` (on each talker gone) calls 1 TALKER LEFT (`lastCall`) when the count drops to one. A Smoker
   away in his smoke still counts (unseen); a hidden boss counts only once woken. From the Jester's final blow (`G.finalFx`)
   there is no call, and taking his mask clears the screen's words (`quietScreen`): the ending plays on a clean picture.

@@ -6,7 +6,8 @@
 //     shielded(e): true when the blow never reaches it (and the fight does not count as started)
 //     struck(e, n, weapon, force): the blow's strength n changed, or null when it is turned away
 //     hurt(e): after the blow lands; stagger (s, default 0.38) and knock (default 7): how much a blow shakes and pushes it
-//     pops: it pops instead of tearing (no hit sound for its last blow)
+//     pops: it pops instead of tearing (no hit sound for its last blow); curses: the words a blow may knock out of it
+//     (default CURSES)
 //     escape(e): true when it gets away instead (kill stops there); torn(e): before it falls apart
 //     tornWord: the word when torn (default TORN, null for none); drops(e): what it leaves (default dropsDefault); gone(e): after
 //     trapped(e): a bear trap leaves it reeling (42-traps); bounce(e, p): a pebble bounces off it at p (its reaction)
@@ -18,6 +19,7 @@
 // update decides the move (mv: direction x, z and speed sp); returning STOP skips the shared movement and collision.
 const TALKERS = {},
   STOP = 'stop',
+  CURSES = ['SH#T!', 'F#CK!', 'SHUT IT', 'STFU', 'F#CK OFF'] /* a blow knocks one out of a talker, sometimes */,
   MOVE = { x: 0, z: 0, sp: 0 };
 function shake(m, amt) {
   m.position.x = rand(-amt, amt);
@@ -278,8 +280,7 @@ function damage(e, n, dx, dz, force, weapon) {
   if (!e.still && !(e.rage > 0)) e.knock.set(dx * (T.knock ?? 7), dz * (T.knock ?? 7));
   if (!T.pops || e.hp > 0) SFX.hit(weapon ? mixPitch() : 1); // a talker that pops (the Shade) has its pop alone for the last blow
   burst(e.pos.clone().setY(hitHeight(e)), e.palette, 12, 5, 0.2);
-  if (Math.random() < 0.3)
-    floatWord(pick(['SH#T!', 'F#CK!', 'SHUT IT', 'STFU', 'F#CK OFF']), e.pos.clone().setY(hitHeight(e) + 1.4 + rand(0, 0.4)), HEX.tie, 0.9);
+  if (Math.random() < 0.3) floatWord(pick(T.curses || CURSES), e.pos.clone().setY(hitHeight(e) + 1.4 + rand(0, 0.4)), HEX.tie, 0.9);
   if (e.hp <= 0) kill(e);
 }
 // down to a sliver and dazed, REELIN’, for Red Cap to finish (what a trap does to a boss, a stray shot to anyone)

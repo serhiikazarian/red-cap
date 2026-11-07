@@ -98,7 +98,7 @@ function jesterWaits(e, dt) {
     if (G.F.lowHeart && hero.hp < 3) spawnPickup(cellMid(G.F.lowHeart[0]), cellMid(G.F.lowHeart[1]));
     e.t = 1.4;
     SFX.laugh();
-    toast('Immune when masked. Ring a totem.');
+    toast('Immune when masked. Ring totems.');
     floatWord('WELCOME', e.pos.clone().setY(4.4), HEX.paper, 1.1);
   }
 }
@@ -586,7 +586,7 @@ TALKERS.M = {
   make: makeJester,
   update: updateJester,
   totemProof: true,
-  bar: e => (e.masked ? ['Masked — immune', false] : ['', false, e.callOut ? 'UNMASKED' : null]),
+  bar: e => (e.masked ? ['Immune', false] : ['Unmasked', 'orange', e.callOut ? 'UNMASKED' : null]),
   struck: jesterBlow,
   stagger: 0.12,
   knock: 2,

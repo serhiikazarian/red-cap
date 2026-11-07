@@ -236,7 +236,7 @@ TALKERS.R = {
   },
   bar: e => {
     const n = e.ghosts.filter(g => g.wait <= 0).length;
-    return n ? ['Shielded by ' + n + ' ghost' + (n > 1 ? 's' : ''), false] : ['', false, 'EXPOSED'];
+    return n ? ['Protected by ' + n + ' ghost' + (n > 1 ? 's' : ''), false] : ['Unprotected', 'orange', 'EXPOSED'];
   },
   // the ghosts shield him while any is left
   shielded: e => {

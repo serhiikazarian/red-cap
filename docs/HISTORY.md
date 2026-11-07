@@ -444,3 +444,26 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   again only stays longer. Plain fade under reduced motion. Done with CSS transitions, not keyframes: the test pictures
   jump transitions to their end, so the box shows settled there (pictures remade: jester, f3-fight).
 - Title label `v1.48`.
+
+## 1.49 (7 Nov 2026)
+- The onlooker hint ("They will remember that.", on hitting one) is back to the old look: white outlined marker lettering
+  that fades in place, no yellow box, no slide (`#toast.plain`), so it does not pass for a hint
+  that matters.
+- Minor hints never cut an important one: the onlooker line, the bear trap ("Lure the enemy onto one") and "Soaked." are
+  skipped while an important hint shows (the door lines, bosses, talkers' tricks) and come back the next time they happen
+  (`toast(msg, ms, how)`: `'minor'`, `'aside'` = minor and plain; it returns whether it showed). The bear trap and
+  "Soaked." keep the yellow box.
+- The yellow box fades a little as it slides in and out (opacity over .3 s each way, was a blink).
+- Floors two and three open with a yellow-box hint a second after the card: "You can talk the talk..." and "Can you walk
+  the walk?.." (`FLOORS` field `opening`; once a game, not on a retry, like floor one's "How did I get here?": `openingsSaid`
+  in 60-flow).
+- Shades never say F#CK when hit: their own words SH#T!, SHUT IT, STFU (`TALKERS.q.curses`; the others keep `CURSES` in
+  20-talkers, the same one dice roll).
+- The Geezer's hint reads "Avoid his gaze." (was "Avoid Geezer's gaze."); the Jester's "Immune when masked. Ring totems."
+  (was "Ring a totem.").
+- Boss bars: the small line under the name reads "Protected by 3/2/1 ghosts" (was "Shielded by"), then "Unprotected" for the
+  Priest; "Immune" (was "Masked — immune"), then "Unmasked" for the Jester; "Winded" for the Geezer while he is out of breath
+  (it was empty). The open-to-attack lines are orange (`--orange` `#ff8a1f`, `bar(e)`'s lit = `'orange'`); Grump's and the
+  Smoker's lit lines stay yellow. The big EXPOSED / UNMASKED call-outs stay; the Geezer's big MISSED is gone.
+- The waking-up page's headline reads "Wake up! Grab a brush" (was "Wake up. Damn!").
+- Title label `v1.49`.
