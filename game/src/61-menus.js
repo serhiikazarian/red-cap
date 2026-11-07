@@ -12,8 +12,11 @@ function showOnly(id) {
   });
 }
 let menuAt = 0;
+let hoverBtn = null; // the button under the mouse: focus follows the mouse only onto another one
 addEventListener('pointerover', e => {
   const b = e.target.closest && e.target.closest('.screen button');
+  if (b === hoverBtn) return; // still the same button (the music button's icon swaps under the pointer when clicked)
+  hoverBtn = b;
   if (b && !b.disabled && e.pointerType === 'mouse') b.focus({ preventScroll: true }); // the red (focus) follows the mouse too
 });
 const MENU_SHOWN = ['title', 'pause', 'dead', 'win', 'catalogue'];
@@ -73,6 +76,8 @@ const CATALOGUE = [
   ['npc_spike', 'Spike', 'Onlooker', 'Cannot keep still. Giggles when you pass.', 'spared'],
   ['npc_hair', 'Long Hair', 'Onlooker', 'Exhales smoke and opinions.', 'spared']
 ];
+// the two smokers share a paintin': the small one drawn smaller, the big one bigger (scale of the picture, from its foot)
+const CAT_PIC_SCALE = { Smoker: 0.88, 'Brainless the Second': 1.12 };
 const CAT_KEY = 'redcap.catalogue.v1';
 let catalogueSeen = (() => {
     try {
@@ -115,7 +120,7 @@ function openCatalogue(from) {
     const open = cardUnlocked(c),
       r = (((i * 37) % 7) - 3) * 0.4,
       fl = c[2].endsWith('hidden') ? 'Hidden' : '';
-    return `<figure class="cat-card${open ? '' : ' locked'}" style="--r:${r}deg"><img src="${ASSETS[c[0]]}" alt="${open ? c[1] : 'Unknown'}">${fl ? `<div class="fl">${fl}</div>` : ''}<div class="nm">${open ? c[1] : '???'}</div>
+    return `<figure class="cat-card${open ? '' : ' locked'}" style="--r:${r}deg;--s:${CAT_PIC_SCALE[c[1]] || 1}"><img src="${ASSETS[c[0]]}" alt="${open ? c[1] : 'Unknown'}">${fl ? `<div class="fl">${fl}</div>` : ''}<div class="nm">${open ? c[1] : '???'}</div>
       <div class="ln">${open ? c[3] : c[4] === 'spared' ? 'Finish the game without strikin’ a single onlooker.' : c[4] === 'ld' ? 'Someone hides on the last floor. Read the walls.' : 'Finish the game.'}</div>
       ${open ? `<span class="st ${c[4] === 'spared' ? 'spared' : 'silenced'}">${c[4] === 'spared' ? 'SPARED' : 'SILENCED'}</span>` : ''}</figure>`;
   });

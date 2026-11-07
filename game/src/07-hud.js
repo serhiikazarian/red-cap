@@ -1,14 +1,32 @@
 // HUD: hints at the bottom (toast), talkers left, the big centred words, the boss bar, attack warnings, Red Cap's ties.
 // Each talker's boss-bar status and warning come from its own file (TALKERS[type].bar / .warn).
-let toastT = null;
+let toastT = null,
+  toastKey = false; /* the hint on screen is an important one */
 // a hint at the bottom of the screen; longer ones stay longer (ms: exactly this long). Screen time (setTimeout), not later():
-// hints also show on the title and menus, where later() does not run
-function toast(msg, ms) {
-  const t = $('#toast');
-  t.textContent = msg;
-  t.style.opacity = 1;
+// hints also show on the title and menus, where later() does not run. A new hint slides in afresh; the same one again
+// while it shows only stays longer. how: '' an important hint (doors, bosses, talkers' tricks); 'minor' a side tip that never
+// cuts an important hint on screen (it is skipped: returns false, so the caller tries again next time); 'aside' a minor
+// remark drawn plain, without the yellow box or the slide (an onlooker's grudge). Returns whether it showed.
+function toast(msg, ms, how = '') {
+  const t = $('#toast'),
+    key = !how;
+  if (!key && toastKey && t.classList.contains('on')) return false;
+  if (!(t.classList.contains('on') && t.textContent === msg)) {
+    t.textContent = msg;
+    t.classList.remove('on', 'out');
+    t.classList.toggle('plain', how === 'aside');
+    void t.offsetWidth; /* back off the left edge at once (no transition there), then slide in */
+    t.classList.add('on');
+  }
+  toastKey = key;
   clearTimeout(toastT);
-  toastT = setTimeout(() => (t.style.opacity = 0), ms || Math.max(3000, 1200 + msg.length * 45));
+  toastT = setTimeout(toastOff, ms || Math.max(3000, 1200 + msg.length * 45));
+  return true;
+}
+// the hint slides off to the right (only if it is showing)
+function toastOff() {
+  clearTimeout(toastT);
+  $('#toast').classList.replace('on', 'out');
 }
 function updateLeft() {
   if (!G) return;
@@ -22,16 +40,16 @@ function updateLeft() {
 function quietScreen() {
   $('#bigWord').classList.remove('on');
   $('#lastCall').classList.remove('on');
-  clearTimeout(toastT);
-  $('#toast').style.opacity = 0;
+  toastOff();
 }
-// a big word in the middle of the screen (HOT, MISSED, FRENZY ...), with an optional smaller line under it
-function bigWord(text, color, size = 1, under = '') {
+// a big word in the middle of the screen (HOT, FRENZY, GAZING ...), with an optional smaller line under it
+function bigWord(text, color, size = 1, under = '', underColor = '') {
   const el = $('#bigWord');
   el.style.fontSize = size === 1 ? '' : `clamp(${(2.4 * size).toFixed(3)}rem, ${(8 * size).toFixed(3)}vw, ${(5.4 * size).toFixed(3)}rem)`;
   const [word, line] = el.firstChild.children;
   word.textContent = text;
   line.textContent = under;
+  line.style.color = underColor; /* '': the urgent red from style.css */
   el.style.color = color;
   el.classList.remove('on');
   void el.offsetWidth; // restart the animation
@@ -88,12 +106,14 @@ function bossBar(e) {
     bossFill = fp;
     HUD.bossFill.style.width = fp + '%';
   }
-  // the status under the bar: [text, lit, word]. lit highlights the line; word ("now's your chance": EXPOSED, WINDED…)
-  // flashes big mid-screen once as that state begins, and the line stays empty while it lasts
+  // the status under the bar: [text, lit, word]. lit: true highlights the line yellow, 'orange' marks a boss open to attack
+  // (Unprotected, Winded, Unmasked); word ("now's your chance": EXPOSED, UNMASKED) flashes big mid-screen once as that
+  // state begins
   const T = TALKERS[e.type],
     [text, lit, word = null] = (T && T.bar && T.bar(e)) || ['', false];
   setText(HUD.bossState, text);
-  HUD.bossState.classList.toggle('open', lit);
+  HUD.bossState.classList.toggle('open', lit === true);
+  HUD.bossState.classList.toggle('orange', lit === 'orange');
   if (word && word !== bossWord) bigWord(word, HEX.bile, 1, 'Attack him!');
   bossWord = word;
 }

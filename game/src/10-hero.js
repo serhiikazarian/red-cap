@@ -144,10 +144,7 @@ function soak() {
     floatWord('BLESSED', hero.pos.clone().setY(hero.pos.y + 2.6), HEX.tie, 0.9, true);
     playNoise({ dur: 0.3, f: 700, f2: 250, type: 'lowpass', gain: 0.2 });
   }
-  if (!G.wetHint) {
-    G.wetHint = true;
-    toast('Soaked.');
-  }
+  if (!G.wetHint) G.wetHint = toast('Soaked.', 0, 'minor');
 }
 // aim: the camera's forward on the ground, with a soft lock on the talker nearest the reticle (the Priest's ghosts one by one;
 // with pyr, the slingshot's: floor two's pyramids too, a talker first)

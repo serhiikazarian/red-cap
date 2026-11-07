@@ -373,7 +373,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Title text: "A paper slasher in three floors. Silence the voices." (was "…, then awake.").
 - Health bars: the Geezer's stare warning line is gone (WINDED stays), Bruno's reads "Flarin’" (was "Flarin’ — back
   off"), the Smoker's has no line (was "Hidin’ in his smoke" / "Every hit shakes out pebbles").
-- Title label `v1.41`.
 - Tidy, no change to play (replays SAME): floors say what they have instead of shared code asking which floor it is
   (`plainFloaters`, `pyramids`, `flatProps`, `embers` in 04-floors; `BUMP_R` in 05-world); the two sight checks say which
   they are: `clearOfWalls` (was `lineOfSight`), `clearOfCover` (was `losCover`).
@@ -387,3 +386,93 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   the Priest and Bruno.
 - Build: a code file without a last line break gets one before the next file is joined on, so it can never run into it
   (`include` in game/build.py; every file has one today, so the built game is the same).
+- Phone layout: the title row's repeated column rule removed (style.css; no change on screen).
+- Priest replay remade (Grins on raised ground now fire from their real height).
+- Docs synced: `CLAUDE.md` (sight helpers; floors say what they have), `docs/ARCHITECTURE.md` (the floor fields, the two
+  sight checks, a talker's height, the boss bar behind walls, the opening line, the build's line breaks, not-verified list).
+- Title label `v1.41`.
+
+## 1.42 (6 Nov 2026)
+- `CLAUDE.md`: Serj's own edit restored (he/him; "Be interactive and report your progress."), which shipping 1.41 had
+  overwritten with the work branch's older copy.
+- Phones play on their side only: held upright, a sheet covers the screen and asks to turn it ("Turn your phone sideways",
+  `#turn` in style.css and index.html), and play pauses if turned upright mid-fight (62-input). No such rule was found in
+  the history since the clean base, so this is new rather than repaired.
+- Short windows (a phone on its side, a low desktop window: under 520 px tall): the catalogue and win sheets go compact
+  (smaller heading, cards and padding) so whole rows fit; they used to run cards over the footer and arrows (3 cut off at
+  740 x 360). Heights use `dvh` (the browser's bars left out); the card grid scrolls only if a row still cannot fit.
+- Title label `v1.42`.
+
+## 1.43 (6 Nov 2026)
+- The Geezer: no WINDED / Attack him! call-out (the small WINDED over his head stays). As his first stare begins, GAZING /
+  Take cover! in the same big lettering, colours swapped (GAZING red, Take cover! yellow: `bigWord`'s `underColor`); again only after two stares in a row have caught Red Cap (`geezerWarn`,
+  `GEEZER_WARN_AGAIN`).
+- The Jester: UNMASKED / Attack him! the first time his mask lifts, then again only if Red Cap has gone more than 35 s without
+  a blow that hurts him (`JESTER_REMIND`; hitting the mask does not count).
+- Bruno's insults: a short rough bark as he spits each volley (`SFX.bark`).
+- Title label `v1.43`.
+
+## 1.44 (6 Nov 2026)
+- The keyboard "stopped working" on the title after the music was switched on: the music button kept the focus, so Enter
+  and Space only toggled the music again. A click or tap on it now hands the focus back to Start (moved to it with the arrow
+  keys, Enter still toggles it). Behind it a second fault: the focus that follows the mouse took the button back when its
+  icon swapped under the pointer; it now moves only when the mouse reaches another button (`hoverBtn`, 61-menus).
+- Title label `v1.44`.
+
+## 1.45 (6 Nov 2026)
+- The title's music button stays red while the mouse is on it (after a click the focus goes to Start, which took its red
+  away): `#musicBtn:hover` in style.css, on screens with a mouse only.
+- Title label `v1.45`.
+
+## 1.46 (6 Nov 2026)
+- Title focus, one red at a time: a click on the music button keeps the focus there (no more hand-off to Start, which left
+  two buttons red); from it the arrows, WASD and Tab go anywhere and Enter presses whatever is red. Its hover red stays, but
+  gives way when the keyboard has taken the focus to another button (`:has(button:focus…)` in style.css).
+- Title label `v1.46`.
+
+## 1.47 (6 Nov 2026)
+- Floating words (Red Cap's opening line, HMMPH, BOO!, RING ME, NOT FUNNY…) are drawn over the finished page, after the ink
+  pass (`wordScene` in 02-render): the pass no longer draws its edge lines across them (the holes in "How did I get here?"
+  where a wall corner or a Shade lay behind), nor darkens them toward the screen's edges (the line greyed as it rose), and
+  a nearly faded word no longer tints the page round it. Pictures remade (f1-fight, f2-fight, f3-fight, f3-start, jester).
+- Title label `v1.47`.
+
+## 1.48 (7 Nov 2026)
+- The hints at the bottom (`toast`: "Dodge sideways.", "Avoid Geezer's gaze." ...) sit in a yellow comic caption box:
+  black marker lettering, a thick ink border, a hard shadow, a slight tilt. Each new hint slides in from the left with a
+  small overshoot and leaves off to the right (`toastOff` in 07-hud, used wherever the hint is cleared); the same hint
+  again only stays longer. Plain fade under reduced motion. Done with CSS transitions, not keyframes: the test pictures
+  jump transitions to their end, so the box shows settled there (pictures remade: jester, f3-fight).
+- Title label `v1.48`.
+
+## 1.49 (7 Nov 2026)
+- The onlooker hint ("They will remember that.", on hitting one) is back to the old look: white outlined marker lettering
+  that fades in place, no yellow box, no slide (`#toast.plain`), so it does not pass for a hint
+  that matters.
+- Minor hints never cut an important one: the onlooker line, the bear trap ("Lure the enemy onto one") and "Soaked." are
+  skipped while an important hint shows (the door lines, bosses, talkers' tricks) and come back the next time they happen
+  (`toast(msg, ms, how)`: `'minor'`, `'aside'` = minor and plain; it returns whether it showed). The bear trap and
+  "Soaked." keep the yellow box.
+- The yellow box fades a little as it slides in and out (opacity over .3 s each way, was a blink).
+- Floors two and three open with a yellow-box hint a second after the card: "You can talk the talk..." and "Can you walk
+  the walk?.." (`FLOORS` field `opening`; once a game, not on a retry, like floor one's "How did I get here?": `openingsSaid`
+  in 60-flow).
+- Shades never say F#CK when hit: their own words SH#T!, SHUT IT, STFU (`TALKERS.q.curses`; the others keep `CURSES` in
+  20-talkers, the same one dice roll).
+- The Geezer's hint reads "Avoid his gaze." (was "Avoid Geezer's gaze."); the Jester's "Immune when masked. Ring totems."
+  (was "Ring a totem.").
+- Boss bars: the small line under the name reads "Protected by 3/2/1 ghosts" (was "Shielded by"), then "Unprotected" for the
+  Priest; "Immune" (was "Masked — immune"), then "Unmasked" for the Jester; "Winded" for the Geezer while he is out of breath
+  (it was empty). The open-to-attack lines are orange (`--orange` `#ff8a1f`, `bar(e)`'s lit = `'orange'`); Grump's and the
+  Smoker's lit lines stay yellow. The big EXPOSED / UNMASKED call-outs stay; the Geezer's big MISSED is gone.
+- The waking-up page's headline reads "Wake up! Grab a brush" (was "Wake up. Damn!").
+- Title label `v1.49`.
+
+## 1.50 (7 Nov 2026)
+- The catalogue opened with a controller (from the ending or the title) picks the "next page" button, as the keyboard and
+  mouse already did; it picked "Back" (`padMenu`: on the catalogue `pnext` comes before the main button).
+- In the catalogue the Smoker's picture is drawn smaller (0.88) and Brainless the Second's bigger (1.12): `CAT_PIC_SCALE`,
+  CSS `--s` on `.cat-card img`, scaled from the picture's foot so the cards and pages lay out as before.
+- Menus on phones lost the grey line along the bottom: a tilted sheet's corner and shadow stuck out of the screen by a few
+  pixels, so the menu scrolled sideways and the phone drew its scrollbar there (`.screen` `overflow-x: hidden`).
+- Title label `v1.50`.

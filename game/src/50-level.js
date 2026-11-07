@@ -50,7 +50,7 @@ function clearEffects() {
   bloodFreeAll();
   const drop = list => {
     for (const x of list) {
-      scene.remove(x.s);
+      if (x.s.parent) x.s.parent.remove(x.s); /* the scene, or wordScene for floating words */
       x.s.material.dispose();
     }
     list.length = 0;

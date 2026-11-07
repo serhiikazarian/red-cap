@@ -6,6 +6,7 @@
   --tie: #d8212a;        /* the red tie, used for health */
   --bile: #f0cf2e;       /* the yellow paint dabs (COL.bile in the code) */
   --smoke: #8d8579;      /* charcoal smudge */
+  --orange: #ff8a1f;     /* a boss open to attack: the boss bar's Unprotected, Winded, Unmasked */
   --alarm: #ff3b30;      /* the urgent red: 1 TALKER LEFT, Attack him! */
   --sheet: #f6f1e6;      /* a lighter paper: catalogue stamps, buttons under the controller's focus */
   --muted: #9a948a;      /* small grey labels */
@@ -60,9 +61,15 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #boss .name { font-family: var(--display); font-size: 1.2rem; text-shadow: 2px 2px 0 var(--ink); }
 #boss .state { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; min-height: 1em; text-shadow: 1px 1px 0 var(--ink); }
 #boss .state.open { color: var(--bile); }
+#boss .state.orange { color: var(--orange); }
 #boss .bar { height: 12px; background: rgba(13,11,10,.75); border: 2px solid var(--paper); margin-top: 4px; transform: rotate(-.6deg); }
 #boss .fill { height: 100%; background: var(--cap); width: 100%; transition: width .2s; }
-#toast { justify-self: center; align-self: end; font-family: var(--display); font-size: clamp(1.45rem, 4.6vw, 2.5rem); line-height: 1.25; text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink); opacity: 0; transition: opacity .4s; transform: translateY(-2vh); text-align: center; max-width: min(82vw, 900px); }
+/* the hint: a yellow comic caption box, slides in from the left and off to the right (07-hud toast / toastOff) */
+#toast { justify-self: center; align-self: end; font-family: var(--display); font-size: clamp(1.3rem, 4.2vw, 2.25rem); line-height: 1.2; color: var(--ink); background: var(--bile); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); padding: .12em .65em .18em; opacity: 0; transform: translate(-60vw, -2vh) rotate(-6deg); text-align: center; max-width: min(82vw, 900px); }
+#toast.on { opacity: 1; transform: translateY(-2vh) rotate(-1.5deg); transition: transform .42s cubic-bezier(.2, 1.35, .45, 1), opacity .3s ease-out; }
+#toast.out { opacity: 0; transform: translate(60vw, -2vh) rotate(3deg); transition: transform .3s ease-in, opacity .3s ease-in; }
+@media (prefers-reduced-motion: reduce) { #toast, #toast.out { transform: translateY(-2vh) rotate(-1.5deg); } #toast.on, #toast.out { transition: opacity .4s; } }
+#toast.plain { background: none; border-color: transparent; box-shadow: none; padding: 0; color: var(--paper); font-size: clamp(1.45rem, 4.6vw, 2.5rem); line-height: 1.25; text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink); transform: translateY(-2vh); transition: opacity .4s; } /* toast(msg, ms, true): the old hint, outlined lettering that fades */
 .hud-bottom { display: flex; justify-content: flex-end; align-items: end; gap: 16px; }
 #weapons { display: flex; gap: 10px; font-family: var(--display); font-size: .95rem; text-shadow: 2px 2px 0 var(--ink); }
 #weapons span { padding: 2px 8px; border: 2px solid var(--paper); transform: rotate(-1deg); }
@@ -106,7 +113,7 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 @media (prefers-reduced-motion: reduce) { #cutting .snip, #card.enter .sheet { animation: none; } }
 
 /* Screens */
-.screen { position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(13,11,10,.8); }
+.screen { position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto; overflow-x: hidden; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(13,11,10,.8); } /* never sideways: a tilted sheet's corner and shadow poke out a few px, and phones drew a grey scrollbar under the menu */
 .sheet { position: relative; width: min(760px, 100%); background: var(--paper); color: var(--ink); padding: clamp(20px, 4vw, 40px); transform: rotate(-.7deg); box-shadow: 8px 10px 0 rgba(0,0,0,.55); }
 .sheet::before { content: ""; position: absolute; left: 6%; right: 6%; top: -9px; height: 18px; background: repeating-linear-gradient(90deg, transparent 0 22px, var(--muted) 22px 30px); border-radius: 4px; }
 .sheet h1 { font-family: var(--display); font-weight: 400; font-size: clamp(3rem, 12vw, 6.4rem); line-height: .9; margin: 0; color: var(--cap); text-wrap: balance; letter-spacing: .01em; }
@@ -138,6 +145,8 @@ button:disabled { cursor: default; } /* "Cuttin' paper…" is a label until Star
 button:focus, button:focus-visible { outline: none; }
 .screen:not(.padnav) button { background: transparent; color: var(--ink); }
 .screen:not(.padnav) button:focus, .screen:not(.padnav) #musicBtn:focus { background: var(--cap); color: var(--paper); }
+/* the music button is red while the mouse is on it, unless the keyboard has taken the focus to another button: one red at a time */
+@media (hover: hover) { .screen:not(.padnav):not(:has(button:focus:not(#musicBtn))) #musicBtn:hover { background: var(--cap); color: var(--paper); } }
 .screen.padnav button { background: var(--sheet); color: var(--ink); outline: none !important; } .screen.padnav button.padfocus, .screen.padnav #musicBtn.padfocus { background: var(--cap); color: var(--paper); }
 .fine { font-size: .78rem; opacity: .7; }
 .wake { background: var(--paper); animation: whiteout 1.4s ease-out both; }
@@ -157,7 +166,7 @@ button:focus, button:focus-visible { outline: none; }
 #card .sheet { width: min(560px, 100%); text-align: center; transform: rotate(1deg); }
 #card .num { font-size: .8rem; letter-spacing: .2em; text-transform: uppercase; }
 /* the catalogue: one pinned card per talker */
-.pager { display: grid; gap: 14px; height: min(600px, calc(100vh - 80px)); overflow: hidden; }
+.pager { display: grid; gap: 14px; height: min(600px, calc(100vh - 80px)); height: min(600px, calc(100dvh - 80px)); overflow: hidden; } /* dvh: the browser's bars left out */
 #win, #catalogue { overflow: hidden; } /* paged, never scrolled */
 .wake-sheet { grid-template-rows: 1fr auto; width: min(820px, 100%); }
 .wpage { display: grid; gap: 16px; align-content: center; min-height: 0; }
@@ -171,9 +180,9 @@ button:focus, button:focus-visible { outline: none; }
 .cat-sheet { width: min(980px, 100%); grid-template-rows: auto 1fr auto auto; }
 .cat-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .cat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; align-content: start; min-height: 0; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; align-content: start; min-height: 0; overflow-y: auto; overscroll-behavior: contain; } /* scrolls only if a row cannot fit (catLayout pages the rest) */
 .cat-card { margin: 0; position: relative; display: grid; gap: 4px; justify-items: center; align-content: start; text-align: center; padding: 10px 8px 12px; border: 2px solid var(--ink); background: var(--sheet); transform: rotate(var(--r, 0deg)); box-shadow: 3px 3px 0 rgba(13,11,10,.25); }
-.cat-card img { height: clamp(52px, 11vh, 88px); width: auto; max-width: 100%; object-fit: contain; }
+.cat-card img { height: clamp(52px, 11vh, 88px); width: auto; max-width: 100%; object-fit: contain; transform: scale(var(--s, 1)); transform-origin: 50% 100%; } /* --s grows a picture into the card's top padding, the layout unmoved */
 .cat-card .nm { font-family: var(--display); font-size: 1.05rem; line-height: 1.1; }
 .cat-card .fl { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
 .cat-floor { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
@@ -197,4 +206,23 @@ button:focus, button:focus-visible { outline: none; }
 #bYoyo { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(118px + env(safe-area-inset-bottom, 0px)); background: var(--cap); }
 #bSling { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); background: #6b5a2a; }
 #bDodge { right: calc(102px + env(safe-area-inset-right, 0px)); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); background: #3a332c; }
-@media (max-width: 560px) { .title-row { grid-template-columns: 1fr auto; } .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }
+@media (max-width: 560px) { .title-row img { --h: 96px; } .hud-bottom { justify-content: flex-start; } }
+/* a short window (a phone on its side, a low desktop window): the paged sheets go compact so a row of cards fits */
+@media (max-height: 520px) {
+  #catalogue, #win { padding-block: 10px; }
+  .pager.sheet { padding: 12px 22px; height: calc(100vh - 46px); height: calc(100dvh - 46px); gap: 8px; } /* 46: the padding round it and its tilt */
+  .pager .cat-head h2 { font-size: 1.5rem; }
+  .cat-grid { gap: 8px; }
+  .cat-card { padding: 6px 6px 8px; gap: 2px; }
+  .cat-card img { height: 40px; }
+  .cat-card .nm { font-size: .9rem; }
+  .cat-card .ln { font-size: .66rem; line-height: 1.25; }
+  .cat-floor b { font-size: 1.1rem; }
+  .pnav button { font-size: 1.3rem; padding: 0 16px 3px; }
+}
+/* phones play on their side: held upright, a sheet asks to turn it (60-flow pauses play) */
+#turn { display: none; }
+@media (pointer: coarse) and (orientation: portrait) {
+  #turn { display: grid; place-items: center; position: fixed; inset: 0; z-index: 1000; background: var(--ink); padding: 24px; }
+}
+@media (max-height: 340px) { .cat-card img { height: 30px; } .pager .cat-head h2 { font-size: 1.25rem; } }

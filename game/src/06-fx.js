@@ -134,7 +134,7 @@ function floatWord(text, pos, color, scale = 1.2, must, life = 0.9, rise = 1.1) 
   s.position.copy(pos);
   s.scale.set(2.3 * scale, 0.8 * scale, 1);
   s.renderOrder = 10;
-  scene.add(s);
+  wordScene.add(s); // on top of the ink pass (02-render)
   floaters.push({ s, life, vy: rise, scale });
 }
 function updateFloaters(dt) {
@@ -144,7 +144,7 @@ function updateFloaters(dt) {
     f.s.position.y += f.vy * dt;
     f.s.material.opacity = clamp(f.life * 2, 0, 1);
     if (f.life <= 0) {
-      scene.remove(f.s);
+      wordScene.remove(f.s);
       f.s.material.dispose();
       floaters.splice(i, 1);
     }

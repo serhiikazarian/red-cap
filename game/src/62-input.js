@@ -96,6 +96,11 @@ addEventListener('blur', () => {
   keys.clear();
   if (state === 'play') pause(true);
 });
+// a phone turned upright mid-play pauses (style.css covers the screen and asks to turn it back)
+if (touchUI)
+  matchMedia('(orientation: portrait)').addEventListener('change', m => {
+    if (m.matches && state === 'play') pause(true);
+  });
 // ----- touch: a stick on the left, buttons on the right
 $('#touch').addEventListener('pointerdown', () => {
   if (state === 'intro') beginFloor();
@@ -289,8 +294,12 @@ function padMenu(gp, hit, mx, my, dt) {
     else PAD.hold = false;
   }
   if (nav || gp.buttons.some((_, i) => hit(i))) PAD.active = true; // any controller input in a menu: show the selection
-  if (!bs.includes(PAD.sel))
-    PAD.sel = bs.find(b => !b.classList.contains('ghost') && !b.closest('.pnav')) || bs.find(b => b.classList.contains('pnext')) || bs[0] || null; // the page's main button, else "next"
+  if (!bs.includes(PAD.sel)) {
+    // the page's main button, else "next"; the catalogue is for readin': "next" first, as with the keyboard
+    const main = bs.find(b => !b.classList.contains('ghost') && !b.closest('.pnav')),
+      next = bs.find(b => b.classList.contains('pnext'));
+    PAD.sel = ($('#catalogue').hidden ? main || next : next || main) || bs[0] || null;
+  }
   PAD.navT -= dt;
   if (nav && PAD.navT <= 0 && bs.length) {
     PAD.sel = bs[(bs.indexOf(PAD.sel) + nav + bs.length) % bs.length];

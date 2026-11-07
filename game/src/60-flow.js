@@ -14,7 +14,7 @@ function startGame(later) {
   stats.deaths = 0;
   stats.npc = [0, 0, 0];
   stats.start = performance.now();
-  openingSaid = false;
+  openingsSaid.clear();
   enterFloor(0, later === true);
 }
 // Loading rule: everything a floor will use is prepared during its loading screen, never mid-game. warmSet holds stand-ins
@@ -122,7 +122,7 @@ function floorCut(i, live) {
   slidesOn(false);
   droneStop();
   for (const id of ['#hud', '#reticle', '#touch']) $(id).hidden = true;
-  $('#toast').style.opacity = 0;
+  toastOff();
   $('#cutNum').textContent = FLOORS[i].num;
   const run = snipPlan(i);
   $('#cutting .snip').style.animationDuration = run + 'ms';
@@ -416,7 +416,7 @@ function floorShow(i) {
   droneStart(FLOORS[i].drone);
   cardAt = performance.now();
   showOnly('card');
-  $('#toast').style.opacity = 0;
+  toastOff();
   keys.clear();
   $('#cardNum').textContent = FLOORS[i].num;
   $('#cardName').textContent = FLOORS[i].name;
@@ -429,8 +429,10 @@ let cardAt = 0;
 const cardReady = () => performance.now() - cardAt > 900; // a key still held from walking through the door must not skip the card
 // Red Cap's first words on a new game (not on a restarted floor): a moment into play, at y m over him, floating for life s,
 // rising slowly (m/s) so the whole line stays in view
-const OPENING = { line: 'How did I get here?', delay: 0.6, y: 2.1, life: 2.4, rise: 0.25 };
-let openingSaid = false;
+// floor one opens with Red Cap's line over his head; a floor with an opening hint (FLOORS .opening) shows it at the bottom.
+// Each once a game, not again on a retry
+const OPENING = { line: 'How did I get here?', delay: 0.6, y: 2.1, life: 2.4, rise: 0.25, hintDelay: 1 };
+const openingsSaid = new Set(); /* floor indices whose opening has shown this game */
 function beginFloor() {
   if (state !== 'intro' || !cardReady()) return;
   state = 'play';
@@ -442,12 +444,13 @@ function beginFloor() {
   hero.iframe = Math.max(hero.iframe, 0.8);
   keys.clear();
   lockPointer();
-  if (!openingSaid && floorIdx === 0) {
-    openingSaid = true;
+  if (openingsSaid.has(floorIdx)) return;
+  openingsSaid.add(floorIdx);
+  if (floorIdx === 0)
     later(OPENING.delay, () =>
       floatWord(OPENING.line, hero.pos.clone().setY(hero.pos.y + OPENING.y), HEX.paper, 1.1, true, OPENING.life, OPENING.rise)
     );
-  }
+  if (G.F.opening) later(OPENING.hintDelay, () => toast(G.F.opening));
 }
 $('#card').addEventListener('pointerdown', e => {
   e.preventDefault();

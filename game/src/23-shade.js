@@ -58,6 +58,7 @@ TALKERS.q = {
   pops: true,
   harmless: true,
   tornWord: 'POPPED',
+  curses: ['SH#T!', 'SHUT IT', 'STFU'] /* never F#CK */,
   hurt: e => e.hp > 0 && Math.random() < 0.08 && giveAmmo(1, e.pos),
   drops: e => {
     dropsDefault(e);
