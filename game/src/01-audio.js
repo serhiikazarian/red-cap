@@ -3,6 +3,7 @@
 const AUDIO = { ctx: null, master: null, muted: false, drone: [], at: null, vol: 1 }, // vol: the VOL share of the SFX entry playing
   MASTER_GAIN = 0.75,
   SOUND_NEAR = 4; // full volume within this many metres
+const BARK_FADE = 0.35; // Bruno's bark keeps this share of the usual fade with distance (10 m: 64% loud, other sounds 28%)
 // the knuckle cracks of a struck-down insult: [when, click pitch, loudness], a little uneven like real fingers
 const KNUCKLE_CRACKS = [
   [0, 2600, 0.55],
@@ -178,14 +179,17 @@ const SFX = {
     playNoise({ dur: 0.5, f: 900, f2: 120, type: 'lowpass', gain: 0.5 });
   },
   bark() {
-    // Bruno's insults: a short rough snap, like a curse spat out; it fills the floor (never quieted by distance: he insults
-    // from afar) and sits high enough for phone speakers
-    const at = AUDIO.at;
+    // Bruno's insults: a short rough snap, like a curse spat out; it fades only a little with distance (he insults from
+    // afar: BARK_FADE) and sits high enough for phone speakers
+    const at = AUDIO.at,
+      vol = AUDIO.vol;
+    AUDIO.vol *= Math.pow(distanceGain(at), BARK_FADE);
     AUDIO.at = null;
     playTone({ f: 420, f2: 190, dur: 0.18, type: 'sawtooth', gain: 0.34, filt: [1900, 700] });
     playNoise({ dur: 0.1, f: 2400, f2: 900, q: 1.2, gain: 0.32 });
     playTone({ f: 150, f2: 90, dur: 0.14, gain: 0.28 });
     AUDIO.at = at;
+    AUDIO.vol = vol;
   },
   knuckles() {
     // one of Bruno's insults struck down: knuckles cracked fast (dry clicks, each with a little bony pop), not the

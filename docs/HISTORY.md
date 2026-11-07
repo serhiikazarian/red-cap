@@ -481,3 +481,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Striking down one of Bruno's insults cracks knuckles: six dry clicks, each with a little bony pop, over 0.17 s
   (`SFX.knuckles`, `KNUCKLE_CRACKS`, a fixed rhythm with no dice); it was a hiss and a glassy tink. The pyramids keep their glass.
 - Title label `v1.50`.
+
+## 1.51 (7 Nov 2026)
+- Bruno's bark fades a little with distance: it keeps 35% of the usual fade (`BARK_FADE`), so 76% loud at 7 m, 64% at
+  10 m, 52% at 15 m (other sounds: 46%, 28%, 16%); in 1.50 it did not fade at all.
+- Title label `v1.51`.
