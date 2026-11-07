@@ -213,7 +213,7 @@ function trailStart() {
   if (!TRAIL_GEO) TRAIL_GEO = share(trailGeo());
   const im = new THREE.InstancedMesh(
     TRAIL_GEO,
-    new THREE.MeshBasicMaterial({ color: G.F.trail || G.F.words, vertexColors: true, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: G.F.trail ?? G.F.words, vertexColors: true, side: THREE.DoubleSide }),
     TRAIL_N
   );
   im.count = 0;
