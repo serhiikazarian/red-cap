@@ -19,10 +19,14 @@ function startGame(later) {
 }
 // Loading rule: everything a floor will use is prepared during its loading screen, never mid-game. warmSet holds stand-ins
 // for every kind of material that only appears later (shots, words, rings, holograms, the trail), so their shaders are built
-// with the floor's; warmUp compiles them, uploads every texture and word, and draws one hidden frame.
+// with the floor's; warmUp compiles them, uploads every texture and word, and draws one hidden frame. The floating words have
+// their own scene (wordScene, no fog nor lights, so a shader of their own): WARM_WORD stands in for them there, and is never
+// disposed, so that shader outlives every word.
 const WARM = new THREE.Group();
+let WARM_WORD = null;
 function warmSet() {
   if (WARM.children.length) return;
+  WARM_WORD = new THREE.Sprite(wordMat(fireTex));
   const g = share(new THREE.PlaneGeometry(0.01, 0.01));
   for (const map of [null, fireTex])
     for (const fog of [true, false]) {
@@ -44,14 +48,16 @@ function warmSet() {
   const gc = share(new THREE.PlaneGeometry(0.01, 0.01)); // coloured like the trail's scraps (their colours are part of the shader)
   gc.setAttribute('color', new THREE.Float32BufferAttribute(new Array(gc.attributes.position.count * 3).fill(1), 3));
   WARM.add(new THREE.InstancedMesh(gc, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), 1)); // the paper trail
-  WARM.traverse(o => {
-    o.frustumCulled = false;
-    o.position.y = -50;
-  });
+  for (const o of [WARM, WARM_WORD])
+    o.traverse(c => {
+      c.frustumCulled = false;
+      c.position.y = -50;
+    });
 }
 function warmUp() {
   warmSet();
   scene.add(WARM);
+  wordScene.add(WARM_WORD);
   const culled = [],
     texs = new Set([...Object.values(TEX), ...Object.values(canvasTexCache), waveTex, fireTex, glowRed, violetTex, smokeTex]);
   scene.traverse(o => {
@@ -65,6 +71,7 @@ function warmUp() {
     }
   });
   renderer.compile(scene, camera);
+  renderer.compile(wordScene, camera);
   seeWarm();
   for (const [w, c] of [...WORDS_SEED, ...(WORDS_FLOOR[floorIdx] || []), ...(WORDS_USED[floorIdx] || new Map()).values()]) texs.add(wordTex(w, c));
   renderer.compile(inkScene, postCam);
@@ -73,9 +80,13 @@ function warmUp() {
   for (const t of texs) if (t && t.image) renderer.initTexture(t);
   renderer.setRenderTarget(sceneTarget);
   renderer.render(scene, camera);
+  renderer.autoClear = false;
+  renderer.render(wordScene, camera);
+  renderer.autoClear = true;
   renderer.setRenderTarget(null); // hidden behind the card; the first real frame draws over it
   for (const o of culled) o.frustumCulled = true;
   scene.remove(WARM);
+  wordScene.remove(WARM_WORD);
 }
 let floorBuildId = 0; // a newer enterFloor cancels a build still waiting to run
 // to floor i: Red Cap's ties and pebbles are those he came in with (a retry restores them); later: through the veil and the
@@ -126,14 +137,15 @@ function floorCut(i, live) {
   $('#cutNum').textContent = FLOORS[i].num;
   const run = snipPlan(i);
   $('#cutting .snip').style.animationDuration = run + 'ms';
+  $('#cutting').classList.remove('out');
   $('#cutting').hidden = false;
   const t0 = performance.now(),
     snip = snipRun(run, live, () => {
-      // in: the veil dissolves into the new floor and the card fades in with it
-      $('#cutting').hidden = true;
+      // in: the veil dissolves into the new floor, and the scrap fades out as the card fades in (never an empty veil)
+      scrapOut(live);
       floorShow(i);
       $('#card').classList.add('enter');
-      veilOff();
+      $('#veil').classList.remove('on');
     });
   // two painted frames and a moment of snipping before the build holds the page, so the scissors are always seen moving
   requestAnimationFrame(() =>
@@ -241,6 +253,17 @@ function snipRun(run, live, arrive) {
 function veilOff() {
   $('#veil').classList.remove('on');
   $('#cutting').hidden = true;
+}
+// the scrap fades out (#cutting.out in style.css, SCRAP_OUT_MS), then is hidden, unless a newer floor entry has taken it over
+const SCRAP_OUT_MS = 350;
+function scrapOut(live) {
+  const c = $('#cutting');
+  c.classList.add('out');
+  setTimeout(() => {
+    if (!live()) return;
+    c.hidden = true;
+    c.classList.remove('out');
+  }, SCRAP_OUT_MS);
 }
 function floorBuilt(i) {
   buildLevel(i);
@@ -551,7 +574,7 @@ function toTitle() {
 }
 // ----- the title's slideshow: Serj's paintings drifting slowly, one after another
 const SLIDES = [
-  // [asset, drift: start and end scale, then x / y offsets in %]  1 the Ushers' corridor, 2 the Geezer, 3 the Mouth, 4 the Priest, 5 the Grump
+  // [asset, drift: start and end scale, then x / y offsets in %]  1 the Newsroom, 2 the Geezer, 3 the Mouth, 4 the Priest, 5 the Grump
   ['slide_1', [1.06, 1.13, 1.5, -0.5, -1.5, 0.5]],
   ['slide_2', [1.14, 1.06, 0, 1.2, 0, -0.8]],
   ['slide_3', [1.05, 1.12, -1.2, 0, 1.2, -1]],

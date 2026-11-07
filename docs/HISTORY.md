@@ -486,3 +486,25 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Bruno's bark fades a little with distance: it keeps 35% of the usual fade (`BARK_FADE`), so 76% loud at 7 m, 64% at
   10 m, 52% at 15 m (other sounds: 46%, 28%, 16%); in 1.50 it did not fade at all.
 - Title label `v1.51`.
+
+## 1.52 (7 Nov 2026)
+- The Priest and the Jester telegraph like floor one's bosses, with the "!" marker over them (pinned to the screen edge
+  when off screen): the Priest's is maroon (`COL.maroon`, new) through his KNEEL wind-up before he vomits (`PRIEST_WIND` 0.8 s), the Jester's
+  white on black through his wind-up before a charge, pulsing faster over its last 0.8 s (`JESTER_WARN`; his feints show it too).
+- Title label `v1.52`.
+
+## 1.53 (7 Nov 2026)
+- Floor one is renamed *The Newsroom* (was *The Usher’s Corridor*): the HUD, the floor card and the Catalogue of Talkers show it.
+  In code its decor set is `deco: 'newsroom'` and the `corridor*` builders are `newsroom*`. Its intro line is unchanged.
+- Floor two's paper trail to the open door is white (`trail: COL.paper`, a new `FLOORS` field; without it the trail keeps
+  the floor's `words` colour), not yellow; its wall doodles stay yellow.
+- No hiccup as play begins: the floating words' shader (their own `wordScene`, no fog nor lights) was built at the first
+  word, floor one's "How did I get here?" 0.6 s in, and thrown away whenever the last word faded, so built again at the next.
+  The loading screen now builds it with a stand-in that is never disposed (`WARM_WORD`; the words' material is `wordMat`, 06-fx).
+- Title label `v1.53`.
+
+## 1.54 (7 Nov 2026)
+- The loading scrap hands over to the floor card in a crossfade: it fades out (`scrapOut`, `#cutting.out`, `SCRAP_OUT_MS`
+  0.35 s) as the card fades in, now with no delay (`cardIn` lost its 0.12 s). Before, the scrap vanished at once and the
+  card came 0.12 s later, so the bare ink veil showed alone for a moment.
+- Title label `v1.54`.

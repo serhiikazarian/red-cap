@@ -117,7 +117,8 @@ function bossBar(e) {
   if (word && word !== bossWord) bigWord(word, HEX.bile, 1, 'Attack him!');
   bossWord = word;
 }
-// attack warnings: a marker over the Usher about to charge and the Geezer about to stare or lash (warnOf)
+// attack warnings: a marker over the Usher about to charge, the Geezer about to stare or lash, the Priest about to spray and
+// the Jester about to charge (warnOf)
 const WARN_N = 3,
   WARN = [],
   warnV = new THREE.Vector3();
