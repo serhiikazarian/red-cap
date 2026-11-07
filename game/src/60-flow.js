@@ -122,7 +122,7 @@ function floorCut(i, live) {
   slidesOn(false);
   droneStop();
   for (const id of ['#hud', '#reticle', '#touch']) $(id).hidden = true;
-  $('#toast').style.opacity = 0;
+  toastOff();
   $('#cutNum').textContent = FLOORS[i].num;
   const run = snipPlan(i);
   $('#cutting .snip').style.animationDuration = run + 'ms';
@@ -416,7 +416,7 @@ function floorShow(i) {
   droneStart(FLOORS[i].drone);
   cardAt = performance.now();
   showOnly('card');
-  $('#toast').style.opacity = 0;
+  toastOff();
   keys.clear();
   $('#cardNum').textContent = FLOORS[i].num;
   $('#cardName').textContent = FLOORS[i].name;

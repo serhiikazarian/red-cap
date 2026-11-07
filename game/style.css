@@ -62,7 +62,14 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #boss .state.open { color: var(--bile); }
 #boss .bar { height: 12px; background: rgba(13,11,10,.75); border: 2px solid var(--paper); margin-top: 4px; transform: rotate(-.6deg); }
 #boss .fill { height: 100%; background: var(--cap); width: 100%; transition: width .2s; }
-#toast { justify-self: center; align-self: end; font-family: var(--display); font-size: clamp(1.45rem, 4.6vw, 2.5rem); line-height: 1.25; text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink); opacity: 0; transition: opacity .4s; transform: translateY(-2vh); text-align: center; max-width: min(82vw, 900px); }
+/* the hint: a yellow comic caption box, slides in from the left and off to the right (07-hud toast / toastOff) */
+#toast { justify-self: center; align-self: end; font-family: var(--display); font-size: clamp(1.3rem, 4.2vw, 2.25rem); line-height: 1.2; color: var(--ink); background: var(--bile); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); padding: .12em .65em .18em; opacity: 0; transform: translateY(-2vh) rotate(-1.5deg); text-align: center; max-width: min(82vw, 900px); }
+#toast.on { animation: toastIn .42s cubic-bezier(.2, 1.35, .45, 1) both; }
+#toast.out { animation: toastOut .3s ease-in both; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-60vw, -2vh) rotate(-6deg); } 30% { opacity: 1; } to { opacity: 1; transform: translateY(-2vh) rotate(-1.5deg); } }
+@keyframes toastOut { from { opacity: 1; transform: translateY(-2vh) rotate(-1.5deg); } 70% { opacity: 1; } to { opacity: 0; transform: translate(60vw, -2vh) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { #toast.on, #toast.out { animation-name: toastFade; } #toast.out { animation-direction: reverse; } }
+@keyframes toastFade { from { opacity: 0; transform: translateY(-2vh) rotate(-1.5deg); } to { opacity: 1; transform: translateY(-2vh) rotate(-1.5deg); } }
 .hud-bottom { display: flex; justify-content: flex-end; align-items: end; gap: 16px; }
 #weapons { display: flex; gap: 10px; font-family: var(--display); font-size: .95rem; text-shadow: 2px 2px 0 var(--ink); }
 #weapons span { padding: 2px 8px; border: 2px solid var(--paper); transform: rotate(-1deg); }

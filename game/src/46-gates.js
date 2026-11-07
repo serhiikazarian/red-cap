@@ -302,7 +302,7 @@ function openDoor() {
       t = $('#toast');
     if (near || p.lineT >= DOOR_HOLD) {
       if (near) {
-        if (t.textContent === DOOR_LINES[p.line]) t.style.opacity = 0; // only if no other hint has taken its place
+        if (t.textContent === DOOR_LINES[p.line]) toastOff(); // only if no other hint has taken its place
         p.line = 2;
       } else if (++p.line < 2) {
         toast(DOOR_LINES[1], DOOR_HOLD * 1000);
