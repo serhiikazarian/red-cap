@@ -489,6 +489,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 
 ## 1.52 (7 Nov 2026)
 - The Priest and the Jester telegraph like floor one's bosses, with the "!" marker over them (pinned to the screen edge
-  when off screen): the Priest's is red through his KNEEL wind-up before he vomits (`PRIEST_WIND` 0.8 s), the Jester's
+  when off screen): the Priest's is maroon (`COL.maroon`, new) through his KNEEL wind-up before he vomits (`PRIEST_WIND` 0.8 s), the Jester's
   white on black through his wind-up before a charge, pulsing faster over its last 0.8 s (`JESTER_WARN`; his feints show it too).
 - Title label `v1.52`.

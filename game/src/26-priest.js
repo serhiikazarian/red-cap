@@ -3,7 +3,7 @@
 // He sprays blood from his mouth (KNEEL), and close up rains it inside a red circle (PREY). Blood soaks Red Cap (half speed).
 const PRIEST_GHOST = 1.8, // his ghosts' size
   RAIN_R = 4.6, // metres: as the rain lands it hurts Red Cap and strikes each pyramid this close to him
-  PRIEST_WIND = 0.8; // s of his KNEEL wind-up before the spray (a red "!" over him meanwhile)
+  PRIEST_WIND = 0.8; // s of his KNEEL wind-up before the spray (a maroon "!" over him meanwhile)
 const RAIN_RING_GEO = share(new THREE.RingGeometry(4.3, 4.7, 40)); // the red circle his blood rains inside
 
 // his paper figure, the white shield ring on the ground, and the ghosts; each ghost has a target stand-in so it can be aimed at
@@ -225,8 +225,8 @@ function hitGhost(p, rad) {
 TALKERS.R = {
   make: makePriest,
   update: updatePriest,
-  // a red "!" while he winds up to spray
-  warn: e => (e.st === 'wind' ? { c: HEX.tie, k: clamp(1 - e.t / PRIEST_WIND, 0, 1), cue: 'R' } : null),
+  // a maroon "!" while he winds up to spray
+  warn: e => (e.st === 'wind' ? { c: HEX.maroon, k: clamp(1 - e.t / PRIEST_WIND, 0, 1), cue: 'R' } : null),
   // the soft lock aims at his ghosts one by one, while he stands and they are out
   aimParts: (e, aim) => {
     for (const g of e.ghosts) if (!(g.wait > 0 || e.dazedT > 0)) aim(g.m.position, g.tgt);
