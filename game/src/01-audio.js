@@ -3,13 +3,24 @@
 const AUDIO = { ctx: null, master: null, muted: false, drone: [], at: null, vol: 1 }, // vol: the VOL share of the SFX entry playing
   MASTER_GAIN = 0.75,
   SOUND_NEAR = 4; // full volume within this many metres
+const BARK_FADE = 0.35; // Bruno's bark keeps this share of the usual fade with distance (10 m: 64% loud, other sounds 28%)
+// the knuckle cracks of a struck-down insult: [when, click pitch, loudness], a little uneven like real fingers
+const KNUCKLE_CRACKS = [
+  [0, 2600, 0.55],
+  [0.031, 3300, 0.45],
+  [0.055, 2200, 0.5],
+  [0.092, 3000, 0.4],
+  [0.118, 2500, 0.45],
+  [0.162, 1900, 0.35]
+];
 // how loud each named sound plays: an SFX entry by its name, a recorded clip by its file's (1, or left out: as it is made). The
 // one place to turn a sound up or down
 const VOL = {
   pop: 0.5, // a Priest's ghost
   shadePop: 0.5,
   death_exhale: 0.3, // Red Cap's last breath
-  vomit: 0.6 // the Priest's spray
+  vomit: 0.6, // the Priest's spray
+  bark: 1.95 // Bruno's insults: as loud as a hit landing
 };
 function distanceGain(p) {
   if (!p) return 1;
@@ -168,10 +179,25 @@ const SFX = {
     playNoise({ dur: 0.5, f: 900, f2: 120, type: 'lowpass', gain: 0.5 });
   },
   bark() {
-    // Bruno's insults: a short rough snap, like a curse spat out
-    playTone({ f: 210, f2: 95, dur: 0.16, type: 'sawtooth', gain: 0.24, filt: [1400, 380] });
-    playNoise({ dur: 0.09, f: 1600, f2: 700, q: 1.4, gain: 0.22 });
-    playTone({ f: 75, f2: 50, dur: 0.12, gain: 0.3 });
+    // Bruno's insults: a short rough snap, like a curse spat out; it fades only a little with distance (he insults from
+    // afar: BARK_FADE) and sits high enough for phone speakers
+    const at = AUDIO.at,
+      vol = AUDIO.vol;
+    AUDIO.vol *= Math.pow(distanceGain(at), BARK_FADE);
+    AUDIO.at = null;
+    playTone({ f: 420, f2: 190, dur: 0.18, type: 'sawtooth', gain: 0.34, filt: [1900, 700] });
+    playNoise({ dur: 0.1, f: 2400, f2: 900, q: 1.2, gain: 0.32 });
+    playTone({ f: 150, f2: 90, dur: 0.14, gain: 0.28 });
+    AUDIO.at = at;
+    AUDIO.vol = vol;
+  },
+  knuckles() {
+    // one of Bruno's insults struck down: knuckles cracked fast (dry clicks, each with a little bony pop), not the
+    // pyramids' glass; a fixed rhythm, so it rolls no dice
+    for (const [t, f, g] of KNUCKLE_CRACKS) {
+      playNoise({ dur: 0.016, f, q: 1.6, gain: g, at: t, a: 0.001 });
+      playTone({ f: f / 3, f2: f / 10, dur: 0.022, gain: g * 0.45, at: t, a: 0.001 });
+    }
   },
   growl() {
     playTone({ f: 70, f2: 55, dur: 0.8, type: 'sawtooth', gain: 0.2, filt: [400, 200] });

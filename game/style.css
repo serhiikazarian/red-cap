@@ -113,7 +113,7 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 @media (prefers-reduced-motion: reduce) { #cutting .snip, #card.enter .sheet { animation: none; } }
 
 /* Screens */
-.screen { position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(13,11,10,.8); }
+.screen { position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto; overflow-x: hidden; padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: rgba(13,11,10,.8); } /* never sideways: a tilted sheet's corner and shadow poke out a few px, and phones drew a grey scrollbar under the menu */
 .sheet { position: relative; width: min(760px, 100%); background: var(--paper); color: var(--ink); padding: clamp(20px, 4vw, 40px); transform: rotate(-.7deg); box-shadow: 8px 10px 0 rgba(0,0,0,.55); }
 .sheet::before { content: ""; position: absolute; left: 6%; right: 6%; top: -9px; height: 18px; background: repeating-linear-gradient(90deg, transparent 0 22px, var(--muted) 22px 30px); border-radius: 4px; }
 .sheet h1 { font-family: var(--display); font-weight: 400; font-size: clamp(3rem, 12vw, 6.4rem); line-height: .9; margin: 0; color: var(--cap); text-wrap: balance; letter-spacing: .01em; }
@@ -182,7 +182,7 @@ button:focus, button:focus-visible { outline: none; }
 .cat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; align-content: start; min-height: 0; overflow-y: auto; overscroll-behavior: contain; } /* scrolls only if a row cannot fit (catLayout pages the rest) */
 .cat-card { margin: 0; position: relative; display: grid; gap: 4px; justify-items: center; align-content: start; text-align: center; padding: 10px 8px 12px; border: 2px solid var(--ink); background: var(--sheet); transform: rotate(var(--r, 0deg)); box-shadow: 3px 3px 0 rgba(13,11,10,.25); }
-.cat-card img { height: clamp(52px, 11vh, 88px); width: auto; max-width: 100%; object-fit: contain; }
+.cat-card img { height: clamp(52px, 11vh, 88px); width: auto; max-width: 100%; object-fit: contain; transform: scale(var(--s, 1)); transform-origin: 50% 100%; } /* --s grows a picture into the card's top padding, the layout unmoved */
 .cat-card .nm { font-family: var(--display); font-size: 1.05rem; line-height: 1.1; }
 .cat-card .fl { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
 .cat-floor { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); padding-bottom: 4px; }

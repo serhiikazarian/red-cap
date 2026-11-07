@@ -62,8 +62,7 @@ function hitWord(p, rad) {
     b.life = 0; // updateShots bursts it and takes it away
     hit = true;
     burst(b.s.position.clone(), [COL.hot, COL.paper, COL.ink], 14, 5, 0.18);
-    playNoise({ dur: 0.18, f: 3200, f2: 1200, q: 2, gain: 0.22 });
-    SFX.tink();
+    SFX.knuckles();
   }
   return hit;
 }

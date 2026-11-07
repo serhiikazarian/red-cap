@@ -467,3 +467,22 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   Smoker's lit lines stay yellow. The big EXPOSED / UNMASKED call-outs stay; the Geezer's big MISSED is gone.
 - The waking-up page's headline reads "Wake up! Grab a brush" (was "Wake up. Damn!").
 - Title label `v1.49`.
+
+## 1.50 (7 Nov 2026)
+- The catalogue opened with a controller (from the ending or the title) picks the "next page" button, as the keyboard and
+  mouse already did; it picked "Back" (`padMenu`: on the catalogue `pnext` comes before the main button).
+- In the catalogue the Smoker's picture is drawn smaller (0.88) and Brainless the Second's bigger (1.12): `CAT_PIC_SCALE`,
+  CSS `--s` on `.cat-card img`, scaled from the picture's foot so the cards and pages lay out as before.
+- Menus on phones lost the grey line along the bottom: a tilted sheet's corner and shadow stuck out of the screen by a few
+  pixels, so the menu scrolled sideways and the phone drew its scrollbar there (`.screen` `overflow-x: hidden`).
+- Bruno's insult bark is heard: it was low (50–210 Hz, which phone speakers hardly play) and faded with distance while he
+  insults only from 7 m out, about 22 dB under what it is now at 10 m. Now the same snap an octave up, at full loudness
+  wherever Red Cap is (`SFX.bark`, `AUDIO.at = null`), as loud as a hit landing (`VOL.bark` 1.95).
+- Striking down one of Bruno's insults cracks knuckles: six dry clicks, each with a little bony pop, over 0.17 s
+  (`SFX.knuckles`, `KNUCKLE_CRACKS`, a fixed rhythm with no dice); it was a hiss and a glassy tink. The pyramids keep their glass.
+- Title label `v1.50`.
+
+## 1.51 (7 Nov 2026)
+- Bruno's bark fades a little with distance: it keeps 35% of the usual fade (`BARK_FADE`), so 76% loud at 7 m, 64% at
+  10 m, 52% at 15 m (other sounds: 46%, 28%, 16%); in 1.50 it did not fade at all.
+- Title label `v1.51`.
