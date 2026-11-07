@@ -453,4 +453,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   skipped while an important hint shows (the door lines, bosses, talkers' tricks) and come back the next time they happen
   (`toast(msg, ms, how)`: `'minor'`, `'aside'` = minor and plain; it returns whether it showed). The bear trap and
   "Soaked." keep the yellow box.
+- The yellow box fades a little as it slides in and out (opacity over .3 s each way, was a blink).
+- Floors two and three open with a yellow-box hint a second after the card: "You can talk the talk..." and "Can you walk
+  the walk?.." (`FLOORS` field `opening`; once a game, not on a retry, like floor one's "How did I get here?": `openingsSaid`
+  in 60-flow).
 - Title label `v1.49`.

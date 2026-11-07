@@ -64,8 +64,8 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #boss .fill { height: 100%; background: var(--cap); width: 100%; transition: width .2s; }
 /* the hint: a yellow comic caption box, slides in from the left and off to the right (07-hud toast / toastOff) */
 #toast { justify-self: center; align-self: end; font-family: var(--display); font-size: clamp(1.3rem, 4.2vw, 2.25rem); line-height: 1.2; color: var(--ink); background: var(--bile); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); padding: .12em .65em .18em; opacity: 0; transform: translate(-60vw, -2vh) rotate(-6deg); text-align: center; max-width: min(82vw, 900px); }
-#toast.on { opacity: 1; transform: translateY(-2vh) rotate(-1.5deg); transition: transform .42s cubic-bezier(.2, 1.35, .45, 1), opacity .12s; }
-#toast.out { opacity: 0; transform: translate(60vw, -2vh) rotate(3deg); transition: transform .3s ease-in, opacity .1s .2s; }
+#toast.on { opacity: 1; transform: translateY(-2vh) rotate(-1.5deg); transition: transform .42s cubic-bezier(.2, 1.35, .45, 1), opacity .3s ease-out; }
+#toast.out { opacity: 0; transform: translate(60vw, -2vh) rotate(3deg); transition: transform .3s ease-in, opacity .3s ease-in; }
 @media (prefers-reduced-motion: reduce) { #toast, #toast.out { transform: translateY(-2vh) rotate(-1.5deg); } #toast.on, #toast.out { transition: opacity .4s; } }
 #toast.plain { background: none; border-color: transparent; box-shadow: none; padding: 0; color: var(--paper); font-size: clamp(1.45rem, 4.6vw, 2.5rem); line-height: 1.25; text-shadow: 3px 3px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink); transform: translateY(-2vh); transition: opacity .4s; } /* toast(msg, ms, true): the old hint, outlined lettering that fades */
 .hud-bottom { display: flex; justify-content: flex-end; align-items: end; gap: 16px; }

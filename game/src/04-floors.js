@@ -3,7 +3,7 @@
 //   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
 //   talkers: B Usher  q Shade  Y Geezer  G Grin  R Priest  Z Bruno  U Grump  S Smoker  W Brainless the Second  M Jester
 // Other fields: the look (fog, bg, amb, hemi, lamp, floor and wall paintings, wallH), raised ground (raise, ramps), the drone,
-// deco (which decor set builds the floor), and tuning: drop odds per talker, hidden hearts and pebble piles, placedHearts (the
+// deco (which decor set builds the floor), opening (a yellow-box hint as the floor begins, once a game), and tuning: drop odds per talker, hidden hearts and pebble piles, placedHearts (the
 // chance each heart lying in the level, an 'h' or a hidden one, is there: fresh each time the floor starts), cages, sizes.
 const FLOORS = [
   {
@@ -67,6 +67,7 @@ const FLOORS = [
     num: 'Floor two',
     name: 'The Mouth',
     line: 'Flyin’ faces that spit fire. A priest who blesses with blood. Bruno, burnin’.',
+    opening: 'You can talk the talk...',
     fog: 0x1e0706,
     near: 4,
     far: 30,
@@ -122,6 +123,7 @@ const FLOORS = [
     num: 'Floor three',
     name: 'Stop Talkin’ Sh#t',
     line: 'The Wall is shoutin’. The Head is smokin’. The Jester waits behind the gate.',
+    opening: 'Can you walk the walk?..',
     fog: 0xb9b2a5,
     near: 6,
     far: 40,
