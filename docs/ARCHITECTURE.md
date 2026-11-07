@@ -125,11 +125,15 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   `playClip` starts a clip at its share.
 - Where a sound comes from: `AUDIO.at`; the loop sets it to each talker's position around its update, and sounds scale by
   `distanceGain(AUDIO.at)`. `hurtHero` clears it, so Red Cap's own sounds never fade. A long clip that follows its source keeps `.at`
-  (`sprayFollow`). The Jester's laugh and the Grump are never distance-faded.
+  (`sprayFollow`). The Jester's laugh and the Grump are never distance-faded; Bruno's bark keeps only `BARK_FADE` of the fade.
+- A fixed-rhythm sound (`KNUCKLE_CRACKS`, Bruno's struck-down insults) rolls no dice: `SFX` entries run even without audio
+  (replays), so a `rand` in one would shift the seeded rolls.
 
 ## Loading and flow (60-flow, 61-menus, 64-loop)
 - Menu focus: arrows / Tab / WASD move it, Enter / Space press the focused button; it follows the mouse only onto another
   button (`hoverBtn`). One red at a time: the focused button; the music button is also red while hovered, unless another button has the focus.
+  A controller picks the page's main button, else "next" (`padMenu`); on the catalogue "next" first, as the keyboard does.
+  `.screen` never scrolls sideways (`overflow-x: hidden`): a tilted sheet pokes out a few px and phones drew a scrollbar.
 - Phones (`touchUI`, pointer coarse) play on their side: upright, `#turn` covers everything and play pauses. Short windows
   (under 520 px tall) get compact paged sheets (catalogue, win); `catLayout` fits whole rows of cards per page.
 - Menu buttons and the exit door enter a floor in steps: `state` `'leave'` (the ink veil, 0.36 s) → `'build'` (the paper scrap
