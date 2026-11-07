@@ -6,6 +6,7 @@
   --tie: #d8212a;        /* the red tie, used for health */
   --bile: #f0cf2e;       /* the yellow paint dabs (COL.bile in the code) */
   --smoke: #8d8579;      /* charcoal smudge */
+  --orange: #ff8a1f;     /* a boss open to attack: the boss bar's Unprotected, Winded, Unmasked */
   --alarm: #ff3b30;      /* the urgent red: 1 TALKER LEFT, Attack him! */
   --sheet: #f6f1e6;      /* a lighter paper: catalogue stamps, buttons under the controller's focus */
   --muted: #9a948a;      /* small grey labels */
@@ -60,6 +61,7 @@ body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(
 #boss .name { font-family: var(--display); font-size: 1.2rem; text-shadow: 2px 2px 0 var(--ink); }
 #boss .state { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; min-height: 1em; text-shadow: 1px 1px 0 var(--ink); }
 #boss .state.open { color: var(--bile); }
+#boss .state.orange { color: var(--orange); }
 #boss .bar { height: 12px; background: rgba(13,11,10,.75); border: 2px solid var(--paper); margin-top: 4px; transform: rotate(-.6deg); }
 #boss .fill { height: 100%; background: var(--cap); width: 100%; transition: width .2s; }
 /* the hint: a yellow comic caption box, slides in from the left and off to the right (07-hud toast / toastOff) */

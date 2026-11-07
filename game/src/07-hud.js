@@ -42,7 +42,7 @@ function quietScreen() {
   $('#lastCall').classList.remove('on');
   toastOff();
 }
-// a big word in the middle of the screen (HOT, MISSED, FRENZY ...), with an optional smaller line under it
+// a big word in the middle of the screen (HOT, FRENZY, GAZING ...), with an optional smaller line under it
 function bigWord(text, color, size = 1, under = '', underColor = '') {
   const el = $('#bigWord');
   el.style.fontSize = size === 1 ? '' : `clamp(${(2.4 * size).toFixed(3)}rem, ${(8 * size).toFixed(3)}vw, ${(5.4 * size).toFixed(3)}rem)`;
@@ -106,12 +106,14 @@ function bossBar(e) {
     bossFill = fp;
     HUD.bossFill.style.width = fp + '%';
   }
-  // the status under the bar: [text, lit, word]. lit highlights the line; word ("now's your chance": EXPOSED, UNMASKED…)
-  // flashes big mid-screen once as that state begins, and the line stays empty while it lasts
+  // the status under the bar: [text, lit, word]. lit: true highlights the line yellow, 'orange' marks a boss open to attack
+  // (Unprotected, Winded, Unmasked); word ("now's your chance": EXPOSED, UNMASKED) flashes big mid-screen once as that
+  // state begins
   const T = TALKERS[e.type],
     [text, lit, word = null] = (T && T.bar && T.bar(e)) || ['', false];
   setText(HUD.bossState, text);
-  HUD.bossState.classList.toggle('open', lit);
+  HUD.bossState.classList.toggle('open', lit === true);
+  HUD.bossState.classList.toggle('orange', lit === 'orange');
   if (word && word !== bossWord) bigWord(word, HEX.bile, 1, 'Attack him!');
   bossWord = word;
 }
