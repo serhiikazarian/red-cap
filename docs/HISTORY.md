@@ -496,4 +496,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 ## 1.53 (7 Nov 2026)
 - Floor one is renamed *The Newsroom* (was *The Usher’s Corridor*): the HUD, the floor card and the floor picker show it.
   In code its decor set is `deco: 'newsroom'` and the `corridor*` builders are `newsroom*`. Its intro line is unchanged.
+- Floor two's paper trail to the open door is white (`trail: COL.paper`, a new `FLOORS` field; without it the trail keeps
+  the floor's `words` colour), not yellow; its wall doodles stay yellow.
 - Title label `v1.53`.
