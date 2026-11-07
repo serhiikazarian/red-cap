@@ -8,7 +8,7 @@
 const FLOORS = [
   {
     num: 'Floor one',
-    name: 'The Usher’s Corridor',
+    name: 'The Newsroom',
     line: 'Three bow-tied ushers. At the end of the corridor, the Geezer, who stares people mad.',
     fog: 0x10140b,
     near: 4,
@@ -28,7 +28,7 @@ const FLOORS = [
     walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble'],
     wallH: [3.2, 5.5],
     words: COL.paper,
-    deco: 'corridor',
+    deco: 'newsroom',
     camThruFloaters: true, // the drifting faces, glasses and boxes never push the camera in (they only fade)
     plainFloaters: true, // its floaters fade without a contour (56-see-through)
     yaw: Math.PI,

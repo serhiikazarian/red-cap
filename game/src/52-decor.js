@@ -124,12 +124,12 @@ function guidePath(F, rng) {
   G.pathSet = new Set(cells.map(c => c.join(',')));
   if (cells.length < 3) return;
   const K = brazierKit(),
-    corridor = F.deco === 'corridor',
-    gt = corridor ? glowTex('#fff2b0', 'rgba(232,198,40,.55)') : fireTex;
-  if (corridor) OWN.add(gt);
+    newsroom = F.deco === 'newsroom',
+    gt = newsroom ? glowTex('#fff2b0', 'rgba(232,198,40,.55)') : fireTex;
+  if (newsroom) OWN.add(gt);
   const L = {
       K,
-      corridor,
+      newsroom,
       glowM: new THREE.SpriteMaterial({ map: gt, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 })
     },
     light = (px, pz) => guideLamp(L, px, pz);
@@ -153,13 +153,13 @@ function guidePath(F, rng) {
   for (const sd of [-1, 1]) {
     const px = cx - dz * sd * 1.25,
       pz = cz + dx * sd * 1.25;
-    if (corridor) light(px, pz);
+    if (newsroom) light(px, pz);
     else if (wallDist(px, pz) > 0.5 && clearOf(px, pz, 0.5)) brazier(px, heightAt(px, pz), pz, 0.9);
   }
 }
 // one route light at (px, pz), unless it would stand in a wall, on a ramp, in a prop or in clutter: a brass footlight on the first floor,
 // a stake with a burning tip (hot to touch) on the second
-function guideLamp({ K, corridor, glowM }, px, pz) {
+function guideLamp({ K, newsroom, glowM }, px, pz) {
   const [pix, piz] = cellOf(px, pz);
   if (
     solid(pix, piz) ||
@@ -173,7 +173,7 @@ function guideLamp({ K, corridor, glowM }, px, pz) {
   const g = still(new THREE.Group());
   g.position.set(px, heightAt(px, pz), pz);
   G.group.add(g);
-  if (corridor) {
+  if (newsroom) {
     const b = new THREE.Mesh(K.foot, K.brass);
     b.position.y = 0.07;
     g.add(b);
@@ -190,8 +190,8 @@ function guideLamp({ K, corridor, glowM }, px, pz) {
     G.hot.push({ x: px, z: pz, r: 0.45 });
   }
   const sp = new THREE.Sprite(glowM);
-  sp.position.y = corridor ? 0.3 : 1.05;
-  sp.scale.setScalar(corridor ? 0.7 : 0.65);
+  sp.position.y = newsroom ? 0.3 : 1.05;
+  sp.scale.setScalar(newsroom ? 0.7 : 0.65);
   g.add(sp);
 }
 // clutter along the walls: newspaper stacks and chairs on the first floor, rubble, stakes and barrels on the second
@@ -218,7 +218,7 @@ function clutter(F, rng) {
     g.rotation.y = yaw + (rng() - 0.5) * 0.6;
     G.group.add(g);
     const pick3 = rng();
-    if (F.deco === 'corridor') (pick3 < 0.55 ? paperStack : clutterChair)(g, rng, M);
+    if (F.deco === 'newsroom') (pick3 < 0.55 ? paperStack : clutterChair)(g, rng, M);
     else (pick3 < 0.5 ? rubbleHeap : pick3 < 0.8 ? stakeBundle : clutterBarrel)(g, rng, M);
     G.clutter.push({ x: px, z: pz, r: 0.38 });
   });

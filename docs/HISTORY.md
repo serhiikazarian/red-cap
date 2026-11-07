@@ -492,3 +492,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   when off screen): the Priest's is maroon (`COL.maroon`, new) through his KNEEL wind-up before he vomits (`PRIEST_WIND` 0.8 s), the Jester's
   white on black through his wind-up before a charge, pulsing faster over its last 0.8 s (`JESTER_WARN`; his feints show it too).
 - Title label `v1.52`.
+
+## 1.53 (7 Nov 2026)
+- Floor one is renamed *The Newsroom* (was *The Usher’s Corridor*): the HUD, the floor card and the floor picker show it.
+  In code its decor set is `deco: 'newsroom'` and the `corridor*` builders are `newsroom*`. Its intro line is unchanged.
+- Title label `v1.53`.

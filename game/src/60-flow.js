@@ -551,7 +551,7 @@ function toTitle() {
 }
 // ----- the title's slideshow: Serj's paintings drifting slowly, one after another
 const SLIDES = [
-  // [asset, drift: start and end scale, then x / y offsets in %]  1 the Ushers' corridor, 2 the Geezer, 3 the Mouth, 4 the Priest, 5 the Grump
+  // [asset, drift: start and end scale, then x / y offsets in %]  1 the Newsroom, 2 the Geezer, 3 the Mouth, 4 the Priest, 5 the Grump
   ['slide_1', [1.06, 1.13, 1.5, -0.5, -1.5, 0.5]],
   ['slide_2', [1.14, 1.06, 0, 1.2, 0, -0.8]],
   ['slide_3', [1.05, 1.12, -1.2, 0, 1.2, -1]],
