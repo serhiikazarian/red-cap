@@ -586,7 +586,7 @@ TALKERS.M = {
   make: makeJester,
   update: updateJester,
   totemProof: true,
-  bar: e => (e.masked ? ['Masked', false] : ['Unmasked', 'orange', e.callOut ? 'UNMASKED' : null]),
+  bar: e => (e.masked ? ['Immune', false] : ['Unmasked', 'orange', e.callOut ? 'UNMASKED' : null]),
   struck: jesterBlow,
   stagger: 0.12,
   knock: 2,
