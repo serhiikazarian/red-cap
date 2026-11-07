@@ -9,7 +9,8 @@ const VOL = {
   pop: 0.5, // a Priest's ghost
   shadePop: 0.5,
   death_exhale: 0.3, // Red Cap's last breath
-  vomit: 0.6 // the Priest's spray
+  vomit: 0.6, // the Priest's spray
+  bark: 1.95 // Bruno's insults: as loud as a hit landing
 };
 function distanceGain(p) {
   if (!p) return 1;
@@ -168,10 +169,14 @@ const SFX = {
     playNoise({ dur: 0.5, f: 900, f2: 120, type: 'lowpass', gain: 0.5 });
   },
   bark() {
-    // Bruno's insults: a short rough snap, like a curse spat out
-    playTone({ f: 210, f2: 95, dur: 0.16, type: 'sawtooth', gain: 0.24, filt: [1400, 380] });
-    playNoise({ dur: 0.09, f: 1600, f2: 700, q: 1.4, gain: 0.22 });
-    playTone({ f: 75, f2: 50, dur: 0.12, gain: 0.3 });
+    // Bruno's insults: a short rough snap, like a curse spat out; it fills the floor (never quieted by distance: he insults
+    // from afar) and sits high enough for phone speakers
+    const at = AUDIO.at;
+    AUDIO.at = null;
+    playTone({ f: 420, f2: 190, dur: 0.18, type: 'sawtooth', gain: 0.34, filt: [1900, 700] });
+    playNoise({ dur: 0.1, f: 2400, f2: 900, q: 1.2, gain: 0.32 });
+    playTone({ f: 150, f2: 90, dur: 0.14, gain: 0.28 });
+    AUDIO.at = at;
   },
   growl() {
     playTone({ f: 70, f2: 55, dur: 0.8, type: 'sawtooth', gain: 0.2, filt: [400, 200] });

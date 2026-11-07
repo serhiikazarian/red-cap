@@ -475,4 +475,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   CSS `--s` on `.cat-card img`, scaled from the picture's foot so the cards and pages lay out as before.
 - Menus on phones lost the grey line along the bottom: a tilted sheet's corner and shadow stuck out of the screen by a few
   pixels, so the menu scrolled sideways and the phone drew its scrollbar there (`.screen` `overflow-x: hidden`).
+- Bruno's insult bark is heard: it was low (50–210 Hz, which phone speakers hardly play) and faded with distance while he
+  insults only from 7 m out, about 22 dB under what it is now at 10 m. Now the same snap an octave up, at full loudness
+  wherever Red Cap is (`SFX.bark`, `AUDIO.at = null`), as loud as a hit landing (`VOL.bark` 1.95).
 - Title label `v1.50`.
