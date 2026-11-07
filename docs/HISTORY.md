@@ -459,5 +459,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   in 60-flow).
 - Shades never say F#CK when hit: their own words SH#T!, SHUT IT, STFU (`TALKERS.q.curses`; the others keep `CURSES` in
   20-talkers, the same one dice roll).
-- The Geezer's hint reads "Avoid his gaze." (was "Avoid Geezer's gaze.").
+- The Geezer's hint reads "Avoid his gaze." (was "Avoid Geezer's gaze."); the Jester's "Immune when masked. Ring totems."
+  (was "Ring a totem.").
 - Title label `v1.49`.
