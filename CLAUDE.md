@@ -41,7 +41,8 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
 ## Rules that bite
 - **Load rule:** anything new is prepared on the loading screen, never mid-game: a new material/shader variant gets a
   stand-in in `warmSet()` (same type, flags, `onBeforeCompile`), a texture goes in `warmUp()`'s `texs`, a floating word in
-  `WORDS_FLOOR`. Verify `renderer.info.programs` unchanged after `beginFloor`.
+  `WORDS_FLOOR` (word sprites only via `wordMat`). Verify `renderer.info.programs` unchanged after `beginFloor` and no
+  `linkProgram` in play (a shader whose last material is disposed is rebuilt at its next use, at the same count).
 - Refactors keep every random roll in order (seeded replays). Layout rng: `mulberry(seed)` per floor; per-start picks
   `Math.random`.
 - No `//` mid-line before code (use `/* */`). GLSL: no names `flat`, `smooth`, `in`, `out`, `sample`; `smoothstep(a,b,x)`
