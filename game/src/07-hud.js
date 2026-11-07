@@ -9,7 +9,7 @@ function toast(msg, ms) {
   if (!(t.classList.contains('on') && t.textContent === msg)) {
     t.textContent = msg;
     t.classList.remove('on', 'out');
-    void t.offsetWidth; /* restart the slide-in */
+    void t.offsetWidth; /* back off the left edge at once (no transition there), then slide in */
     t.classList.add('on');
   }
   clearTimeout(toastT);
