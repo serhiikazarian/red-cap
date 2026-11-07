@@ -298,6 +298,28 @@ function puffDepths() {
     p.k = lo;
   }
 }
+// on: each puff draw not in use holds one puff of no size, clear, far below the floor, so the loading screen's hidden frame
+// (warmUp) draws it: its buffers are made and its first draw is done before play (floor one's smoke starts as play does);
+// off: those go back to none
+const PUFF_WARM_Y = -50;
+function puffWarm(on) {
+  for (const m of PUFF_MESHES) {
+    const g = m.geometry;
+    if (on && !m.visible) {
+      m.userData.warm = true;
+      m.visible = true;
+      m.position.set(0, PUFF_WARM_Y, 0);
+      g.attributes.aPos.array.fill(0, 0, 3);
+      g.attributes.aSro.array.fill(0, 0, 3);
+      g.attributes.aPos.needsUpdate = g.attributes.aSro.needsUpdate = true;
+      g.instanceCount = 1;
+    } else if (!on && m.userData.warm) {
+      m.userData.warm = false;
+      m.visible = false;
+      g.instanceCount = 0;
+    }
+  }
+}
 // one draw per group of puffs between two such things, nearest group first; past PUFF_DRAWS the farthest groups share the last draw
 function puffGroups() {
   for (const l of puffOrder) l.length = 0;

@@ -504,7 +504,12 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Title label `v1.53`.
 
 ## 1.54 (7 Nov 2026)
-- The loading scrap hands over to the floor card in a crossfade: it fades out (`scrapOut`, `#cutting.out`, `SCRAP_OUT_MS`
-  0.35 s) as the card fades in, now with no delay (`cardIn` lost its 0.12 s). Before, the scrap vanished at once and the
-  card came 0.12 s later, so the bare ink veil showed alone for a moment.
+- No stutter as the first floor's card comes in: the smoke puffs' eight draws (`PUFF_MESHES`) stood hidden until the first
+  puff, so floor one's smoke, starting with play's loop, sent their buffers and made their first draws right then. The
+  loading screen's hidden frame now draws each with a puff of no size (`puffWarm`, 06-fx, around `warmUp`'s render).
+- The resolution kept by `tune` is drawn before the floor opens: the opening view, as the main loop draws it (`worldLook`,
+  64-loop: the lamp and the camera with its see-through), `TUNE_HOLD` 8 frames (at most `TUNE_HOLD_MAX` 1 s) under the
+  scrap (`tuneHold`). Before, its buffers were made on the floor's first frame.
+- The floor's card text and the HUD are laid out under the veil as that hold begins (`floorDress`), not on the first frame.
+- The scrap still hands over to the card as before (1.54's prerelease crossfade is gone).
 - Title label `v1.54`.
