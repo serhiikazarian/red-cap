@@ -19,7 +19,7 @@ const VOL = {
   pop: 0.5, // a Priest's ghost
   shadePop: 0.5,
   death_exhale: 0.3, // Red Cap's last breath
-  vomit: 0.6, // the Priest's spray
+  vomit: 0.6, // Priest's spray
   bark: 1.95 // Bruno's insults: as loud as a hit landing
 };
 function distanceGain(p) {
@@ -303,7 +303,7 @@ for (const [name, play] of Object.entries(SFX))
     play(...args);
     AUDIO.vol = was;
   };
-// the Priest's spray: one looping clip whose loudness follows him
+// Priest's spray: one looping clip whose loudness follows him
 let sprayNode = null;
 function sprayStart() {
   if (sprayNode) return;

@@ -65,7 +65,7 @@ const CATALOGUE = [
   ['ghost_a', 'Shade', 'Floor one', 'Harmless. Says boo and pinches your pebbles.'],
   ['geezer', 'The Geezer', 'Floor one', 'Stares people mad. Mostly himself, in mirrors.'],
   ['grin', 'Grin', 'Floor two', 'A face on fire that never stops smilin’.'],
-  ['priest', 'The Priest', 'Floor two', 'God loves his children. The blessings are wet.'],
+  ['priest', 'Priest', 'Floor two', 'God loves his children. The blessings are wet.'],
   ['bruno', 'Bruno', 'Floor two', 'Burns alive and calls you stupid. Madone!'],
   ['smoker', 'Smoker', 'Floor three', 'Hides in his own smoke. Psst.'],
   ['smoker', 'Brainless the Second', 'Floor three', 'Bigger, smokier, never stops coughin’.'],

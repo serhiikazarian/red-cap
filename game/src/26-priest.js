@@ -1,4 +1,4 @@
-// The Priest (R): floor two's boss. God loves his children; the blessings are wet.
+// Priest (R): floor two's boss. God loves his children; the blessings are wet.
 // Three little ghosts circle him and shield him while any is left (pop them: they rise again 7 s after the last one goes).
 // He sprays blood from his mouth (KNEEL), and close up rains it inside a red circle (PREY). Blood soaks Red Cap (half speed).
 const PRIEST_GHOST = 1.8, // his ghosts' size
