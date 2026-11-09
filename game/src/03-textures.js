@@ -242,7 +242,23 @@ function glowTex(inner, outer) {
   x.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(c);
 }
-let waveTex, fireTex, glowRed, violetTex, fogNoiseTex; // made at boot
+let waveTex, fireTex, glowRed, violetTex, spikeTex, fogNoiseTex; // made at boot
+// a Grin's thorn, foot (bottom) to tip (top): see-through lavender heating to violet, then black ink
+function spikeFootTex() {
+  const c = document.createElement('canvas');
+  c.width = 4;
+  c.height = 64;
+  const x = c.getContext('2d'),
+    g = x.createLinearGradient(0, 64, 0, 0);
+  g.addColorStop(0, 'rgba(247,219,255,0)');
+  g.addColorStop(GRIN_SPIKE_INK * 0.35, 'rgba(230,190,255,.7)');
+  g.addColorStop(GRIN_SPIKE_INK * 0.7, 'rgba(132,44,232,.95)');
+  g.addColorStop(GRIN_SPIKE_INK, HEX.ink);
+  g.addColorStop(1, HEX.ink);
+  x.fillStyle = g;
+  x.fillRect(0, 0, 4, 64);
+  return new THREE.CanvasTexture(c);
+}
 // the Grump's shout ring: a yellow zigzag band with STOP TALKIN' SH#T, two to a tile
 function makeWaveTex() {
   const c = document.createElement('canvas');

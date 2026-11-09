@@ -539,3 +539,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   1.49, comes back with new words; `24-geezer.js`). His boss bar still says Winded.
 - Grins are spiky: 12 black ink thorns stick out all round the burning ball, like a sea urchin's, and fade with it when it
   dies (`grinSpikeGeo`, `GRIN_SPIKE_*`, `25-grin.js`).
+
+## 1.59 (9 Nov 2026)
+- A Grin's thorns melt into the ball: each foot is see-through lavender heating to violet, then solid black ink from 30% of
+  its length (`spikeTex`, `GRIN_SPIKE_INK`); thorns a little longer (`GRIN_SPIKE_LEN` 1.1, was 0.95) so the black part
+  keeps its 1.58 size. Built with `mergeGeos`.
