@@ -43,7 +43,8 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   stand-in in `warmSet()` (same type, flags, `onBeforeCompile`), a texture goes in `warmUp()`'s `texs`, a floating word in
   `WORDS_FLOOR`. Verify `renderer.info.programs` unchanged after `beginFloor`.
 - Refactors keep every random roll in order (seeded replays). Layout rng: `mulberry(seed)` per floor; per-start picks
-  `Math.random`.
+  `Math.random`; a look with fixed randomness uses its own `mulberry`. A texture or material made at boot takes dice for its
+  id: make it after `makeFogNoise()`.
 - No `//` mid-line before code (use `/* */`). GLSL: no names `flat`, `smooth`, `in`, `out`, `sample`; `smoothstep(a,b,x)`
   needs a < b.
 - Player text: -ing as -in’ (not Sling/Ring/String). Censored: SH#T, F#CK.

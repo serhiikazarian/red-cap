@@ -5,7 +5,7 @@
 // each of those driven into a scorched, white-hot socket. The ones behind the outline draw before the ball, which hides their
 // feet; the front ones (and their sockets) after it.
 // Their places, sizes and tilts come from fixed dice (GRIN_SPIKE_SEED), never the game's: replays keep their rolls.
-const GRIN_SPIKES = 14, // thorns on the ball
+const GRIN_SPIKES = 12, // thorns on the ball
   GRIN_SPIKE_SEED = 23, // the dice for where they stand, how long, thick and crooked they are
   GRIN_SPIKE_JIT = 0.4, // how far a thorn strays from its even place round the ball, as a share of the gap (never touching)
   GRIN_SPIKE_SWAP = 0.2, // thorns take turns, front and rim; this share of them breaks the turn
@@ -18,6 +18,50 @@ const GRIN_SPIKES = 14, // thorns on the ball
   GRIN_SOCKET = 2.2; // a socket's radius, in thorn foot radii
 // a thorn's foot, as a share of its length: see-through, white-hot, violet, then solid ink from GRIN_SPIKE_INK on
 const GRIN_SPIKE_INK = 0.3;
+let spikeTex, socketTex; // made at boot, after the textures drawn at random (a texture's id takes dice too)
+// a Grin's thorn, foot (bottom) to tip (top): see-through, white-hot, violet, then black ink
+function spikeFootTex() {
+  const c = document.createElement('canvas');
+  c.width = 4;
+  c.height = 64;
+  const x = c.getContext('2d'),
+    g = x.createLinearGradient(0, 64, 0, 0);
+  g.addColorStop(0, 'rgba(255,244,255,0)');
+  g.addColorStop(GRIN_SPIKE_INK * 0.25, 'rgba(255,244,255,.95)');
+  g.addColorStop(GRIN_SPIKE_INK * 0.6, 'rgba(132,44,232,.95)');
+  g.addColorStop(GRIN_SPIKE_INK, HEX.ink);
+  g.addColorStop(1, HEX.ink);
+  x.fillStyle = g;
+  x.fillRect(0, 0, 4, 64);
+  return new THREE.CanvasTexture(c);
+}
+// the scorched socket a Grin's thorn is driven into: a white-hot middle, a dark burnt ring, a thin glowing crack round it
+// (its wobble from fixed dice, never the game's)
+function socketFootTex() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const x = c.getContext('2d'),
+    g = x.createRadialGradient(32, 32, 0, 32, 32, 32),
+    dice = mulberry(5);
+  g.addColorStop(0, 'rgba(255,244,255,1)');
+  g.addColorStop(0.16, 'rgba(236,200,255,.95)');
+  g.addColorStop(0.3, 'rgba(132,44,232,.9)');
+  g.addColorStop(0.42, 'rgba(13,11,10,.6)');
+  g.addColorStop(0.7, 'rgba(13,11,10,.3)');
+  g.addColorStop(1, 'rgba(13,11,10,0)');
+  x.fillStyle = g;
+  x.fillRect(0, 0, 64, 64);
+  x.strokeStyle = 'rgba(232,196,255,.5)';
+  x.lineWidth = 1.2;
+  x.beginPath();
+  for (let k = 0; k <= 18; k++) {
+    const a = (k / 18) * Math.PI * 2,
+      r = 19 + (k % 18 ? dice() * 4 - 2 : 0);
+    x.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r);
+  }
+  x.stroke();
+  return new THREE.CanvasTexture(c);
+}
 
 // the Grin's face painted into a fireball: a shader eats its edge with rising noise and lights it lavender
 function grinFire(h) {

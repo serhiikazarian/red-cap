@@ -549,3 +549,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `GRIN_SPIKE_SEED`), spaced evenly round it and a little off their places (never touching), taking turns between a ragged ring
   round the face (`GRIN_FRONT_TILT`) and the outline (`GRIN_RIM_TILT`); the middle of the face stays clear. Each front thorn
   sits in a faint scorched socket with a white-hot middle and a thin glowing crack round it (`socketTex`, `GRIN_SOCKET` 2.2).
+
+## 1.60 (9 Nov 2026)
+- A Grin has 12 thorns (`GRIN_SPIKES`, was 14).
+- Tidy: the thorn textures (`spikeFootTex`, `socketFootTex`) moved from `03-textures.js` to `25-grin.js`, which owns them;
+  `warnMark` takes the marker's place as one object (`at`). `CLAUDE.md` and `docs/ARCHITECTURE.md` brought up to date (warning
+  `size` / `mark`, PHEW!, thorn draw ranks, itch.io focus, boot textures and dice, close-up pictures).
