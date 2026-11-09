@@ -52,7 +52,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - The ink pass reads depth through `uniform highp sampler2D tDep`: WebGL2 samplers default to lowp, which many phone GPUs
   honour, rounding depth into steps the outlines draw as lines sliding with the camera. A new depth read is highp too.
 - Sorting: `renderer.setTransparentSort` draws far to near, but a figure of parts in a set order (a Grin: `userData.sortRank`,
-  `sortZ` from `sortUnits()` each frame) sorts as one thing. Words keep `renderOrder` 10 (always on top).
+  `sortZ` from `sortUnits()` each frame) sorts as one thing. Ranks may be fractions: a Grin's glow 0, fire card 1, back thorns
+  1.5, ball 2, sockets 2.4, front thorns 2.5, mouth 3 (its thorns: `grinSpikeGeos`, one shared set, placed by fixed dice). Words keep `renderOrder` 10 (always on top).
 - Resolution adapts (`resScale`, the controller at `adaptResolution` in 02-render). Under the ink during loading, `tune()`
   (60-flow) draws real frames from the opening view and `CALIBRATION_VIEWS` more spread over the floor (`calibrationViews`): `settle` until
   their times stop changing, then `calibrate` (GPU-timed: from the screen's full ratio, when the second-slowest view is over
@@ -93,7 +94,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   top of 20-talkers.js; shared code never asks `e.type`; shared `damage`, `kill` call them in a fixed order
   (keep it: the dice rolls must stay in the same order). Long fights run one step per state (`JESTER_STATES[e.st]` …).
   Each talker's file holds its build, fight and helpers, tuning at the top. Attack warnings: a talker's `warn(e)` (07-hud
-  `warnOf`, `updateWarn`).
+  `warnOf`, `updateWarn`, `warnMark`): `{ c, k, cue }`, plus `size` (the "!" marker's scale: the Jester's `JESTER_MARK`) and
+  `mark: false` (the screen-edge glow alone: the Geezer's lash).
 - `e.mats` are brought back to no tint (or the hit flash's red) every frame, written only where the colour differs
   (`HIT_RED`, `NO_TINT`): another writer's colour (the Jester's blink) is undone the next frame, so coloured parts use
   textures or vertex colours. A caged talker's cage is `e.cage`.
@@ -109,7 +111,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Big call-outs (`bigWord(text, colour, size, under, underColor)`, 07-hud): a boss's `bar` hook may name a word that flashes
   with Attack him! as a state begins (Priest's EXPOSED; the Jester's UNMASKED only when `e.callOut`, latched as the mask
   lifts: first time, then after `JESTER_REMIND` s without a blow that hurts). The Geezer calls GAZING / Take cover! himself
-  (`geezerWarn`: first stare, then after `GEEZER_WARN_AGAIN` stares in a row that caught Red Cap).
+  (`geezerWarn`: first stare, then after `GEEZER_WARN_AGAIN` stares in a row that caught Red Cap), and a white PHEW! when a
+  stare misses (his bar then says Winded).
 - The boss bar (`bossInFight` in 64-loop, `bossBar` in 07-hud): the nearest boss met, within 26 m and with no wall between
   (`clearOfWalls`); out of sight it fades out after 0.3 s (`#boss.on` in style.css), back in at once.
 - The crosshair's lock: yellow, red when the yo-yo reaches (`reach`), white on a pyramid (`pyr`) or on a talker pebbles bounce
@@ -131,6 +134,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   (replays), so a `rand` in one would shift the seeded rolls.
 
 ## Loading and flow (60-flow, 61-menus, 64-loop)
+- Keyboard focus in a frame (itch.io): every `pointerdown` calls `window.focus()` (62-input), or the keys stay with the page
+  round the game; only on a press, so that page stays usable.
 - Menu focus: arrows / Tab / WASD move it, Enter / Space press the focused button; it follows the mouse only onto another
   button (`hoverBtn`). One red at a time: the focused button; the music button is also red while hovered, unless another button has the focus.
   A controller picks the page's main button, else "next" (`padMenu`); on the catalogue "next" first, as the keyboard does.
@@ -166,7 +171,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 ## Testing (tests/)
 - Playwright + swiftshader (`tests/browser.js`), viewport 880×500. First render of new shaders is slow (tens of seconds).
 - `tests/harness.js`: frozen clock, seeded dice (fixed from the page's first line, so start-up drawing such as the smoke
-  texture repeats; three.js ids on their own dice), sound off, a scripted player; used by the replay and picture tests that
+  texture repeats; three.js ids on their own dice once a run is seeded, but at start-up a new texture or material takes the
+  page's dice for its id: make one at boot after the textures drawn at random, as `spikeTex` follows `makeFogNoise`), sound off, a scripted player; used by the replay and picture tests that
   prove a change alters nothing. The scenarios and pictures are listed in `tests/jobs.js`; `tools/same.sh` runs them all
   (`tests/same.js`: `JOBS` pages at a time, default 3; the floors touched since `main` first, by `FLOOR_FILES`; the run kept in
   `out/same` with the build's fingerprint, which `new` turns into the baselines). By hand: `tests/replay.js build outDir [name…]`
@@ -182,7 +188,9 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   three.js): re-run the failed job before suspecting the code.
 - Picture or probe: `node tests/shot.js game/red-cap.html out/x.png "<js>" <floor 0-2> <waitMs>` (`<js>` is one expression:
   wrap statements in `(async () => { ... })()`; what it returns is printed as JSON). To pin the camera, wrap
-  `renderer.render` and set the camera when `c===camera`.
+  `renderer.render` and set the camera when `c===camera`. Its 880×500 picture is too small to judge a talker's detail: for a
+  close-up, `pg.setViewportSize` larger, keep `resScale = 2` (and `RES.clock = 0`) and hold the talker in front of the camera
+  every frame (`setInterval`).
 - Menus against an older version (1.13 or later): `tools/build-at.sh N.NN`, then `node tests/menus.js out/red-cap-N.NN.html out/a &&
   node tests/menus.js game/red-cap.html out/b && python3 tests/pics-cmp.py out/a out/b`.
 - Probe gotchas: headless game time runs 5–10× slow, and Red Cap is held at floor start, so move the thing to him instead.
@@ -207,4 +215,5 @@ On a real GPU: the loading's chosen sharpness, the scissors' pace, low-end frame
 fog wall), the 1.38 camera speeds and the 1.40 wall wait (0.28 s). By ear: volumes (title music, pyramid scream, bomb blast), laughs, pops, the exhale. By
 feel: the yo-yo's hit-stop in slow motion, the 0.85 s chain, see-through fades in motion, Grump ring cracks, hologram gaze
 timing, Bruno's circle, talkers breaking pyramids, floor one's floaters passing through the camera, floor two's stray
-shots (how often Grins reel), Spike's pebble odds, the boss bar's fade at wall corners. Touch on a real phone; controller on hardware.
+shots (how often Grins reel), Spike's pebble odds, the boss bar's fade at wall corners, how the Grins' thorns read at fighting
+distance (1.59–1.60). On itch.io: the keys after a click (1.58; the test browser gives a framed page focus on a click anyway). Touch on a real phone; controller on hardware.
