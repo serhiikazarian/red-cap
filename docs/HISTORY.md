@@ -545,5 +545,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   its length (`spikeTex`, `GRIN_SPIKE_INK`); thorns a little longer (`GRIN_SPIKE_LEN` 1.1, was 0.95) so the black part
   keeps its 1.58 size. Built with `mergeGeos`. The texture is made at the end of start-up, after the ones drawn at random
   (a new texture's id takes dice: made earlier, it shifted floor three's sky in the seeded pictures).
-- A Grin's thorns cover the whole ball, not only its rim: 34 spread evenly (a golden-angle spiral), the middle of the face
-  left clear (`GRIN_FACE_CLEAR`); the back ones draw before the ball and show only their tips, the front ones after it.
+- A Grin's thorns stand round the whole ball, not only its rim: 14, uneven in length, thickness and lean (fixed dice,
+  `GRIN_SPIKE_SEED`), spaced evenly round it and a little off their places (never touching), taking turns between a ragged ring
+  round the face (`GRIN_FRONT_TILT`) and the outline (`GRIN_RIM_TILT`); the middle of the face stays clear. Each front thorn
+  is driven into a scorched socket with a white-hot middle and a thin glowing crack round it (`socketTex`, `GRIN_SOCKET`).

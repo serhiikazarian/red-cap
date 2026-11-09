@@ -1,13 +1,22 @@
 // The Grin (G): a face on fire that never stops smilin'. A lit, lumpy ball with its painted face, inside a corona of flame
 // (a shader eats the painting's edge with rising noise), and its grin cut out and hung in front.
 // Its parts draw in a set order at the Grin's own distance (userData.sortRank, sortUnits in 02-render).
-// Black ink thorns stick out all over the ball, like a sea urchin's, and leave the middle of the face clear: the back ones
-// draw before the ball, which hides all but their tips, the front ones after it (fixed places: no dice, replays keep their rolls).
-const GRIN_SPIKES = 34, // thorns spread evenly over the whole ball, before the face's are left out
-  GRIN_FACE_CLEAR = 0.72, // no thorn whose direction points this straight at the viewer (the painted face and the grin)
-  GRIN_SPIKE_LEN = 1.1, // a thorn's length, in ball radii (each one a little longer or shorter)
-  GRIN_SPIKE_W = 0.17, // a thorn's foot radius, in ball radii
-  GRIN_SPIKE_ROOT = 0.85; // where a thorn starts, in ball radii from the centre (its foot melts into the burning skin)
+// Black ink thorns stick out unevenly from the ball: some round its outline, some on the front in a ragged ring round the face,
+// each of those driven into a scorched, white-hot socket. The ones behind the outline draw before the ball, which hides their
+// feet; the front ones (and their sockets) after it.
+// Their places, sizes and tilts come from fixed dice (GRIN_SPIKE_SEED), never the game's: replays keep their rolls.
+const GRIN_SPIKES = 14, // thorns on the ball
+  GRIN_SPIKE_SEED = 23, // the dice for where they stand, how long, thick and crooked they are
+  GRIN_SPIKE_JIT = 0.4, // how far a thorn strays from its even place round the ball, as a share of the gap (never touching)
+  GRIN_SPIKE_SWAP = 0.2, // thorns take turns, front and rim; this share of them breaks the turn
+  GRIN_FRONT_TILT = [0.85, 1.15], // a front thorn's angle from the line to the viewer, radians: clear of the face, its socket seen
+  GRIN_RIM_TILT = [1.4, 1.85], // a rim thorn's: around the outline, a little before or behind it
+  GRIN_SPIKE_LEN = [0.7, 1.45], // a thorn's length, in ball radii, from .. to
+  GRIN_SPIKE_W = [0.12, 0.24], // a thorn's foot radius, in ball radii, from .. to
+  GRIN_SPIKE_LEAN = 0.3, // how crooked a thorn may stand off the straight-out line
+  GRIN_SPIKE_ROOT = 0.85, // where a thorn starts, in ball radii from the centre (its foot melts into the burning skin)
+  GRIN_SOCKET = 2.8; // a socket's radius, in thorn foot radii
+// a thorn's foot, as a share of its length: see-through, white-hot, violet, then solid ink from GRIN_SPIKE_INK on
 const GRIN_SPIKE_INK = 0.3;
 
 // the Grin's face painted into a fireball: a shader eats its edge with rising noise and lights it lavender
@@ -67,15 +76,14 @@ function grinBall(h) {
   fire.position.z = -0.3;
   fire.scale.setScalar(1.12);
   g.add(fire); // the corona sits just behind and a little larger, so flames lick past the head
-  g.userData.spikeMats = [false, true].map(front => {
-    const spikes = new THREE.Mesh(
-      grinSpikeGeo(R, cy, front),
-      new THREE.MeshBasicMaterial({ map: spikeTex, transparent: true, depthWrite: false, ...INK_HIDE })
-    );
-    spikes.userData.sortRank = front ? 2.5 : 1.5; /* the back ones before the ball, which covers them; the front ones after it */
-    g.add(spikes);
-    return spikes.material;
-  });
+  const spikeMat = map => new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, ...INK_HIDE });
+  g.userData.spikeMats = [];
+  for (const [geo, map, rank] of grinSpikeGeos(R, cy)) {
+    const part = new THREE.Mesh(geo, spikeMat(map));
+    part.userData.sortRank = rank;
+    g.add(part);
+    g.userData.spikeMats.push(part.material);
+  }
   const mat = grinHeadMat(fire, W, H, cy);
   mat.color = mat.uniforms.tint.value;
   const ball = new THREE.Mesh(grinHeadGeo(R, cy), mat);
@@ -90,33 +98,56 @@ function grinBall(h) {
   g.userData.mouthMat = mouth.material;
   return g;
 }
-// the thorns, two meshes shared by every Grin (its back half and its front half): open cones spread evenly over the head
-// (a golden-angle spiral, as wide and flat as the head), each standing straight out of it; their texture runs foot to tip
-// (spikeTex), so each foot glows and melts into the ball
-const grinSpikeShared = [];
-function grinSpikeGeo(R, cy, front) {
-  if (grinSpikeShared[+front]) return grinSpikeShared[+front];
-  const up = new THREE.Vector3(0, 1, 0),
+// the thorns, meshes shared by every Grin: [geometry, texture, draw rank] for the back thorns (before the ball), the front
+// sockets and the front thorns (after it). Open cones standing out of the head (as wide and flat as it), spaced evenly round
+// the line to the viewer, each a little off its place; their texture runs foot to tip (spikeTex). A socket is a disc on the
+// skin round a thorn's foot.
+let grinSpikeShared = null;
+function grinSpikeGeos(R, cy) {
+  if (grinSpikeShared) return grinSpikeShared;
+  const dice = mulberry(GRIN_SPIKE_SEED),
+    span = ([a, b]) => a + (b - a) * dice(),
+    up = new THREE.Vector3(0, 1, 0),
+    out = new THREE.Vector3(0, 0, 1),
+    n = new THREE.Vector3(),
     dir = new THREE.Vector3(),
-    foot = new THREE.Vector3(),
     one = new THREE.Vector3(1, 1, 1),
-    list = [];
+    back = [],
+    front = [],
+    sockets = [];
   for (let k = 0; k < GRIN_SPIKES; k++) {
-    const y = 1 - (2 * (k + 0.5)) / GRIN_SPIKES,
-      ring = Math.sqrt(1 - y * y),
-      a = k * Math.PI * (3 - Math.sqrt(5)),
-      z = Math.sin(a) * ring;
-    if (z > GRIN_FACE_CLEAR || z > 0 !== front) continue;
-    const len = R * GRIN_SPIKE_LEN * (1 + 0.28 * Math.sin(k * 2.3 + 1)),
-      cone = new THREE.ConeGeometry(R * GRIN_SPIKE_W, len, 5, 1, true).translate(0, len / 2, 0);
-    dir.set(Math.cos(a) * ring * 1.1, y, z * 0.8).normalize();
-    foot.set(Math.cos(a) * ring * 1.1, y, z * 0.8).multiplyScalar(R * GRIN_SPIKE_ROOT);
+    const tilt = span((k % 2 === 0) !== dice() < GRIN_SPIKE_SWAP ? GRIN_FRONT_TILT : GRIN_RIM_TILT),
+      a = ((k + 0.5 + (dice() - 0.5) * GRIN_SPIKE_JIT) / GRIN_SPIKES) * Math.PI * 2,
+      z = Math.cos(tilt),
+      len = R * span(GRIN_SPIKE_LEN),
+      w = R * span(GRIN_SPIKE_W);
+    dir.set((dice() - 0.5) * GRIN_SPIKE_LEAN, (dice() - 0.5) * GRIN_SPIKE_LEAN, (dice() - 0.5) * GRIN_SPIKE_LEAN);
+    n.set(Math.cos(a) * Math.sin(tilt) * 1.1, Math.sin(a) * Math.sin(tilt), z * 0.8);
+    const foot = n.clone().multiplyScalar(R * GRIN_SPIKE_ROOT),
+      skin = n.clone().multiplyScalar(R);
     foot.y += cy;
-    list.push([cone, new THREE.Matrix4().compose(foot, new THREE.Quaternion().setFromUnitVectors(up, dir), one)]);
+    skin.y += cy;
+    n.normalize();
+    dir.add(n).normalize();
+    const cone = new THREE.ConeGeometry(w, len, 5, 1, true).translate(0, len / 2, 0);
+    (z > 0 ? front : back).push([cone, new THREE.Matrix4().compose(foot, new THREE.Quaternion().setFromUnitVectors(up, dir), one)]);
+    if (z > 0)
+      sockets.push([
+        new THREE.CircleGeometry(w * GRIN_SOCKET, 12),
+        new THREE.Matrix4().compose(skin, new THREE.Quaternion().setFromUnitVectors(out, n), one)
+      ]);
   }
-  grinSpikeShared[+front] = share(mergeGeos(list));
-  list.forEach(([g]) => g.dispose());
-  return grinSpikeShared[+front];
+  const merge = list => {
+    const g = share(mergeGeos(list));
+    list.forEach(([q]) => q.dispose());
+    return g;
+  };
+  grinSpikeShared = [
+    [merge(back), spikeTex, 1.5],
+    [merge(sockets), socketTex, 2.4],
+    [merge(front), spikeTex, 2.5]
+  ];
+  return grinSpikeShared;
 }
 // the head: a sphere made lumpy, a little wide and flat, its foot at y 0
 function grinHeadGeo(R, cy) {
