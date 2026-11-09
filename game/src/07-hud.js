@@ -117,13 +117,14 @@ function bossBar(e) {
   if (word && word !== bossWord) bigWord(word, HEX.bile, 1, 'Attack him!');
   bossWord = word;
 }
-// attack warnings: a marker over the Usher about to charge, the Geezer about to stare or lash, Priest about to spray and
-// the Jester about to charge (warnOf)
+// attack warnings: a marker over the Usher about to charge, the Geezer about to stare, Priest about to spray and the Jester
+// about to charge (smaller); the Geezer about to lash lights only the screen edge (warnOf)
 const WARN_N = 3,
   WARN = [],
   warnV = new THREE.Vector3();
 let warnEdgeOn = false;
-// a talker's warning now: { c: colour, k: how close the blow is 0..1, cue: changes when a new warning starts } or null
+// a talker's warning now: { c: colour, k: how close the blow is 0..1, cue: changes when a new warning starts, size: the
+// marker's scale (1 if left out), mark: false for the edge glow alone, no marker } or null
 function warnOf(e) {
   if (e.dead || e.dying || e.dormant || e.caged) return null;
   const T = TALKERS[e.type];
@@ -156,20 +157,12 @@ function updateWarn() {
       }
       if (w.cue !== e.warnCue) warnCue(w.cue);
       e.warnCue = w.cue;
-      if (n >= WARN_N) continue;
-      const m = WARN[n++],
-        { x, y, out } = warnPlace(e, W, H),
+      const marked = w.mark !== false;
+      if (marked && n >= WARN_N) continue;
+      const { x, y, out } = warnPlace(e, W, H),
         px = ((x + 1) / 2) * W,
-        py = ((y + 1) / 2) * H,
-        pulse = 1 + (0.12 + 0.2 * w.k) * Math.abs(Math.sin(now * (8 + 14 * w.k)));
-      m.d.style.setProperty('--wc', w.c);
-      m.d.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) scale(${pulse.toFixed(3)})`;
-      m.arr.style.display = out ? '' : 'none';
-      if (out) m.arr.style.transform = `rotate(${Math.atan2(y * H, x * W).toFixed(3)}rad) translate(30px)`;
-      if (!m.on) {
-        m.d.style.display = 'block';
-        m.on = true;
-      }
+        py = ((y + 1) / 2) * H;
+      if (marked) warnMark(WARN[n++], w, x, y, px, py, out, W, H, now);
       if (!edge || w.k > edge.k) edge = { c: w.c, k: w.k, x: px, y: py, out };
     }
   for (let k = n; k < WARN.length; k++)
@@ -182,6 +175,18 @@ function updateWarn() {
   else if (warnEdgeOn) {
     el.style.opacity = 0;
     warnEdgeOn = false;
+  }
+}
+// one marker over a talker (w.size scales it), pulsing faster as the blow nears; off screen, its arrow points at him
+function warnMark(m, w, x, y, px, py, out, W, H, now) {
+  const pulse = (w.size || 1) * (1 + (0.12 + 0.2 * w.k) * Math.abs(Math.sin(now * (8 + 14 * w.k))));
+  m.d.style.setProperty('--wc', w.c);
+  m.d.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) scale(${pulse.toFixed(3)})`;
+  m.arr.style.display = out ? '' : 'none';
+  if (out) m.arr.style.transform = `rotate(${Math.atan2(y * H, x * W).toFixed(3)}rad) translate(30px)`;
+  if (!m.on) {
+    m.d.style.display = 'block';
+    m.on = true;
   }
 }
 // the markers, made on first use

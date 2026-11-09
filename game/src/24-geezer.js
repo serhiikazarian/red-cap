@@ -215,7 +215,7 @@ TALKERS.Y = {
     e.st === 'gaze'
       ? { c: '#b48cff', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'Y' + e.flashes }
       : e.st === 'sweep'
-        ? { c: HEX.paper, k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'y' + e.lashes }
+        ? { c: HEX.paper, k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'y' + e.lashes, mark: false }
         : e.st === 'blink'
           ? { c: '#b48cff', k: 0, cue: 'Y' }
           : null,

@@ -532,3 +532,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 ## 1.57 (9 Nov 2026)
 - Keys work when the game runs inside itch.io's frame: every click or tap on the game takes keyboard focus for its frame
   (`window.focus()` on `pointerdown`, `62-input.js`), the workaround Serj found and tested.
+- The Geezer's white "!" before his lash is gone; the white glow at the screen edge still warns of it (`mark: false` in his
+  `warn`, `24-geezer.js`; `warnMark` in `07-hud.js`).
+- The Jester's "!" before a charge is 30% smaller (`JESTER_MARK` 0.7, `30-jester.js`; any `warn` may now give a `size`).
