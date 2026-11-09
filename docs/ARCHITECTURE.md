@@ -107,7 +107,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - A talker's height: `e.pos.y` / `e.gy` is its ground (raised floor included, unknown until its first move: use `e.gy || 0`),
   `e.fly` how high a flier is drawn above it; shots, words and strands it gives off start at `(e.gy || 0) + e.fly`.
 - Big call-outs (`bigWord(text, colour, size, under, underColor)`, 07-hud): a boss's `bar` hook may name a word that flashes
-  with Attack him! as a state begins (the Priest's EXPOSED; the Jester's UNMASKED only when `e.callOut`, latched as the mask
+  with Attack him! as a state begins (Priest's EXPOSED; the Jester's UNMASKED only when `e.callOut`, latched as the mask
   lifts: first time, then after `JESTER_REMIND` s without a blow that hurts). The Geezer calls GAZING / Take cover! himself
   (`geezerWarn`: first stare, then after `GEEZER_WARN_AGAIN` stares in a row that caught Red Cap).
 - The boss bar (`bossInFight` in 64-loop, `bossBar` in 07-hud): the nearest boss met, within 26 m and with no wall between
@@ -141,14 +141,12 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   while the floor is built: planned 1.4 s for floor one, 0.7 s for two, 3 s for three) → `'intro'`. Plain `startGame()` /
   `enterFloor(i)` still build at once.
 - Floating words live in `wordScene` (02-render), drawn after the ink pass straight onto the page: never put a word sprite
-  in `scene` (the pass would cut it with edge lines, darken it, and the see-through mask would catch its quad). Their
-  material is `wordMat` (06-fx); `WARM_WORD` (60-flow), never disposed, builds and keeps its shader from the loading screen.
+  in `scene` (the pass would cut it with edge lines, darken it, and the see-through mask would catch its quad).
 - Red Cap's first words on a new game: `OPENING` (60-flow), in marker font (`HERO_WORDS`), rising slowly (`floatWord`'s
   `rise`).
 - Loading does real work: `warmUp` pre-draws `WORDS_SEED` + `WORDS_FLOOR[floor]` + words used this session and every `TEX`
   (a word with `\n` breaks there; `spacedWord` puts thin spaces between letters: the Jester's NOT FUNNY);
-  `warmSet` compiles every material/shader variant from stand-ins (`wordScene` too: no fog nor lights, so its own shader);
-  then `calibrate()`.
+  `warmSet` compiles every material/shader variant from stand-ins; then `calibrate()`.
 - The death screen stops drawing the world (`deadStill`). HUD elements are cached in `HUD`; write to the DOM only on change.
   Big centred words: `bigWord(text, color, size, under)` (`under`: a smaller red pulsing line); hints: `toast(msg, ms, how)`.
   The hint is a yellow caption box sliding in from the left (`.on`) and off to the right (`toastOff()`, `.out`): clear it

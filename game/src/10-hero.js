@@ -136,7 +136,7 @@ function takeBlow(dmg, from, pierce) {
   if (hero.hp <= 0) die();
   return true;
 }
-// the Priest's blood: each drop adds a third of a second of wet, up to three; wet, Red Cap moves at half speed and drips red
+// Priest's blood: each drop adds a third of a second of wet, up to three; wet, Red Cap moves at half speed and drips red
 function soak() {
   const was = hero.wet > 0;
   hero.wet = Math.min(3, (hero.wet || 0) + 0.35);
@@ -146,7 +146,7 @@ function soak() {
   }
   if (!G.wetHint) G.wetHint = toast('Soaked.', 0, 'minor');
 }
-// aim: the camera's forward on the ground, with a soft lock on the talker nearest the reticle (the Priest's ghosts one by one;
+// aim: the camera's forward on the ground, with a soft lock on the talker nearest the reticle (Priest's ghosts one by one;
 // with pyr, the slingshot's: floor two's pyramids too, a talker first)
 const AIM = { cone: 0.42, near: 0.5, far: 26, partFar: 22, perMetre: 0.012 }; // rad off the aim; m; score per metre away
 function aimInfo(pyr) {
@@ -312,7 +312,7 @@ function heroInput(dt) {
   if (keys.has('KeyE') || keys.has('ArrowRight')) cam.yaw -= CAM_TURN * dt;
   return [ix, iz];
 }
-// what holds him back (a Shade's fright, a trap, the hidden boss's strand, the Priest's blood, a niche's blessing): his speed
+// what holds him back (a Shade's fright, a trap, the hidden boss's strand, Priest's blood, a niche's blessing): his speed
 function heroConditions(dt) {
   hero.spook = Math.max(0, (hero.spook || 0) - dt);
   const so = Math.round(Math.min(1, hero.spook / 1.6) * 80) / 100;

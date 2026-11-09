@@ -1,4 +1,4 @@
-// The Shade (q): one of the Priest's little ghosts, loose on the first floor. Harmless: it says boo and pinches a pebble.
+// The Shade (q): one of Priest's little ghosts, loose on the first floor. Harmless: it says boo and pinches a pebble.
 
 function makeShade(e, add) {
   Object.assign(e, { name: 'Shade', hp: 1.5, maxHp: 1.5, pebbleDmg: 1.5, r: 0.55, fly: 1.6, palette: [0xd8d4cc, 0x6c6a66, COL.ink] });

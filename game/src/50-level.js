@@ -94,7 +94,7 @@ function buildLevel(i) {
   buildCages(F);
   tuneUshers(F);
   if (F.deco !== 'blocks') guidePath(F, rng);
-  if (F.deco === 'newsroom') decorNarcissism(rng);
+  if (F.deco === 'corridor') decorNarcissism(rng);
   else if (F.deco === 'mouth') decorWrath(rng);
   if (F.deco !== 'blocks') clutter(F, rng);
   dreamwork(F, rng);
@@ -347,13 +347,13 @@ function roomPile(F) {
   const [cx, cz] = pick(cells);
   pebblePile(...heartRoom((cx + 0.2 + Math.random() * 0.6) * CELL, (cz + 0.2 + Math.random() * 0.6) * CELL));
 }
-// floor two's slogan, GOD LOVES HIS CHILDREN (SLOGAN_W x SLOGAN_H at full size): on the Priest's wall facing the exit door, its
+// floor two's slogan, GOD LOVES HIS CHILDREN (SLOGAN_W x SLOGAN_H at full size): on Priest's wall facing the exit door, its
 // foot 0.5 m up and its top under the cornice; and smaller on the wall in front of the door room, on a soft dark backing that lifts
 // it off the busy painting
 const SLOGAN_W = 5,
   SLOGAN_H = 6.2,
-  SLOGAN_AT = [8.5 * CELL, 12 * CELL], // the Priest's wall: the middle of the face (wall words keep 3.5 m off it, 52-decor)
-  SLOGAN_PRIEST = 1 / 1.6, // the size on the Priest's wall
+  SLOGAN_AT = [8.5 * CELL, 12 * CELL], // Priest's wall: the middle of the face (wall words keep 3.5 m off it, 52-decor)
+  SLOGAN_PRIEST = 1 / 1.6, // the size on Priest's wall
   SLOGAN_DOOR = 0.6; // and in front of the door room
 function slogans() {
   const sl = new THREE.Mesh(
@@ -387,7 +387,7 @@ function slogans() {
 function skyDecor(F, w, box) {
   const fw = w * CELL,
     fh = G.h * CELL;
-  if (F.deco === 'newsroom') {
+  if (F.deco === 'corridor') {
     const dg = new THREE.ConeGeometry(0.07, 0.5, 4);
     dg.rotateX(Math.PI);
     const im = new THREE.InstancedMesh(dg, new THREE.MeshBasicMaterial({ color: 0xe8c628 }), 60);
