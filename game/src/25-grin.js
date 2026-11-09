@@ -15,7 +15,7 @@ const GRIN_SPIKES = 14, // thorns on the ball
   GRIN_SPIKE_W = [0.12, 0.24], // a thorn's foot radius, in ball radii, from .. to
   GRIN_SPIKE_LEAN = 0.3, // how crooked a thorn may stand off the straight-out line
   GRIN_SPIKE_ROOT = 0.85, // where a thorn starts, in ball radii from the centre (its foot melts into the burning skin)
-  GRIN_SOCKET = 2.8; // a socket's radius, in thorn foot radii
+  GRIN_SOCKET = 2.2; // a socket's radius, in thorn foot radii
 // a thorn's foot, as a share of its length: see-through, white-hot, violet, then solid ink from GRIN_SPIKE_INK on
 const GRIN_SPIKE_INK = 0.3;
 

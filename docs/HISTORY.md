@@ -548,4 +548,4 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - A Grin's thorns stand round the whole ball, not only its rim: 14, uneven in length, thickness and lean (fixed dice,
   `GRIN_SPIKE_SEED`), spaced evenly round it and a little off their places (never touching), taking turns between a ragged ring
   round the face (`GRIN_FRONT_TILT`) and the outline (`GRIN_RIM_TILT`); the middle of the face stays clear. Each front thorn
-  is driven into a scorched socket with a white-hot middle and a thin glowing crack round it (`socketTex`, `GRIN_SOCKET`).
+  sits in a faint scorched socket with a white-hot middle and a thin glowing crack round it (`socketTex`, `GRIN_SOCKET` 2.2).

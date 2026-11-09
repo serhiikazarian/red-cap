@@ -270,13 +270,13 @@ function socketFootTex() {
   g.addColorStop(0, 'rgba(255,244,255,1)');
   g.addColorStop(0.16, 'rgba(236,200,255,.95)');
   g.addColorStop(0.3, 'rgba(132,44,232,.9)');
-  g.addColorStop(0.42, 'rgba(13,11,10,.9)');
-  g.addColorStop(0.7, 'rgba(13,11,10,.55)');
+  g.addColorStop(0.42, 'rgba(13,11,10,.6)');
+  g.addColorStop(0.7, 'rgba(13,11,10,.3)');
   g.addColorStop(1, 'rgba(13,11,10,0)');
   x.fillStyle = g;
   x.fillRect(0, 0, 64, 64);
-  x.strokeStyle = 'rgba(232,196,255,.9)';
-  x.lineWidth = 1.6;
+  x.strokeStyle = 'rgba(232,196,255,.5)';
+  x.lineWidth = 1.2;
   x.beginPath();
   for (let k = 0; k <= 18; k++) {
     const a = (k / 18) * Math.PI * 2,
