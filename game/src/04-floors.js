@@ -2,13 +2,13 @@
 //   # wall   . floor   o block or prop   T pillar, pyramid (floor 2) or totem (floor 3)   P start   X exit door   h heart
 //   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
 //   talkers: B Usher  q Shade  Y Geezer  G Grin  R Priest  Z Bruno  U Grump  S Smoker  W Brainless the Second  M Jester
-// Other fields: the look (fog, bg, amb, hemi, lamp, floor and wall paintings, wallH, words, trail: the paper trail's colour if not words), raised ground (raise, ramps), the drone,
+// Other fields: the look (fog, bg, amb, hemi, lamp, floor and wall paintings, wallH), raised ground (raise, ramps), the drone,
 // deco (which decor set builds the floor), opening (a yellow-box hint as the floor begins, once a game), and tuning: drop odds per talker, hidden hearts and pebble piles, placedHearts (the
 // chance each heart lying in the level, an 'h' or a hidden one, is there: fresh each time the floor starts), cages, sizes.
 const FLOORS = [
   {
     num: 'Floor one',
-    name: 'The Newsroom',
+    name: 'The Usher’s Corridor',
     line: 'Three bow-tied ushers. At the end of the corridor, the Geezer, who stares people mad.',
     fog: 0x10140b,
     near: 4,
@@ -28,7 +28,7 @@ const FLOORS = [
     walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble'],
     wallH: [3.2, 5.5],
     words: COL.paper,
-    deco: 'newsroom',
+    deco: 'corridor',
     camThruFloaters: true, // the drifting faces, glasses and boxes never push the camera in (they only fade)
     plainFloaters: true, // its floaters fade without a contour (56-see-through)
     yaw: Math.PI,
@@ -93,7 +93,6 @@ const FLOORS = [
     walls: ['t_chaos', 't_ember', 't_hatch', 't_chaos', 't_chaos:0x5a3040', 't_ember:0x41305a', 't_hatch:0x3a2626'],
     wallH: [3.4, 6],
     words: COL.bile,
-    trail: COL.paper, // the paper trail to the door is white, not the words' yellow (46-gates)
     deco: 'mouth',
     strayShots: true, // the talkers' shots hurt the small talkers they hit by accident (21-shots)
     pyramids: true, // its 'T' cells are pyramids (44-pyramids): their round body stops sight and pebbles, and they glow

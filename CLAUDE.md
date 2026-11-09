@@ -41,8 +41,7 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
 ## Rules that bite
 - **Load rule:** anything new is prepared on the loading screen, never mid-game: a new material/shader variant gets a
   stand-in in `warmSet()` (same type, flags, `onBeforeCompile`), a texture goes in `warmUp()`'s `texs`, a floating word in
-  `WORDS_FLOOR` (word sprites only via `wordMat`). Verify `renderer.info.programs` unchanged after `beginFloor` and no
-  `linkProgram` in play (a shader whose last material is disposed is rebuilt at its next use, at the same count).
+  `WORDS_FLOOR`. Verify `renderer.info.programs` unchanged after `beginFloor`.
 - Refactors keep every random roll in order (seeded replays). Layout rng: `mulberry(seed)` per floor; per-start picks
   `Math.random`.
 - No `//` mid-line before code (use `/* */`). GLSL: no names `flat`, `smooth`, `in`, `out`, `sample`; `smoothstep(a,b,x)`
@@ -57,7 +56,7 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   motion in `G.anim`. Every `G` field is declared in `floorState` (50-level).
 
 ## Game
-Floors: 1 *The Newsroom* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged,
+Floors: 1 *The Usher's Corridor* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged,
 pyramids: bombs, empties, hearts; stray fire and blood hurt Grins, at most to reeling); 3 *Stop Talkin’ Sh#t* (Grump U, Smokers S/W, Jester M behind the fog gate, totems,
 hidden boss L). Red Cap: 5 ties, yo-yo (heavy third only within `YOYO_CHAIN` 0.85 s), slingshot (7–10 pebbles), dodge.
 Camera: `CAM_EASE`, `CAM_TURN`. `CELL` = 3 m. HISTORY: open only when asked why/when, or for a likely regression; search it.
