@@ -56,7 +56,7 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   motion in `G.anim`. Every `G` field is declared in `floorState` (50-level).
 
 ## Game
-Floors: 1 *The Usher's Corridor* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged,
+Floors: 1 *Newsroom* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged,
 pyramids: bombs, empties, hearts; stray fire and blood hurt Grins, at most to reeling); 3 *Stop Talkin’ Sh#t* (Grump U, Smokers S/W, Jester M behind the fog gate, totems,
 hidden boss L). Red Cap: 5 ties, yo-yo (heavy third only within `YOYO_CHAIN` 0.85 s), slingshot (7–10 pebbles), dodge.
 Camera: `CAM_EASE`, `CAM_TURN`. `CELL` = 3 m. HISTORY: open only when asked why/when, or for a likely regression; search it.

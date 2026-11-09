@@ -38,7 +38,8 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   down the map's story cells and talkers.
 - Map legend and per-floor settings live in `FLOORS` (04-floors); the optional fields `start` and `pitch` set the opening view,
   `camThruFloaters` (floor one: drifting things never push the camera in), `plainFloaters` (floor one's floaters fade without
-  a contour), `strayShots` (floor two: see Talkers), `pyramids`, `flatProps` and `embers` (floor two). Shared code reads these,
+  a contour), `strayShots` (floor two: see Talkers), `pyramids`, `flatProps` and `embers` (floor two), `trail` (floor two: the paper
+  trail's colour, else `words`). Shared code reads these,
   never `F.deco` (that only picks what the floor builder makes). Obstacle sizes: `propRadius`, `BUMP_R`.
 - "Can he see you?" has two answers; pick the one the rule means: `clearOfWalls` counts walls only; `clearOfCover` also pillars and props, or pillars only with `props = false` (the Geezer's stare:
   `geezerSees`; his blink still treats an easel as cover, to spook).
@@ -106,7 +107,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - A talker's height: `e.pos.y` / `e.gy` is its ground (raised floor included, unknown until its first move: use `e.gy || 0`),
   `e.fly` how high a flier is drawn above it; shots, words and strands it gives off start at `(e.gy || 0) + e.fly`.
 - Big call-outs (`bigWord(text, colour, size, under, underColor)`, 07-hud): a boss's `bar` hook may name a word that flashes
-  with Attack him! as a state begins (the Priest's EXPOSED; the Jester's UNMASKED only when `e.callOut`, latched as the mask
+  with Attack him! as a state begins (Priest's EXPOSED; the Jester's UNMASKED only when `e.callOut`, latched as the mask
   lifts: first time, then after `JESTER_REMIND` s without a blow that hurts). The Geezer calls GAZING / Take cover! himself
   (`geezerWarn`: first stare, then after `GEEZER_WARN_AGAIN` stares in a row that caught Red Cap).
 - The boss bar (`bossInFight` in 64-loop, `bossBar` in 07-hud): the nearest boss met, within 26 m and with no wall between

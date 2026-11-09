@@ -347,13 +347,13 @@ function roomPile(F) {
   const [cx, cz] = pick(cells);
   pebblePile(...heartRoom((cx + 0.2 + Math.random() * 0.6) * CELL, (cz + 0.2 + Math.random() * 0.6) * CELL));
 }
-// floor two's slogan, GOD LOVES HIS CHILDREN (SLOGAN_W x SLOGAN_H at full size): on the Priest's wall facing the exit door, its
+// floor two's slogan, GOD LOVES HIS CHILDREN (SLOGAN_W x SLOGAN_H at full size): on Priest's wall facing the exit door, its
 // foot 0.5 m up and its top under the cornice; and smaller on the wall in front of the door room, on a soft dark backing that lifts
 // it off the busy painting
 const SLOGAN_W = 5,
   SLOGAN_H = 6.2,
-  SLOGAN_AT = [8.5 * CELL, 12 * CELL], // the Priest's wall: the middle of the face (wall words keep 3.5 m off it, 52-decor)
-  SLOGAN_PRIEST = 1 / 1.6, // the size on the Priest's wall
+  SLOGAN_AT = [8.5 * CELL, 12 * CELL], // Priest's wall: the middle of the face (wall words keep 3.5 m off it, 52-decor)
+  SLOGAN_PRIEST = 1 / 1.6, // the size on Priest's wall
   SLOGAN_DOOR = 0.6; // and in front of the door room
 function slogans() {
   const sl = new THREE.Mesh(

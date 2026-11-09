@@ -1,4 +1,4 @@
-// Effects: particles (one instanced mesh, a fixed pool of 520 reused oldest first), the Priest's blood drops (another pool),
+// Effects: particles (one instanced mesh, a fixed pool of 520 reused oldest first), Priest's blood drops (another pool),
 // floating words over the action, ground shadows and blood pools.
 const parts = [];
 const triGeo = share(new THREE.CircleGeometry(0.5, 3));
@@ -78,7 +78,7 @@ function updateParts(dt) {
   }
   if (PMESH) PMESH.instanceMatrix.needsUpdate = true;
 }
-// the Priest's blood drops: the same trick, a slot per drop (21-shots moves them)
+// Priest's blood drops: the same trick, a slot per drop (21-shots moves them)
 let BLOOD = null;
 const bloodFree = [],
   BLOOD_N = 640;

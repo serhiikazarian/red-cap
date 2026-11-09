@@ -1,5 +1,5 @@
-// Talkers' shots: a Grin's fireball, the Priest's blood (drops and rain), the red orbs, Bruno's insults and embers.
-// kind: 'fire' and 'word' hurt and burst; 'blood' soaks and falls; 'rain' (the Priest's) falls from above. On a floor with strayShots
+// Talkers' shots: a Grin's fireball, Priest's blood (drops and rain), the red orbs, Bruno's insults and embers.
+// kind: 'fire' and 'word' hurt and burst; 'blood' soaks and falls; 'rain' (Priest's) falls from above. On a floor with strayShots
 // (floor two) fire and blood also hurt the small talkers they hit by accident (shotHitsTalker); insults fly past them.
 const shots = [];
 function fireball(from, dir, by) {
@@ -104,7 +104,7 @@ function updateShots(dt) {
   }
   if (BLOOD) BLOOD.instanceMatrix.needsUpdate = true;
 }
-// blood starts falling before it moves, the Priest's rain after (as each was tuned); fire trails sparks, blood spins
+// blood starts falling before it moves, Priest's rain after (as each was tuned); fire trails sparks, blood spins
 function flyShot(shot, dt) {
   if (shot.kind === 'blood') shot.v.y -= SHOT_FALL * dt;
   shot.s.position.addScaledVector(shot.v, dt);

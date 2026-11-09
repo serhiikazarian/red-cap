@@ -1,5 +1,5 @@
 // Niches (floor two): pointed arches in the walls. Look straight at one from close by for a moment and the nearest talker
-// appears in it as a violet hologram; hit the hologram and Red Cap is blessed (slowed, less than the Priest's blood).
+// appears in it as a violet hologram; hit the hologram and Red Cap is blessed (slowed, less than Priest's blood).
 const NICHE_LOOK = 2.5, // seconds of looking before the hologram shows
   NICHE_NEAR = 7,
   NICHE_T = { value: 0 }, // the holograms' clock (their scan lines roll)
@@ -147,7 +147,7 @@ function updateNiches(dt) {
     );
   }
 }
-// a hologram struck: it bursts, and the blessing slows Red Cap (less than the Priest's)
+// a hologram struck: it bursts, and the blessing slows Red Cap (less than Priest's)
 function hitHolo(p, rad) {
   for (const n of G.niches) {
     if (!n.holo || n.holo.a < 0.3) continue;

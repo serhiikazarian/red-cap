@@ -396,7 +396,7 @@ function pebbleStep(b, dt) {
     return true;
   return pebbleHitsTalker(b, p);
 }
-// the first talker it meets takes it (or bounces it off: its bounce hook); a shot meant for a ghost flies past the Priest
+// the first talker it meets takes it (or bounces it off: its bounce hook); a shot meant for a ghost flies past Priest
 function pebbleHitsTalker(b, p) {
   for (const e of G.enemies) {
     if (e.dead || e.dying || e.dormant || e.away || (b.target && b.target.ghost && e === b.target.priest)) continue;

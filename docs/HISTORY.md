@@ -519,3 +519,12 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   1.53 (the Newsroom name, floor two's white trail, the floating words' shader built while loading) and the prereleased,
   unshipped 1.54 (the hand-off fixes). Floor three looked softer from 1.53 on; the cause was not found.
 - Title label `v1.55`.
+
+## 1.56 (9 Nov 2026)
+- Floor one is renamed *Newsroom* (was *The Usher’s Corridor*): `FLOORS[0].name`, shown on its card, in the HUD and in the
+  Catalogue of Talkers. Nothing else of it changes.
+- Priest goes without "the": his Catalogue card says *Priest* (his boss bar and the win screen already did), and so do the
+  code comments.
+- Floor two's paper trail to the open door is white (`trail: COL.paper`, a new `FLOORS` field; without it a trail keeps
+  the floor's `words` colour), not yellow; its wall doodles stay yellow.
+- Title label `v1.56`.
