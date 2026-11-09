@@ -40,6 +40,8 @@ async function titleWarm() {
     scene.add(m);
   }
   fogNoiseTex = makeFogNoise();
+  spikeTex = spikeFootTex(); /* these two after the textures drawn at random: a texture's id takes dice too */
+  socketTex = socketFootTex();
   poolInit();
   scene.add(buildHero());
   slingModel = buildSling();

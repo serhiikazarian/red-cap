@@ -53,7 +53,7 @@ function warmUp() {
   warmSet();
   scene.add(WARM);
   const culled = [],
-    texs = new Set([...Object.values(TEX), ...Object.values(canvasTexCache), waveTex, fireTex, glowRed, violetTex, smokeTex]);
+    texs = new Set([...Object.values(TEX), ...Object.values(canvasTexCache), waveTex, fireTex, glowRed, violetTex, spikeTex, socketTex, smokeTex]);
   scene.traverse(o => {
     if (o.frustumCulled) {
       o.frustumCulled = false;
