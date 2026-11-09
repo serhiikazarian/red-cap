@@ -208,12 +208,12 @@ function updatePaperTrail(dt) {
   T.im.count = shown;
   T.im.instanceMatrix.needsUpdate = true;
 }
-// the trail's instanced scraps, tinted the floor's trail colour, else its word colour (the shape is made once: trailGeo)
+// the trail's instanced scraps, tinted the floor's word colour (the shape is made once: trailGeo)
 function trailStart() {
   if (!TRAIL_GEO) TRAIL_GEO = share(trailGeo());
   const im = new THREE.InstancedMesh(
     TRAIL_GEO,
-    new THREE.MeshBasicMaterial({ color: G.F.trail ?? G.F.words, vertexColors: true, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: G.F.words, vertexColors: true, side: THREE.DoubleSide }),
     TRAIL_N
   );
   im.count = 0;

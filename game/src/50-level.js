@@ -94,7 +94,7 @@ function buildLevel(i) {
   buildCages(F);
   tuneUshers(F);
   if (F.deco !== 'blocks') guidePath(F, rng);
-  if (F.deco === 'newsroom') decorNarcissism(rng);
+  if (F.deco === 'corridor') decorNarcissism(rng);
   else if (F.deco === 'mouth') decorWrath(rng);
   if (F.deco !== 'blocks') clutter(F, rng);
   dreamwork(F, rng);
@@ -387,7 +387,7 @@ function slogans() {
 function skyDecor(F, w, box) {
   const fw = w * CELL,
     fh = G.h * CELL;
-  if (F.deco === 'newsroom') {
+  if (F.deco === 'corridor') {
     const dg = new THREE.ConeGeometry(0.07, 0.5, 4);
     dg.rotateX(Math.PI);
     const im = new THREE.InstancedMesh(dg, new THREE.MeshBasicMaterial({ color: 0xe8c628 }), 60);

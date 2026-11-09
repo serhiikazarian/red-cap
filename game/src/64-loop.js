@@ -42,18 +42,13 @@ function frame(now) {
   }
   if (state === 'play' && !locked && mouse.in && !touchUI) edgeTurn(dt);
   ambience(dt, now / 1000);
-  worldLook(dt);
+  G.lamp.position.set(hero.pos.x, 2.6, hero.pos.z);
+  updateCamera(dt);
   finaleShock(realDt);
   camera.updateMatrixWorld();
   updateWarn();
   pyrSort();
   render();
-}
-// the lamp over Red Cap and the camera (with what it sees through): every frame of the world, and the loading screen's last
-// frames (tuneHold, 60-flow), so the floor's first frame draws nothing new
-function worldLook(dt) {
-  G.lamp.position.set(hero.pos.x, 2.6, hero.pos.z);
-  updateCamera(dt);
 }
 // both count down in unslowed time, so a hit-stop inside slow motion (a bomb, the finale) lasts as long as anywhere else
 function slowedDt(dt) {

@@ -513,3 +513,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - The floor's card text and the HUD are laid out under the veil as that hold begins (`floorDress`), not on the first frame.
 - The scrap still hands over to the card as before (1.54's prerelease crossfade is gone).
 - Title label `v1.54`.
+
+## 1.55 (9 Nov 2026)
+- Back to 1.52: the game, its test pictures, `CLAUDE.md` and `docs/ARCHITECTURE.md` are exactly as they were there. Undone:
+  1.53 (the Newsroom name, floor two's white trail, the floating words' shader built while loading) and the prereleased,
+  unshipped 1.54 (the hand-off fixes). Floor three looked softer from 1.53 on; the cause was not found.
+- Title label `v1.55`.

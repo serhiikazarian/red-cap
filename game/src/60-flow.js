@@ -19,15 +19,10 @@ function startGame(later) {
 }
 // Loading rule: everything a floor will use is prepared during its loading screen, never mid-game. warmSet holds stand-ins
 // for every kind of material that only appears later (shots, words, rings, holograms, the trail), so their shaders are built
-// with the floor's; warmUp compiles them, uploads every texture and word, and draws one hidden frame (the smoke puffs' draws
-// too, each holding a hidden puff: puffWarm, 06-fx). The floating words have
-// their own scene (wordScene, no fog nor lights, so a shader of their own): WARM_WORD stands in for them there, and is never
-// disposed, so that shader outlives every word.
+// with the floor's; warmUp compiles them, uploads every texture and word, and draws one hidden frame.
 const WARM = new THREE.Group();
-let WARM_WORD = null;
 function warmSet() {
   if (WARM.children.length) return;
-  WARM_WORD = new THREE.Sprite(wordMat(fireTex));
   const g = share(new THREE.PlaneGeometry(0.01, 0.01));
   for (const map of [null, fireTex])
     for (const fog of [true, false]) {
@@ -49,17 +44,14 @@ function warmSet() {
   const gc = share(new THREE.PlaneGeometry(0.01, 0.01)); // coloured like the trail's scraps (their colours are part of the shader)
   gc.setAttribute('color', new THREE.Float32BufferAttribute(new Array(gc.attributes.position.count * 3).fill(1), 3));
   WARM.add(new THREE.InstancedMesh(gc, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), 1)); // the paper trail
-  for (const o of [WARM, WARM_WORD])
-    o.traverse(c => {
-      c.frustumCulled = false;
-      c.position.y = -50;
-    });
+  WARM.traverse(o => {
+    o.frustumCulled = false;
+    o.position.y = -50;
+  });
 }
 function warmUp() {
   warmSet();
   scene.add(WARM);
-  puffWarm(true);
-  wordScene.add(WARM_WORD);
   const culled = [],
     texs = new Set([...Object.values(TEX), ...Object.values(canvasTexCache), waveTex, fireTex, glowRed, violetTex, smokeTex]);
   scene.traverse(o => {
@@ -73,7 +65,6 @@ function warmUp() {
     }
   });
   renderer.compile(scene, camera);
-  renderer.compile(wordScene, camera);
   seeWarm();
   for (const [w, c] of [...WORDS_SEED, ...(WORDS_FLOOR[floorIdx] || []), ...(WORDS_USED[floorIdx] || new Map()).values()]) texs.add(wordTex(w, c));
   renderer.compile(inkScene, postCam);
@@ -82,14 +73,9 @@ function warmUp() {
   for (const t of texs) if (t && t.image) renderer.initTexture(t);
   renderer.setRenderTarget(sceneTarget);
   renderer.render(scene, camera);
-  renderer.autoClear = false;
-  renderer.render(wordScene, camera);
-  renderer.autoClear = true;
   renderer.setRenderTarget(null); // hidden behind the card; the first real frame draws over it
   for (const o of culled) o.frustumCulled = true;
   scene.remove(WARM);
-  puffWarm(false);
-  wordScene.remove(WARM_WORD);
 }
 let floorBuildId = 0; // a newer enterFloor cancels a build still waiting to run
 // to floor i: Red Cap's ties and pebbles are those he came in with (a retry restores them); later: through the veil and the
@@ -161,8 +147,7 @@ function floorCut(i, live) {
             loadMemSet(i, performance.now() - t0);
             snip.loaded();
           },
-          snip.expect,
-          () => floorDress(i)
+          snip.expect
         );
       }, 280)
     )
@@ -277,35 +262,8 @@ const CALIBRATION_VIEWS = 4,
   TRY_FRAMES = 30, // then frames judged
   TRY_LATE = 1, // and how many of them may be late
   TUNE_MAX = 3000, // ms: the controller (02-render) goes on from the best setting found by then
-  TUNE_HOLD = 8, // frames: the opening view drawn at the kept setting under the scrap before the floor opens (tuneHold)
-  TUNE_HOLD_MAX = 1000, // ms: or this long, whichever comes first
   FINAL_SCRAP_MS = 3000, // the scrap stays at least this long before floor three
   FIRST_SCRAP_MS = 1400; // and before floor one (its first build is the longest)
-// the setting kept: the opening view is drawn under the scrap TUNE_HOLD frames (or TUNE_HOLD_MAX ms) before done(), as the
-// main loop draws it (worldLook: the see-through on), so the new buffers are made, everything is drawn once and the page has
-// settled before the floor shows, not on its first frames
-function tuneHold(live, done) {
-  let left = TUNE_HOLD;
-  const end = () => {
-    if (left < 0 || !live()) return;
-    left = -1;
-    done();
-  };
-  const frame = () => {
-    if (left < 0 || !live()) return;
-    try {
-      worldLook(1 / 60);
-      pyrSort();
-      render();
-    } catch {
-      return end(); /* drawn by the main loop instead */
-    }
-    if (--left <= 0 || document.hidden) return end();
-    requestAnimationFrame(frame);
-  };
-  setTimeout(end, TUNE_HOLD_MAX); // no frames at all (a hidden page): the floor still opens
-  frame();
-}
 // the views drawn while a floor loads, each a camera place and turn: the floor's opening view first, then CALIBRATION_VIEWS more
 function calibrationViewsAll() {
   updateCamera(1 / 60);
@@ -342,10 +300,10 @@ function settled(gaps) {
     before = mean(n - 2 * SETTLE_RUN, n - SETTLE_RUN);
   return Math.abs(now - before) <= SETTLE_TOL * before;
 }
-// the floor's drawing settings, found while it loads; then kept() and, after the hold (tuneHold), done, from its opening view.
-// expect(ms), each frame: how long it expects still to take (the frames left at the pace so far; while settling, one try when
-// the frames are well inside the late-frame rule, else as many as halving the rungs takes), within TUNE_MAX
-function tune(live, done, expect, kept) {
+// the floor's drawing settings, found while it loads; then done, from its opening view. expect(ms), each frame: how long it
+// expects still to take (the frames left at the pace so far; while settling, one try when the frames are well inside the
+// late-frame rule, else as many as halving the rungs takes), within TUNE_MAX
+function tune(live, done, expect) {
   const views = calibrationViewsAll(),
     L = resLadder(),
     t0 = performance.now(),
@@ -366,8 +324,7 @@ function tune(live, done, expect, kept) {
     setRung(L[hi]);
     calibrationLook(views[0]);
     resolutionFresh();
-    kept();
-    tuneHold(live, done);
+    done();
   };
   const next = () => {
     if (lo >= hi) return finish();
@@ -451,25 +408,19 @@ function calibrationViews(n) {
   return out;
 }
 let worldOn = false; // the world has been shown since the title (until then the title and the ink cover it: not drawn)
-// the floor's card and the HUD laid out under the veil while the scrap still shows (tune's hold), so the page's first drawing
-// of them is not on the floor's first frames; floorShow does it again (the plain start has no scrap)
-function floorDress(i) {
-  $('#cardNum').textContent = FLOORS[i].num;
-  $('#cardName').textContent = FLOORS[i].name;
-  $('#cardLine').textContent = FLOORS[i].line;
-  $('#hud').hidden = false;
-  $('#weapons').hidden = touchUI;
-  $('#card').hidden = false;
-}
 function floorShow(i) {
   state = 'intro';
   worldOn = true;
-  floorDress(i);
+  $('#hud').hidden = false;
+  $('#weapons').hidden = touchUI;
   droneStart(FLOORS[i].drone);
   cardAt = performance.now();
   showOnly('card');
   toastOff();
   keys.clear();
+  $('#cardNum').textContent = FLOORS[i].num;
+  $('#cardName').textContent = FLOORS[i].name;
+  $('#cardLine').textContent = FLOORS[i].line;
   $('#reticle').hidden = true;
   $('#touch').hidden = true;
 }
@@ -600,7 +551,7 @@ function toTitle() {
 }
 // ----- the title's slideshow: Serj's paintings drifting slowly, one after another
 const SLIDES = [
-  // [asset, drift: start and end scale, then x / y offsets in %]  1 the Newsroom, 2 the Geezer, 3 the Mouth, 4 the Priest, 5 the Grump
+  // [asset, drift: start and end scale, then x / y offsets in %]  1 the Ushers' corridor, 2 the Geezer, 3 the Mouth, 4 the Priest, 5 the Grump
   ['slide_1', [1.06, 1.13, 1.5, -0.5, -1.5, 0.5]],
   ['slide_2', [1.14, 1.06, 0, 1.2, 0, -0.8]],
   ['slide_3', [1.05, 1.12, -1.2, 0, 1.2, -1]],
