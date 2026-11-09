@@ -1,6 +1,11 @@
 // The Grin (G): a face on fire that never stops smilin'. A lit, lumpy ball with its painted face, inside a corona of flame
 // (a shader eats the painting's edge with rising noise), and its grin cut out and hung in front.
 // Its parts draw in a set order at the Grin's own distance (userData.sortRank, sortUnits in 02-render).
+// Black ink thorns stick out all round its burning rim, like a sea urchin's (fixed lengths: no dice, so replays keep their rolls).
+const GRIN_SPIKES = 12, // thorns round the rim
+  GRIN_SPIKE_LEN = 0.95, // a thorn's length, in ball radii (each one a little longer or shorter)
+  GRIN_SPIKE_W = 0.17, // a thorn's foot radius, in ball radii
+  GRIN_SPIKE_ROOT = 0.85; // where a thorn starts, in ball radii from the centre (its foot hides under the burning rim)
 
 // the Grin's face painted into a fireball: a shader eats its edge with rising noise and lights it lavender
 function grinFire(h) {
@@ -59,6 +64,13 @@ function grinBall(h) {
   fire.position.z = -0.3;
   fire.scale.setScalar(1.12);
   g.add(fire); // the corona sits just behind and a little larger, so flames lick past the head
+  const spikes = new THREE.Mesh(
+    grinSpikeGeo(R, cy),
+    new THREE.MeshBasicMaterial({ color: COL.ink, transparent: true, depthWrite: false, ...INK_HIDE })
+  );
+  spikes.userData.sortRank = 1.5; /* after the fire card, before the ball, which covers their feet */
+  g.add(spikes);
+  g.userData.spikeMat = spikes.material;
   const mat = grinHeadMat(fire, W, H, cy);
   mat.color = mat.uniforms.tint.value;
   const ball = new THREE.Mesh(grinHeadGeo(R, cy), mat);
@@ -72,6 +84,37 @@ function grinBall(h) {
   g.userData.mouth = mouth;
   g.userData.mouthMat = mouth.material;
   return g;
+}
+// the thorns, one mesh shared by every Grin: cones round the head's rim (it is as wide and flat as the head), tipped a
+// little forward or back by turns
+let grinSpikeShared = null;
+function grinSpikeGeo(R, cy) {
+  if (grinSpikeShared) return grinSpikeShared;
+  const pos = [],
+    m = new THREE.Matrix4(),
+    q = new THREE.Quaternion(),
+    up = new THREE.Vector3(0, 1, 0),
+    dir = new THREE.Vector3(),
+    foot = new THREE.Vector3(),
+    one = new THREE.Vector3(1, 1, 1);
+  for (let k = 0; k < GRIN_SPIKES; k++) {
+    const a = (k / GRIN_SPIKES) * Math.PI * 2 + 0.2 * Math.sin(k * 3.7),
+      len = R * GRIN_SPIKE_LEN * (1 + 0.28 * Math.sin(k * 2.3 + 1)),
+      cone = new THREE.ConeGeometry(R * GRIN_SPIKE_W, len, 5).toNonIndexed();
+    cone.translate(0, len / 2, 0);
+    dir.set(Math.cos(a) * 1.1, Math.sin(a), k % 2 ? 0.28 : -0.2).normalize();
+    q.setFromUnitVectors(up, dir);
+    foot.set(Math.cos(a) * 1.1 * R * GRIN_SPIKE_ROOT, Math.sin(a) * R * GRIN_SPIKE_ROOT + cy, 0);
+    m.compose(foot, q, one);
+    cone.applyMatrix4(m);
+    pos.push(...cone.attributes.position.array);
+    cone.dispose();
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.computeVertexNormals();
+  grinSpikeShared = share(geo);
+  return grinSpikeShared;
 }
 // the head: a sphere made lumpy, a little wide and flat, its foot at y 0
 function grinHeadGeo(R, cy) {
@@ -288,6 +331,7 @@ function grinDying(e, dt) {
     B = e.body.userData;
   B.ballMat.uniforms.fade.value = f;
   B.mat.uniforms.opacity.value = f;
+  B.spikeMat.opacity = f;
   B.mat.uniforms.time.value = performance.now() / 1000;
   e.body.scale.setScalar(1 + k * 0.3);
   e.glow.material.opacity = 0.75 * f;

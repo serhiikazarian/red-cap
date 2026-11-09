@@ -528,3 +528,14 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Floor two's paper trail to the open door is white (`trail: COL.paper`, a new `FLOORS` field; without it a trail keeps
   the floor's `words` colour), not yellow; its wall doodles stay yellow.
 - Title label `v1.56`.
+
+## 1.58 (9 Nov 2026), after 1.57 was tried as a prerelease only
+- Keys work when the game runs inside itch.io's frame: every click or tap on the game takes keyboard focus for its frame
+  (`window.focus()` on `pointerdown`, `62-input.js`), the workaround Serj found and tested.
+- The Geezer's white "!" before his lash is gone; the white glow at the screen edge still warns of it (`mark: false` in his
+  `warn`, `24-geezer.js`; `warnMark` in `07-hud.js`).
+- The Jester's "!" before a charge is 30% smaller (`JESTER_MARK` 0.7, `30-jester.js`; any `warn` may now give a `size`).
+- When the Geezer's stare misses Red Cap, a big white PHEW! shows in the middle of the screen (the big MISSED, gone since
+  1.49, comes back with new words; `24-geezer.js`). His boss bar still says Winded.
+- Grins are spiky: 12 black ink thorns stick out all round the burning ball, like a sea urchin's, and fade with it when it
+  dies (`grinSpikeGeo`, `GRIN_SPIKE_*`, `25-grin.js`).

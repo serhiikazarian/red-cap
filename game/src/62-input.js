@@ -3,6 +3,9 @@
 // a floor), touch controls, a game controller, and the screens' buttons.
 // The browser may refuse the capture (Esc and a controller button don't count as the player's action, and Chrome waits about
 // a second after Esc let the mouse go): then the next key or click in play asks again.
+// Inside a frame (itch.io) the keys reach the game only while its frame holds focus, and a click does not always hand it
+// over: every press of a mouse button or finger asks for it (only then, so the page around stays usable).
+document.addEventListener('pointerdown', () => window.focus(), true);
 let locked = false;
 const mouse = { x: 0, y: 0, in: false };
 function lockPointer() {
