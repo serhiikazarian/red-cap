@@ -127,7 +127,10 @@ const GEEZER_STATES = {
           hero.iframe = 0;
           hurtHero(far ? 1 : 2, e.pos);
         }
-      } else if (hero.stun <= 0) e.missed = true; /* a miss leaves him winded (his boss bar says so) */
+      } else if (hero.stun <= 0) {
+        e.missed = true; /* a miss leaves him winded (his boss bar says so) */
+        bigWord('PHEW!', HEX.paper);
+      }
       e.flashes--;
       if (e.flashes > 0) {
         // another flash, after a gap you cannot count on

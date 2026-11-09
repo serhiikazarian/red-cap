@@ -535,3 +535,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - The Geezer's white "!" before his lash is gone; the white glow at the screen edge still warns of it (`mark: false` in his
   `warn`, `24-geezer.js`; `warnMark` in `07-hud.js`).
 - The Jester's "!" before a charge is 30% smaller (`JESTER_MARK` 0.7, `30-jester.js`; any `warn` may now give a `size`).
+- When the Geezer's stare misses Red Cap, a big white PHEW! shows in the middle of the screen (the big MISSED, gone since
+  1.49, comes back with new words; `24-geezer.js`). His boss bar still says Winded.
