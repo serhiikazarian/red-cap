@@ -127,7 +127,10 @@ const GEEZER_STATES = {
           hero.iframe = 0;
           hurtHero(far ? 1 : 2, e.pos);
         }
-      } else if (hero.stun <= 0) e.missed = true; /* a miss leaves him winded (his boss bar says so) */
+      } else if (hero.stun <= 0) {
+        e.missed = true; /* a miss leaves him winded (his boss bar says so) */
+        bigWord('PHEW!', HEX.paper);
+      }
       e.flashes--;
       if (e.flashes > 0) {
         // another flash, after a gap you cannot count on
@@ -215,7 +218,7 @@ TALKERS.Y = {
     e.st === 'gaze'
       ? { c: '#b48cff', k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'Y' + e.flashes }
       : e.st === 'sweep'
-        ? { c: HEX.paper, k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'y' + e.lashes }
+        ? { c: HEX.paper, k: clamp(1 - e.t / e.tWind, 0, 1), cue: 'y' + e.lashes, mark: false }
         : e.st === 'blink'
           ? { c: '#b48cff', k: 0, cue: 'Y' }
           : null,
