@@ -528,3 +528,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Floor two's paper trail to the open door is white (`trail: COL.paper`, a new `FLOORS` field; without it a trail keeps
   the floor's `words` colour), not yellow; its wall doodles stay yellow.
 - Title label `v1.56`.
+
+## 1.57 (9 Nov 2026)
+- Keys work when the game runs inside itch.io's frame: every click or tap on the game takes keyboard focus for its frame
+  (`window.focus()` on `pointerdown`, `62-input.js`), the workaround Serj found and tested.
