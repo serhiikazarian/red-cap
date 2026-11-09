@@ -32,7 +32,6 @@ async function titleWarm() {
   await loadTextures();
   fireTex = glowTex('#ffcf3a', 'rgba(255,70,20,.75)');
   violetTex = glowTex('#e4b8ff', 'rgba(132,44,232,.8)');
-  spikeTex = spikeFootTex();
   glowRed = glowTex('#ff4a3a', 'rgba(216,33,42,.5)');
   waveTex = makeWaveTex();
   smokeTex = makeSmokeTex();
@@ -41,6 +40,7 @@ async function titleWarm() {
     scene.add(m);
   }
   fogNoiseTex = makeFogNoise();
+  spikeTex = spikeFootTex(); /* after the textures drawn at random: a texture's id takes dice too */
   poolInit();
   scene.add(buildHero());
   slingModel = buildSling();
