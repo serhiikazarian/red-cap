@@ -243,6 +243,8 @@ function buildCells(F, w, box, rng) {
     G.group.add(still(new THREE.Mesh(mergeGeos(B.cornice), new THREE.MeshLambertMaterial({ color: 0x24100c, emissive: 0x1a0402 }))));
   if (F.deco === 'mouth') addWebs(w, B.webFaces);
   if (F.deco === 'blocks') addPaintings(w);
+  if (F.lintels) addLintels(F);
+  if (F.bigArt) hangBigArt(F);
 }
 // the floor's wall materials, one per wall texture; a tint after the colon (floor two's darker walls)
 function wallMaterials(F) {

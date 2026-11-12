@@ -582,3 +582,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   (`hitProp`, `breakProp` in 51-props, `G.breaks`), and falls apart; its cell is open floor after. Such props are baked each on
   its own (`own` on its see-through entry, 55-bake) so the drawing can be taken away.
 - An Usher wakes only when he sees Red Cap: no longer through a wall within 8 m. (A call still carries through walls.)
+- Denser, less even floors. Plans made lopsided (pillars, totem and props moved off their mirror places), wall stubs added
+  (floor one's middle hall, floor two's start room, three in floor three's south field), props in clusters (easels in the
+  Geezer's hall, an L of block stacks by floor three's start). Crooked beams over doorways on floors one and three
+  (`lintels`, `addLintels`: no dice, each from its cell's numbers). Serj's paintings hung large on chosen walls of every
+  floor (`bigArt`, `hangBigArt`).

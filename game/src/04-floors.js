@@ -50,6 +50,11 @@ const FLOORS = [
     // the hidden room north of the curtain room: a tall curtain hangs in its doorway (the 'c' cell), a wall until a blow parts it;
     // inside, a big heart (never carried on if left) and a framed painting on the far wall
     curtainRoom: { door: [7, 3], heart: [7, 1], art: 'paint_job' },
+    lintels: true, // crooked beams over its doorways (53-architecture)
+    bigArt: [
+      ['paint_scream', 7, 17, 'S'],
+      ['paint_fish', 1, 13, 'W']
+    ], // Serj's paintings, large, on the wall of that side of the cell
     roomHeart: [6, 9], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',
@@ -60,15 +65,15 @@ const FLOORS = [
       '#.P.#.....#.B.#',
       '#...##.#.##...#',
       '##.#.......#.##',
-      '#...o.T.T.o...#',
-      '#..o.....Bq...#',
+      '#...o.T..T.o..#',
+      '#..o.#...Bq...#',
       '#...###.###...#',
       '##o.q..B....o##',
       '#####.###.#####',
-      '#.............#',
-      '#..T...o...T..#',
+      '#..oo.......o.#',
+      '#..T...o....T.#',
       '#......Y......#',
-      '#..o..T.T..o..#',
+      '#..o..T..T.o..#',
       '#.h.........X.#',
       '###############'
     ]
@@ -114,6 +119,10 @@ const FLOORS = [
     trail: COL.paper, // the paper trail to the open door is white, not the words' yellow (46-gates)
     deco: 'mouth',
     strayShots: true, // the talkers' shots hurt the small talkers they hit by accident (21-shots)
+    bigArt: [
+      ['paint_fish', 13, 5, 'E'],
+      ['paint_scream', 1, 11, 'W']
+    ],
     pyramids: true, // its 'T' cells are pyramids (44-pyramids): their round body stops sight and pebbles, and they glow
     flatProps: true, // its 'o' cells hold bear traps: flat, nothing to bump into or hide behind
     embers: true, // sparks rise from the floor round Red Cap (64-loop)
@@ -125,10 +134,10 @@ const FLOORS = [
     map: [
       '###############',
       '#..T.h#..T.G..#',
-      '#.G...#.......#',
+      '#.G...#.....#.#',
       '#...o.#.P.o...#',
       '##.####.###.###',
-      '#....T.....T..#',
+      '#...T......T..#',
       '#.o....o.o...o#',
       '#.##.#######..#',
       '#.#..#.....#.##',
@@ -155,6 +164,11 @@ const FLOORS = [
     placedHearts: 0.9,
     lowHeart: [2, 2], // the Jester's chamber: a heart here too if Red Cap walks in with fewer than 3
     blockMoved: [[11, 11, 11, 12]],
+    lintels: true,
+    bigArt: [
+      ['paint_job', 19, 15, 'E'],
+      ['paint_fish', 1, 15, 'W']
+    ],
     raise: [
       [1, 9, 5, 11],
       [15, 9, 19, 11]
@@ -187,13 +201,13 @@ const FLOORS = [
       '#.....#._.....#.....#',
       '#.W...##.o.o.##.....#',
       '#....o.._..._..o....#',
-      '#..o.............o..#',
-      '#.....o.o.....o.....#',
+      '#..o............#o..#',
+      '#.....o.o.....o.#...#',
       '#....o.........o....#',
-      '#..o........o....o..#',
-      '#..T.............T..#',
-      '#......o..P..o......#',
-      '#.o...............o.#',
+      '#..o...#....o....o..#',
+      '#..T............T...#',
+      '#.o....o..P..o......#',
+      '#.oo.............o..#',
       '#####################'
     ]
   }
