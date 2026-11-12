@@ -160,7 +160,8 @@ function floorState(F, w) {
     cages: [],
     piles: [], // pebble piles
     breaks: {}, // props Red Cap can break, by cell 'x,z': { g, x, z, hits } (51-props)
-    curtain: null, // the hidden room's curtain: { x, z, m, done } (54-dreamwork); its doorway is a wall until done
+    beam: null, // the gate beam while it holds: { x, z, m, hits } (53-architecture)
+    curtain: null, // the hidden room's curtain: { x, z, m, done, idle } (54-dreamwork); its doorway is a wall until done
     see: [], // see-through things (56-see-through)
     wallWords: [], // where floor two's wall words are painted
     niches: [],
@@ -242,6 +243,7 @@ function buildCells(F, w, box, rng) {
   if (F.deco === 'mouth') addWebs(w, B.webFaces);
   if (F.deco === 'blocks') addPaintings(w);
   if (F.lintels) addLintels(F);
+  if (F.beam) addBeam(F);
 }
 // the floor's wall materials, one per wall texture; a tint after the colon (floor two's darker walls)
 function wallMaterials(F) {

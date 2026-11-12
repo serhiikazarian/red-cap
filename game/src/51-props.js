@@ -68,7 +68,7 @@ function critterRoom(x, z) {
 }
 // Breakin’ props: a prop that blocks the way (an easel, a stack of blocks; never a flat trap) takes PROP_BREAK.hits blows, one a
 // yo-yo throw or a pebble, landing within r m of its middle and below top m, and falls apart: its cell is open floor after
-const PROP_BREAK = { hits: 3, r: 0.8, top: 2.6 };
+const PROP_BREAK = { hits: 2, r: 0.8, top: 2.6 };
 function hitProp(p, rad) {
   const k = cellOf(p.x, p.z).join(),
     b = G.breaks[k];

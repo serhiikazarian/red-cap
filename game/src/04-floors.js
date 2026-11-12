@@ -49,7 +49,7 @@ const FLOORS = [
     // the hidden room north of the curtain room: a tall curtain hangs in its doorway (the 'c' cell), a wall until a blow parts it;
     // inside, a big heart (never carried on if left), a framed painting on the far wall, and a Shade
     curtainRoom: { door: [7, 3], heart: [7, 1], art: 'paint_job' },
-    lintels: true, // crooked beams over its doorways (53-architecture)
+    beam: [8, 6], // one beam on posts over this doorway (the curtain room's east door): it stops the biggest Usher's charge once (53-architecture)
     roomHeart: [6, 9], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',
