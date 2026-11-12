@@ -38,25 +38,6 @@ function heartRoom(x, z, big) {
     }
   return [x, z];
 }
-// Hittin’ a tie: at full health, with room in his pockets, a blow (yo-yo or pebble) breaks a tie into pebbles: TIE_PEBBLES for a
-// tie, for a big heart, with a clink. Hurt, or with full pockets, the blow passes through and the tie stays.
-const TIE_PEBBLES = [1, 3],
-  TIE_HIT = { r: 0.45, y: 0.8 }; /* how near the blow must pass: across, and up or down */
-function hitTie(p, rad) {
-  if (hero.hp < hero.maxHp || hero.ammo >= hero.maxAmmo) return false;
-  for (const t of G.pickups) {
-    const at = t.g.position;
-    if (t.taken || Math.hypot(at.x - p.x, at.z - p.z) > rad + TIE_HIT.r || Math.abs(at.y - p.y) > rad + TIE_HIT.y) continue;
-    t.taken = true;
-    G.group.remove(t.g);
-    G.group.remove(t.glow);
-    burst(at, [COL.tie, COL.smoke, COL.paper], 14, 4, 0.14);
-    SFX.tink(); /* the tie breaks: a pebble's clink, then the pick-up chime (giveAmmo) */
-    giveAmmo(TIE_PEBBLES[t.big ? 1 : 0], at);
-    return true;
-  }
-  return false;
-}
 // a heart on clear floor between two points, nearer the first
 function heartBetween(a, b) {
   for (const k of [0.4, 0.7, 0.15, 1]) {

@@ -448,7 +448,7 @@ function narcGlasses(rng) {
     G.deco.push({ m, spin: 0.4, bob: rng() * 6, y: m.position.y });
   });
   const big = paper('defuk', 4.5, 0.1, true);
-  big.position.set(7.5 * CELL, 5.5, 15.5 * CELL);
+  big.position.set(7.5 * CELL, 5.5, 12.5 * CELL);
   G.group.add(big);
   G.deco.push({ m: big, spin: 0.15, bob: 1, y: 5.5 });
 }

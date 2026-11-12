@@ -231,9 +231,6 @@ function yoyoHits(y, hand, p) {
     kickFace(q, 0.5 + g);
     hitPlaque(q, 0.3 + g);
     hitWord(q, 0.3 + g);
-    if (!y.tie && hitTie(q, 0.3 + g)) y.tie = true;
-    hitCurtain(q, 0.3 + g);
-    if (!y.prop && hitProp(q, 0.2 + g)) y.prop = true;
   }
   if (!y.npc && hitNpc(p, 0.3)) y.npc = true;
 }
@@ -397,7 +394,6 @@ function pebbleStep(b, dt) {
   }
   if (hitGhost(p, 0.15) || hitHolo(p, 0.1) || hitTotem(p, 0.1) || hitPyr(p, 0.1) || kickFace(p, 0.2) || hitPlaque(p, 0.1) || hitNpc(p, 0.1))
     return true;
-  if (hitTie(p, 0.15) || hitCurtain(p, 0.1) || hitProp(p, 0.1)) return true;
   return pebbleHitsTalker(b, p);
 }
 // the first talker it meets takes it (or bounces it off: its bounce hook); a shot meant for a ghost flies past Priest

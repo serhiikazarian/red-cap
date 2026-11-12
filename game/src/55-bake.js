@@ -132,11 +132,11 @@ function bakeStatics() {
   G.group.updateMatrixWorld(true);
 }
 // the see-through group a mesh belongs to, or null (a hard one never fades: it is baked with everything else, only its
-// shape kept for the camera; unless it is own: a prop Red Cap can break is baked alone, to be taken away)
+// shape kept for the camera)
 function seeGroupOf(o) {
   let see = null;
   for (let q = o; q && q !== G.group; q = q.parent) if (q.userData.seeId) see = G.see[q.userData.seeId - 1];
-  if (see && see.hard && !see.own) {
+  if (see && see.hard) {
     see.baked = true;
     see = null;
   }

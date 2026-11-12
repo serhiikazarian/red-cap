@@ -1,44 +1,5 @@
 // The Usher (B): shows you to your seat, then charges at it.
 // a cone body in a dark coat, his bow-tied face, brows that drop when he sees you, glowing eyes for the charge, two arms
-// Calling the others: hurt to USHER_CALL.hp of his health, a chasing Usher backs off (at back m/s) and shouts for tell s. A blow
-// in that time cuts the shout off, and he does not try again. Sleeping Ushers within reach m are fetched (usherFetch): they
-// come round Red Cap's far side (off m past him, for flank s) and hold their charge while the caller is in his, so the two
-// charge in turn. A fetched Usher ends the floor's quiet (G.announced, 60-flow).
-const USHER_CALL = { hp: 0.6, tell: 1, back: 3.2, reach: 26, off: 4, flank: 8 };
-const FLANK_AT = new THREE.Vector3();
-const sleepingUshers = (pos, reach) =>
-  G.enemies
-    .filter(u => u.type === 'B' && u.st === 'idle' && !u.dead && !u.dying && !u.caged && u.pos.distanceTo(pos) < reach)
-    .sort((a, b) => a.pos.distanceTo(pos) - b.pos.distanceTo(pos));
-function usherCall(e) {
-  Object.assign(e, { called: true, st: 'call', t: USHER_CALL.tell, callHp: e.hp });
-  floatWord('USHERS!', e.pos.clone().setY(3 * (e.k || 1) + 0.4), HEX.tie, 1.2, true);
-  playTone({ f: 520, f2: 760, dur: USHER_CALL.tell, type: 'square', gain: 0.07, filt: [1400, 900] });
-  if (!G.callHint) {
-    G.callHint = true;
-    toast('Hit him before he calls.');
-  }
-}
-// a sleeping Usher u is woken and comes: round the far side from the one who called (by)
-function usherFetch(u, by) {
-  Object.assign(u, { st: 'chase', flank: by, flankT: USHER_CALL.flank });
-  u.brows.forEach(b => (b.visible = true));
-  G.announced = true;
-  SFX.growl();
-  floatWord('!!', u.pos.clone().setY(3 * (u.k || 1)), HEX.tie, 0.9 * (u.k || 1));
-}
-// where a chasing Usher heads: Red Cap, or while he flanks, the spot past Red Cap from the caller (when that is open floor)
-function usherGoal(e) {
-  const c = e.flank;
-  if (!c || e.flankT <= 0 || c.dead || c.dying || heroDist(e.pos.x, e.pos.z) < USHER_CALL.off) return hero.pos;
-  const dx = hero.pos.x - c.pos.x,
-    dz = hero.pos.z - c.pos.z,
-    d = Math.hypot(dx, dz) || 1;
-  FLANK_AT.set(hero.pos.x + (dx / d) * USHER_CALL.off, hero.pos.y, hero.pos.z + (dz / d) * USHER_CALL.off);
-  return solid(...cellOf(FLANK_AT.x, FLANK_AT.z)) ? hero.pos : FLANK_AT;
-}
-// he holds his charge while the one who called him is in his own
-const usherHolds = e => e.flank && !e.flank.dead && !e.flank.dying && (e.flank.st === 'aim' || e.flank.st === 'charge');
 function makeUsher(e, add) {
   Object.assign(e, { name: 'Usher', hp: 4.5, maxHp: 4.5, r: 0.7, hgt: 3, y1: 3, palette: [COL.cap, COL.ink, 0xe8c628, 0x58622e] });
   const bmat = new THREE.MeshBasicMaterial({ map: TEX.t_dark, color: 0xc4c4b4 });
@@ -102,9 +63,6 @@ function updateUsher(e, dt, dist, ux, uz, mv) {
     floatWord('!!', e.pos.clone().setY(3 * K), HEX.tie, 0.9 * K);
   };
   if (e.rage > 0) e.rage -= dt;
-  if (e.flankT > 0) e.flankT -= dt;
-  if (!e.called && e.st === 'chase' && e.hp <= e.maxHp * USHER_CALL.hp && e.stagger <= 0 && sleepingUshers(e.pos, USHER_CALL.reach).length)
-    usherCall(e);
   if (e.wantCharge) {
     e.wantCharge = false;
     e.stagger = 0;
@@ -131,8 +89,7 @@ function updateUsher(e, dt, dist, ux, uz, mv) {
 const USHER_STATES = {
   idle(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (animTick) e.head.rotation.z = Math.sin(performance.now() / 400 + e.seed) * 0.1;
-    /* he wakes only when he sees Red Cap: never through a wall, however near */
-    if (dist < (e.sight || 20) && clearOfWalls(e.pos, hero.pos)) {
+    if ((dist < (e.sight || 20) && clearOfWalls(e.pos, hero.pos)) || dist < 8) {
       e.brows.forEach(b => (b.visible = true));
       if (clearOfCover(e.pos, hero.pos, e.r + 0.15)) aim();
       else {
@@ -146,36 +103,13 @@ const USHER_STATES = {
     }
   },
   chase(e, dt, dist, ux, uz, mv, K, cs, aim) {
-    [mv.x, mv.z] = steer(e, usherGoal(e));
+    [mv.x, mv.z] = steer(e);
     mv.sp = 4.8 - (K - 1) * 1.1;
     if (animTick) e.arms.forEach((a, i) => (a.rotation.z = Math.sin(performance.now() / 160 + i * 3) * 0.3));
     if (dist < 2.8 * K && e.stagger <= 0) {
       e.st = 'wind';
       e.t = 0.3 * Math.sqrt(K);
-    } else if (
-      dist > 3.2 * K &&
-      dist < 14 + (K - 1) * 8 &&
-      e.chargeCd <= 0 &&
-      e.stagger <= 0 &&
-      clearOfCover(e.pos, hero.pos, e.r + 0.15) &&
-      !usherHolds(e)
-    )
-      aim();
-  },
-  // the shout: backing off, one arm up; a blow cuts it off, else the sleeping Ushers in reach come
-  call(e, dt, dist, ux, uz, mv) {
-    const cut = e.hp < e.callHp;
-    if (cut) floatWord('GULP', e.pos.clone().setY(3 * (e.k || 1)), HEX.paper, 0.9);
-    else if (e.t > 0) {
-      mv.x = -ux;
-      mv.z = -uz;
-      mv.sp = USHER_CALL.back;
-      if (animTick) shake(e.tilt, 0.04);
-      e.arms.forEach((a, i) => (a.rotation.z = i ? 0 : 2.4));
-      return;
-    } else for (const u of sleepingUshers(e.pos, USHER_CALL.reach)) usherFetch(u, e);
-    e.st = 'chase';
-    e.tilt.position.set(0, 0, 0);
+    } else if (dist > 3.2 * K && dist < 14 + (K - 1) * 8 && e.chargeCd <= 0 && e.stagger <= 0 && clearOfCover(e.pos, hero.pos, e.r + 0.15)) aim();
   },
   aim(e, dt, dist, ux, uz, mv, K, cs, aim) {
     // the tell: he stops, shakes, arms back, brows twitching
