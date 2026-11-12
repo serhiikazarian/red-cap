@@ -555,3 +555,17 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Tidy: the thorn textures (`spikeFootTex`, `socketFootTex`) moved from `03-textures.js` to `25-grin.js`, which owns them;
   `warnMark` takes the marker's place as one object (`at`). `CLAUDE.md` and `docs/ARCHITECTURE.md` brought up to date (warning
   `size` / `mark`, PHEW!, thorn draw ranks, itch.io focus, boot textures and dice, close-up pictures).
+
+## 1.61 (12 Nov 2026)
+- Floor one has a hidden room: its plan grew three rows north (every floor-one cell moved 3 down the map: `FLOORS` fields,
+  the Geezer's waking line in 24-geezer, the big DEFUK in 52-decor). A tall red curtain hangs in the doorway north of the
+  curtain room (`curtainRoom` in `FLOORS`, map letter `c`, `G.curtain`): the doorway is a wall (`solid`) until the first blow
+  to the curtain (`hitCurtain`, RUSTLE), which draws it aside. Inside: a big heart (never carried on if left) and
+  Serj's full-time-job painting (`paint_job`) in a gold frame.
+- An Usher wakes only when he sees Red Cap: no longer through a wall within 8 m.
+- Floor two denser and lopsided: the west room raised (one ramp at its door), a hump in the east passage with a pyramid on it,
+  two more bear traps, a pyramid moved off its mirror place, a wall stub in the start room.
+- Hittin’ ties: at full health, with room in his pockets, a blow (yo-yo or pebble) breaks a tie into pebbles (`hitTie`,
+  `TIE_PEBBLES`: 1 for a tie, 3 for a big heart) with its own sound (`SFX.snip`); hurt or with full pockets the tie stays.
+- Crooked beams over doorways on floors one and three (`lintels`, `addLintels` in 53-architecture: no dice, each from its
+  cell's numbers).

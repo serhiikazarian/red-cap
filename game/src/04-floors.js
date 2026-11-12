@@ -1,6 +1,6 @@
 // The three floors. Map legend (one character per CELL-metre cell, rows run along z):
 //   # wall   . floor   o block or prop   T pillar, pyramid (floor 2) or totem (floor 3)   P start   X exit door   h heart
-//   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
+//   c the curtain's doorway (a wall until the curtain is struck: curtainRoom)   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
 //   talkers: B Usher  q Shade  Y Geezer  G Grin  R Priest  Z Bruno  U Grump  S Smoker  W Brainless the Second  M Jester
 // Other fields: the look (fog, bg, amb, hemi, lamp, floor and wall paintings, wallH, trail: the paper trail's colour if not words), raised ground (raise, ramps), the drone,
 // deco (which decor set builds the floor), opening (a yellow-box hint as the floor begins, once a game), and tuning: drop odds per talker, hidden hearts and pebble piles, placedHearts (the
@@ -17,12 +17,15 @@ const FLOORS = [
     amb: [0x9aa474, 0.9],
     hemi: [0xb2c07a, 0x1a0c08, 0.45],
     lamp: [0xffd88a, 1.4, 14],
-    raise: [[1, 1, 13, 3]],
+    raise: [
+      [1, 4, 13, 6],
+      [6, 1, 8, 3]
+    ], // the north rooms, and the hidden room behind the curtain with its doorway
     ramps: [
-      [2, 4, 'N'],
-      [6, 4, 'N'],
-      [8, 4, 'N'],
-      [12, 4, 'N']
+      [2, 7, 'N'],
+      [6, 7, 'N'],
+      [8, 7, 'N'],
+      [12, 7, 'N']
     ],
     floor: 't_dark',
     walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble'],
@@ -33,19 +36,26 @@ const FLOORS = [
     plainFloaters: true, // its floaters fade without a contour (56-see-through)
     yaw: Math.PI,
     drone: { notes: [46.25, 69.3], wave: 'sawtooth', cut: 260, lfo: 0.07, gain: 0.1 },
-    firstUsher: [9, 6],
+    firstUsher: [9, 9],
     usherSizes: [
-      [7, 8, 1.28],
-      [12, 2, 1.68, 11]
+      [7, 11, 1.28],
+      [12, 5, 1.68, 11]
     ],
     dropOdds: { B: 0.18, q: 0.05 },
     hiddenHearts: 1, // hidden in quiet corners (hideHearts)
     placedHearts: 0.784,
     hiddenPiles: 2, // and piles of pebbles in the next quiet corners
-    roomPile: [5, 1, 9, 2, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
-    roomHeart: [6, 6], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
+    roomPile: [5, 4, 9, 5, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
+    // the hidden room north of the curtain room: a tall curtain hangs in its doorway (the 'c' cell), a wall until a blow parts it;
+    // inside, a big heart (never carried on if left) and a framed painting on the far wall
+    curtainRoom: { door: [7, 3], heart: [7, 1], art: 'paint_job' },
+    lintels: true, // crooked beams over its doorways (53-architecture)
+    roomHeart: [6, 9], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',
+      '######...######',
+      '######...######',
+      '#######c#######',
       '#...#.o...#...#',
       '#.P.#.....#.B.#',
       '#...##.#.##...#',
@@ -75,10 +85,18 @@ const FLOORS = [
     amb: [0xc08070, 0.75],
     hemi: [0xff9a7a, 0x200404, 0.45],
     lamp: [0xffc9a0, 1.3, 14],
-    raise: [[7, 1, 13, 3]],
+    raise: [
+      [7, 1, 13, 3],
+      [1, 1, 5, 3],
+      [12, 9, 13, 9]
+    ], // the start room, the west room (one ramp at its door), and a hump in the east passage with a pyramid on it
     ramps: [
       [7, 4, 'N'],
-      [11, 4, 'N']
+      [11, 4, 'N'],
+      [2, 4, 'N'],
+      [12, 8, 'S'],
+      [12, 10, 'N'],
+      [13, 10, 'N']
     ],
     spreadHearts: true,
     dropOdds: { G: 0.2 },
@@ -107,16 +125,16 @@ const FLOORS = [
     map: [
       '###############',
       '#..T.h#..T.G..#',
-      '#.G...#.......#',
+      '#.G...#.....#.#',
       '#...o.#.P.o...#',
       '##.####.###.###',
-      '#....T.....T..#',
-      '#.o....o.o....#',
+      '#...T......T..#',
+      '#.o....o.o...o#',
       '#.##.#######..#',
       '#.#..#.....#.##',
-      '#.TZ.#..X..#..#',
+      '#.TZ.#..X..#.T#',
       '#.##.##...##..#',
-      '#.....o.R.o...#',
+      '#...o.o.R.o...#',
       '###############'
     ]
   },
@@ -137,6 +155,7 @@ const FLOORS = [
     placedHearts: 0.9,
     lowHeart: [2, 2], // the Jester's chamber: a heart here too if Red Cap walks in with fewer than 3
     blockMoved: [[11, 11, 11, 12]],
+    lintels: true,
     floor: 't_smudge',
     walls: ['t_blue', 't_lime', 't_orange', 't_brown', 't_coal', 't_ochre'],
     wallH: [3, 6],

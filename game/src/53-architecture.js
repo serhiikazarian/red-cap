@@ -318,3 +318,28 @@ function paintEasel(M, r, ex, ez, dx, dz) {
   g.rotation.y = Math.atan2(-dx, -dz) + (r() - 0.5) * 0.5;
   G.group.add(still(g));
 }
+
+// Crooked beams over doorways (floors with lintels): an open cell between two walls gets a beam across it, LINTEL.y m above the
+// higher ground at its ends, in the floor's first wall painting. No dice: which doorways (two in three), how thick and how
+// crooked each is come from the cell's own numbers, so no two are alike and the layout's rolls stay as they are
+const LINTEL = { y: 3.1, thick: [0.34, 0.62], tilt: 0.05, skip: 3 };
+function addLintels(F) {
+  const mat = new THREE.MeshLambertMaterial({ map: TEX[F.walls[0].split(':')[0]], color: 0x8a8a8a }),
+    open = (x, z) => !solid(x, z) && cellAt(x, z) !== 'g';
+  for (let z = 1; z < G.h - 1; z++)
+    for (let x = 1; x < G.w - 1; x++) {
+      const k = x * 7 + z * 13,
+        ew = cellAt(x - 1, z) === '#' && cellAt(x + 1, z) === '#' && open(x, z - 1) && open(x, z + 1),
+        ns = cellAt(x, z - 1) === '#' && cellAt(x, z + 1) === '#' && open(x - 1, z) && open(x + 1, z);
+      if (!open(x, z) || (!ew && !ns) || k % LINTEL.skip === 0) continue;
+      const t = lerp(LINTEL.thick[0], LINTEL.thick[1], (k % 5) / 4),
+        ends = ew
+          ? [heightAt(cellMid(x), cellMid(z - 1)), heightAt(cellMid(x), cellMid(z + 1))]
+          : [heightAt(cellMid(x - 1), cellMid(z)), heightAt(cellMid(x + 1), cellMid(z))],
+        m = new THREE.Mesh(BOX, mat);
+      m.scale.set(CELL + 0.3, t, t * 1.3);
+      m.position.set(cellMid(x) + ((k % 3) - 1) * 0.08, Math.max(...ends) + LINTEL.y + t / 2, cellMid(z) + ((k % 4) - 1.5) * 0.12);
+      m.rotation.set(0, ew ? 0 : Math.PI / 2, ((k % 7) - 3) * LINTEL.tilt);
+      G.group.add(still(m));
+    }
+}

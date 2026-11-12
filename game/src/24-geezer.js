@@ -69,7 +69,7 @@ function geezerWarn(e) {
 // his states, one step each (updateGeezer runs the one he is in)
 const GEEZER_STATES = {
   idle(e, dt, dist, ux, uz, mv, now, p2, seenK) {
-    if (hero.pos.z > 9 * CELL && clearOfWalls(e.pos, hero.pos)) {
+    if (hero.pos.z > 12 * CELL && clearOfWalls(e.pos, hero.pos)) {
       e.st = 'drift';
       e.t = 1.8;
       SFX.growl();
