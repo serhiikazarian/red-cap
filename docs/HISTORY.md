@@ -560,9 +560,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Ushers call for help: hurt to `USHER_CALL.hp` of his health a chasing Usher backs off and shouts USHERS! (state `call`); a
   blow cuts it off (GULP) and he does not try again. Sleeping Ushers in reach are fetched (`usherFetch`): they come round Red
   Cap's far side (`usherGoal`) and hold their charge while the caller is in his (`usherHolds`). Hint: Hit him before he calls.
-- Shades tell: after its BOO a Shade says TELLIN’ and flies through the walls to the nearest sleeping Usher (`SHADE_TELL`,
-  state `tell`) and wakes him. Popped on the way, it tells no one. Hint: Pop it before it tells.
-- Floor one's quiet rule (`FLOORS .quiet`, `G.announced`, `keepQuiet` in 60-flow): left with no Usher fetched, Red Cap takes a
+- Floor one's quiet rule (`FLOORS .quiet`, `G.announced`, `keepQuiet` in 60-flow): left with no Usher fetched by a call, Red Cap takes a
   tie and full pockets upstairs, and floor two opens with UNANNOUNCED.
 - Floor three has height: two terraces either side of the Grump's room (`raise`, `ramps` in its `FLOORS` entry), each climbed
   by two ramps from the south; the east Smoker and the west heart stand on them.
@@ -571,10 +569,10 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `hangRootHeads`); `t_crack` is a new wall painting on floors one and two.
 - Fuller floor plans, nothing taken away. Floor one: a Shade in the curtain room, an easel in the middle hall, a third hidden
   pile of pebbles. Floor two: the west room is raised (one ramp at its door), a hump in the east passage with a pyramid on it,
-  two more bear traps. Floor three: a second Smoker on the west terrace, a third totem in the middle of the south field, six
-  more block stacks there.
+  two more bear traps. Floor three: six more block stacks in the south
+  field.
 - Hittin’ ties: at full health, with room in his pockets, a blow (yo-yo or pebble) breaks a tie into pebbles (`hitTie`,
-  `TIE_PEBBLES`: 1 for a tie, 3 for a big heart); hurt or with full pockets the tie stays.
+  `TIE_PEBBLES`: 1 for a tie, 3 for a big heart), with a clink (`SFX.tink`); hurt or with full pockets the tie stays.
 - Floor one has a hidden room: its plan grew three rows north (every floor-one cell moved 3 down the map: `FLOORS` fields,
   the Geezer's waking line in 24-geezer, the big DEFUK in 52-decor). A tall red curtain hangs in the doorway north of the
   curtain room (`curtainRoom` in `FLOORS`, map letter `c`, `G.curtain`): the doorway is a wall (`solid`) until the first blow

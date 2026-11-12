@@ -187,7 +187,6 @@ function floorState(F, w) {
     announced: false, // an Usher was fetched by a call or a Shade: the floor's quiet is broken (FLOORS .quiet)
     usherHint: false, // hints already shown on this floor
     callHint: false,
-    tellHint: false,
     npcHint: false,
     mineHint: false,
     wetHint: false,
