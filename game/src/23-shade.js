@@ -1,8 +1,5 @@
 // The Shade (q): one of Priest's little ghosts, loose on the first floor. Harmless: it says boo and pinches a pebble.
-// Tellin’: after its BOO, when an Usher sleeps within SHADE_TELL.reach m, it hangs for wait s, then flies straight to him, through
-// walls (at sp m/s), and wakes him within at m (usherFetch, 22-usher). Popped on the way, it tells no one.
-const SHADE_TELL = { reach: 30, wait: 0.8, sp: 4.6, at: 1.6 },
-  SHADE_FLEE = 2.6; /* s it keeps away after a BOO or a telling */
+
 function makeShade(e, add) {
   Object.assign(e, { name: 'Shade', hp: 1.5, maxHp: 1.5, pebbleDmg: 1.5, r: 0.55, fly: 1.6, palette: [0xd8d4cc, 0x6c6a66, COL.ink] });
   const m = add(paper(Math.random() < 0.5 ? 'ghost_a' : 'ghost_b', 1.3, 0.05));
@@ -24,7 +21,7 @@ function updateShade(e, dt, dist, ux, uz, mv) {
       e.st = 'drift';
       floatWord('boo', e.pos.clone().setY(2.8), '#d8d4cc', 0.6);
     }
-  } else if (e.st === 'drift') {
+  } else if (e.st !== 'flee') {
     // weaving
     const w = Math.sin(now * 1.7 + e.seed) * 0.9;
     [mv.x, mv.z] = steer(e);
@@ -43,7 +40,7 @@ function updateShade(e, dt, dist, ux, uz, mv) {
   } else if (e.st === 'drift' && dist < e.r + hero.r + 0.2 && hero.dodgeT <= 0 && (hero.spook || 0) <= 0 && state === 'play') {
     hero.spook = 1.6;
     e.st = 'flee';
-    e.t = SHADE_FLEE;
+    e.t = 2.6;
     floatWord('BOO!', e.pos.clone().setY((e.gy || 0) + e.fly + 1.2), '#d8d4cc', 0.9);
     playTone({ f: 700, f2: 180, dur: 0.45, type: 'sine', gain: 0.08 });
     playNoise({ dur: 0.4, f: 900, f2: 300, type: 'bandpass', gain: 0.12 });
@@ -53,38 +50,7 @@ function updateShade(e, dt, dist, ux, uz, mv) {
       updateAmmo();
       floatWord('-1 PEBBLE', hero.pos.clone().setY(hero.pos.y + 2.3), '#d8d4cc', 0.6);
     }
-    shadeGoesTellin(e);
-  } else if (e.st === 'tell') return shadeTells(e, dt);
-}
-// off to wake the nearest sleeping Usher, if one is in reach
-function shadeGoesTellin(e) {
-  const u = sleepingUshers(e.pos, SHADE_TELL.reach)[0];
-  if (!u) return;
-  Object.assign(e, { st: 'tell', t: SHADE_TELL.wait, to: u, toAt: u.pos.clone() });
-  later(0.5, () => !e.dead && !e.dying && floatWord('TELLIN’', e.pos.clone().setY((e.gy || 0) + e.fly + 1.2), '#d8d4cc', 0.9, true));
-  if (!G.tellHint) {
-    G.tellHint = true;
-    later(1, () => toast('Pop it before it tells.'));
   }
-}
-// its flight to the Usher: its own move (a ghost minds no wall), so the shared one is skipped
-function shadeTells(e, dt) {
-  if (e.t > 0) return;
-  const dx = e.toAt.x - e.pos.x,
-    dz = e.toAt.z - e.pos.z,
-    d = Math.hypot(dx, dz);
-  if (d > SHADE_TELL.at) {
-    e.pos.x += (dx / d) * SHADE_TELL.sp * dt;
-    e.pos.z += (dz / d) * SHADE_TELL.sp * dt;
-    e.root.position.copy(e.pos);
-    return STOP;
-  }
-  if (e.to.st === 'idle' && !e.to.dead && !e.to.dying) {
-    floatWord('PSST', e.pos.clone().setY((e.gy || 0) + e.fly + 1.2), '#d8d4cc', 0.8);
-    usherFetch(e.to);
-  }
-  e.st = 'flee';
-  e.t = SHADE_FLEE;
 }
 TALKERS.q = {
   make: makeShade,

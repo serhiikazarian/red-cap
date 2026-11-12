@@ -3,7 +3,7 @@
 // Calling the others: hurt to USHER_CALL.hp of his health, a chasing Usher backs off (at back m/s) and shouts for tell s. A blow
 // in that time cuts the shout off, and he does not try again. Sleeping Ushers within reach m are fetched (usherFetch): they
 // come round Red Cap's far side (off m past him, for flank s) and hold their charge while the caller is in his, so the two
-// charge in turn. A Shade fetches one too (23-shade). A fetched Usher ends the floor's quiet (G.announced, 60-flow).
+// charge in turn. A fetched Usher ends the floor's quiet (G.announced, 60-flow).
 const USHER_CALL = { hp: 0.6, tell: 1, back: 3.2, reach: 26, off: 4, flank: 8 };
 const FLANK_AT = new THREE.Vector3();
 const sleepingUshers = (pos, reach) =>
@@ -19,7 +19,7 @@ function usherCall(e) {
     toast('Hit him before he calls.');
   }
 }
-// a sleeping Usher u is woken and comes: round the far side from the one who called (by; a Shade's telling has none)
+// a sleeping Usher u is woken and comes: round the far side from the one who called (by)
 function usherFetch(u, by) {
   Object.assign(u, { st: 'chase', flank: by, flankT: USHER_CALL.flank });
   u.brows.forEach(b => (b.visible = true));
@@ -131,7 +131,8 @@ function updateUsher(e, dt, dist, ux, uz, mv) {
 const USHER_STATES = {
   idle(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (animTick) e.head.rotation.z = Math.sin(performance.now() / 400 + e.seed) * 0.1;
-    if ((dist < (e.sight || 20) && clearOfWalls(e.pos, hero.pos)) || dist < 8) {
+    /* he wakes only when he sees Red Cap: never through a wall, however near */
+    if (dist < (e.sight || 20) && clearOfWalls(e.pos, hero.pos)) {
       e.brows.forEach(b => (b.visible = true));
       if (clearOfCover(e.pos, hero.pos, e.r + 0.15)) aim();
       else {
