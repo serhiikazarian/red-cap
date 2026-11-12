@@ -159,6 +159,7 @@ function floorState(F, w) {
     clutter: [], // round set dressing to keep clear of
     cages: [],
     piles: [], // pebble piles
+    curtain: null, // the curtain that hides a heart: { x, z, dx, dz, big, done } (54-dreamwork)
     see: [], // see-through things (56-see-through)
     wallWords: [], // where floor two's wall words are painted
     niches: [],

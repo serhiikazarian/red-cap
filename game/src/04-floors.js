@@ -44,6 +44,7 @@ const FLOORS = [
     hiddenPiles: 3, // and piles of pebbles in the next quiet corners
     roomPile: [5, 1, 9, 2, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
     quiet: { word: 'UNANNOUNCED', line: 'Nobody was fetched. A tie and full pockets.', ties: 1 }, // left with no Usher fetched: carried up (60-flow)
+    curtainHeart: [7, 1, true], // a curtain on this cell's north wall (the curtain room) hides a big heart: a blow shakes it out
     roomHeart: [6, 6], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',

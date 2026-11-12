@@ -573,3 +573,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   pile of pebbles. Floor two: the west room is raised (one ramp at its door), a hump in the east passage with a pyramid on it,
   two more bear traps. Floor three: a second Smoker on the west terrace, a third totem in the middle of the south field, six
   more block stacks there.
+- Hittin’ ties: at full health, with room in his pockets, a blow (yo-yo or pebble) breaks a tie into pebbles (`hitTie`,
+  `TIE_PEBBLES`: 1 for a tie, 3 for a big heart); hurt or with full pockets the tie stays.
+- Floor one's curtain room always has its own red curtain now (`curtainHeart` in `FLOORS`, `G.curtain`): the first blow to it
+  shakes a big heart out (`hitCurtain`, RUSTLE). The dice-hung curtains are as before.
