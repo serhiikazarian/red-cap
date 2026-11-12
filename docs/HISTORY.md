@@ -569,3 +569,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - New drawings from Serj: `paint_fish`, `paint_job`, `paint_scream` join `beard_painting` in floor three's gallery (`PAINT_ART`,
   taken in turn on walls and easels); `root_head`, a cut-out, hangs head down and sways on six wall faces there (`ROOT`,
   `hangRootHeads`); `t_crack` is a new wall painting on floors one and two.
+- Fuller floor plans, nothing taken away. Floor one: a Shade in the curtain room, an easel in the middle hall, a third hidden
+  pile of pebbles. Floor two: the west room is raised (one ramp at its door), a hump in the east passage with a pyramid on it,
+  two more bear traps. Floor three: a second Smoker on the west terrace, a third totem in the middle of the south field, six
+  more block stacks there.

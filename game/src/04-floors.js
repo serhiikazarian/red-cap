@@ -41,18 +41,18 @@ const FLOORS = [
     dropOdds: { B: 0.18, q: 0.05 },
     hiddenHearts: 1, // hidden in quiet corners (hideHearts)
     placedHearts: 0.784,
-    hiddenPiles: 2, // and piles of pebbles in the next quiet corners
+    hiddenPiles: 3, // and piles of pebbles in the next quiet corners
     roomPile: [5, 1, 9, 2, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
     quiet: { word: 'UNANNOUNCED', line: 'Nobody was fetched. A tie and full pockets.', ties: 1 }, // left with no Usher fetched: carried up (60-flow)
     roomHeart: [6, 6], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',
-      '#...#.o...#...#',
+      '#...#.o.q.#...#',
       '#.P.#.....#.B.#',
       '#...##.#.##...#',
       '##.#.......#.##',
       '#...o.T.T.o...#',
-      '#........Bq...#',
+      '#..o.....Bq...#',
       '#...###.###...#',
       '##o.q..B....o##',
       '#####.###.#####',
@@ -76,10 +76,18 @@ const FLOORS = [
     amb: [0xc08070, 0.75],
     hemi: [0xff9a7a, 0x200404, 0.45],
     lamp: [0xffc9a0, 1.3, 14],
-    raise: [[7, 1, 13, 3]],
+    raise: [
+      [7, 1, 13, 3],
+      [1, 1, 5, 3],
+      [12, 9, 13, 9]
+    ], // the start room, the west room (one ramp at its door), and a hump in the east passage with a pyramid on it
     ramps: [
       [7, 4, 'N'],
-      [11, 4, 'N']
+      [11, 4, 'N'],
+      [2, 4, 'N'],
+      [12, 8, 'S'],
+      [12, 10, 'N'],
+      [13, 10, 'N']
     ],
     spreadHearts: true,
     dropOdds: { G: 0.2 },
@@ -112,12 +120,12 @@ const FLOORS = [
       '#...o.#.P.o...#',
       '##.####.###.###',
       '#....T.....T..#',
-      '#.o....o.o....#',
+      '#.o....o.o...o#',
       '#.##.#######..#',
       '#.#..#.....#.##',
-      '#.TZ.#..X..#..#',
+      '#.TZ.#..X..#.T#',
       '#.##.##...##..#',
-      '#.....o.R.o...#',
+      '#...o.o.R.o...#',
       '###############'
     ]
   },
@@ -165,18 +173,18 @@ const FLOORS = [
       '#...o...T...T...o...#',
       '#...................#',
       '#ggggggggggggggggggg#',
-      '#.....#...U...#...S.#',
+      '#..S..#...U...#...S.#',
       '#..h..#.......#.....#',
       '#.....#._.....#.....#',
       '#.W...##.o.o.##.....#',
       '#....o.._..._..o....#',
-      '#...................#',
+      '#..o.............o..#',
       '#.....o.o.....o.....#',
-      '#...................#',
+      '#....o....T....o....#',
       '#..o........o....o..#',
       '#..T.............T..#',
       '#......o..P..o......#',
-      '#...................#',
+      '#.o...............o.#',
       '#####################'
     ]
   }
