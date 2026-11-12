@@ -157,7 +157,7 @@ const USHER_STATES = {
     const moved = Math.hypot(e.pos.x - e.cx0, e.pos.z - e.cz0);
     e.cx0 = e.pos.x;
     e.cz0 = e.pos.z;
-    if (e.t < e.chargeT0 - 0.12 && moved < cs * dt * 0.3) {
+    if ((e.t < e.chargeT0 - 0.12 && moved < cs * dt * 0.3) || beamStops(e)) {
       e.st = 'recover';
       e.t = 1.4;
       e.stagger = 1.2;

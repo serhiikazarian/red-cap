@@ -366,3 +366,44 @@ function addLintels(F) {
       G.group.add(still(m));
     }
 }
+
+// The gate beam (FLOORS .beam: [cell x, cell z], a doorway between walls to its west and east): one beam on two posts, its
+// underside BEAM.y m above the ground there: Red Cap and the smaller talkers pass under, a taller one does not. The first tall
+// one to charge into it (within BEAM.near m of the doorway's middle, plus its radius) is stopped: beamStops says true and the
+// beam cracks and sags. The next breaks it and goes through
+const BEAM = { y: 4.2, thick: 0.5, near: 0.6, sag: 0.16 };
+function addBeam(F) {
+  const [cx, cz] = F.beam,
+    x = cellMid(cx),
+    z = cellMid(cz),
+    y = heightAt(x, z),
+    mat = new THREE.MeshLambertMaterial({ map: TEX[F.walls[0].split(':')[0]], color: 0x8a8a8a }),
+    m = new THREE.Mesh(BOX, mat);
+  m.scale.set(CELL + 0.3, BEAM.thick, BEAM.thick * 1.3);
+  m.position.set(x, y + BEAM.y + BEAM.thick / 2, z);
+  m.rotation.z = 0.04;
+  G.group.add(m); /* not baked: it sags, then goes */
+  for (const side of [-1, 1]) {
+    const post = new THREE.Mesh(BOX, mat);
+    post.scale.set(0.3, BEAM.y, 0.36);
+    post.position.set(x + side * (CELL / 2 - 0.17), y + BEAM.y / 2, z);
+    G.group.add(still(post));
+  }
+  G.beam = { x, z, m, hits: 0 };
+}
+function beamStops(e) {
+  const b = G.beam;
+  if (!b || e.hgt <= BEAM.y || Math.hypot(e.pos.x - b.x, e.pos.z - b.z) > e.r + BEAM.near) return false;
+  const at = FX_AT.copy(b.m.position);
+  playNoise({ dur: 0.4, f: 900, f2: 200, q: 0.8, gain: 0.26 });
+  if (b.hits++) {
+    G.group.remove(b.m);
+    G.beam = null;
+    for (let i = -1; i <= 1; i++) burst(FX_AT.set(b.x + i * 1.1, at.y, b.z), [COL.paper, COL.smoke, COL.ink], 12, 6, 0.24);
+    return false;
+  }
+  b.m.rotation.z = BEAM.sag;
+  b.m.position.y -= 0.12;
+  burst(at, [COL.paper, COL.smoke, COL.ink], 14, 5, 0.18);
+  return true;
+}

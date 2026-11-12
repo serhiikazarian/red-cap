@@ -575,3 +575,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - A Shade waits in floor one's hidden room. `t_crack` (Serj's cracked wall) is a new wall painting on floor one.
 - Floor three: three wall stubs in the south field, an L of three block stacks by the start, and `root_head` (Serj's
   upside-down head, a cut-out) hanging and swaying on six wall faces (`ROOT`, `hangRootHeads` in 53-architecture).
+- Floor one: a third of the idle red curtains, those nearest the hidden room, give way to a framed `t_crack` drawing
+  (`CURTAIN.fewer`). Its doorway beams are gone but one, on posts over the curtain room's east door (`beam` in `FLOORS`,
+  `addBeam`, `beamStops`, `G.beam`): only the biggest Usher is too tall for it; his first charge into it is stopped (BONK, the
+  beam sags), the second breaks it. Floor three keeps its beams.
+- A prop breaks at two blows (`PROP_BREAK.hits`). The tie sound (`SFX.snip`) is shorter and higher.

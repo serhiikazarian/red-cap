@@ -154,7 +154,14 @@ function dreamCorridor(rng, fw, fh) {
 // door cell's south side and that cell is a wall (solid, 05-world) until the first blow to the curtain (hitCurtain, within
 // CURTAIN.hit m of its middle): then it draws aside over CURTAIN.open s to CURTAIN.gap of its width. Behind: a big heart, and
 // the painting framed on the far wall
-const CURTAIN = { hit: 1.3, open: 0.7, gap: 0.22, wide: 1.16, tall: 1.7 }; /* wide, tall: times a wall curtain's size */
+const CURTAIN = {
+  hit: 1.3,
+  open: 0.7,
+  gap: 0.22,
+  wide: 1.16,
+  tall: 1.7,
+  fewer: 1 / 3
+}; /* wide, tall: times a wall curtain's size; fewer: the share of idle curtains replaced */
 function hitCurtain(p, rad) {
   const c = G.curtain;
   if (!c || c.done || Math.hypot(c.x - p.x, c.z - p.z) > rad + CURTAIN.hit) return false;
@@ -195,14 +202,25 @@ function corridorCurtains(rng) {
     for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(p.getX(i) * 9) * 0.09);
     curtainGeo.computeVertexNormals();
   }
-  const curtainM = new THREE.MeshLambertMaterial({ color: 0x8a1018, side: THREE.DoubleSide, emissive: 0x2a0306 });
+  const curtainM = new THREE.MeshLambertMaterial({ color: 0x8a1018, side: THREE.DoubleSide, emissive: 0x2a0306 }),
+    hung = [];
   wallFaces(rng, 0.035, (x, z, yaw, dx, dz) => {
     const m = still(new THREE.Mesh(curtainGeo, curtainM));
     m.position.set(x - dx * 0.12, 1.8, z - dz * 0.12);
     m.rotation.y = yaw;
     G.group.add(m);
+    hung.push({ m, dx, dz });
   });
-  if (G.F.curtainRoom) curtainRoom(curtainGeo, curtainM);
+  if (!G.F.curtainRoom) return;
+  curtainRoom(curtainGeo, curtainM);
+  /* a share of the idle curtains, those nearest the hidden room's, gives way to a framed drawing (wallFaces has lifted each) */
+  const near = c => Math.hypot(c.m.position.x - G.curtain.x, c.m.position.z - G.curtain.z);
+  hung.sort((a, b) => near(a) - near(b));
+  G.curtain.idle = hung.length; /* how many idle curtains the dice hung, before the share below gives way */
+  for (const { m, dx, dz } of hung.slice(0, Math.ceil(hung.length * CURTAIN.fewer))) {
+    G.group.remove(m);
+    framed(TEX.t_crack, 1.2, 1.2, m.position.x + dx * 0.1, m.position.y, m.position.z + dz * 0.1, m.rotation.y, 0, '', false);
+  }
 }
 // gilt-framed doorways on the walls that never end: a doorway inside a doorway, each turned a little further
 function corridorDroste(rng) {
