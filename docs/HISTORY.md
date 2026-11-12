@@ -556,7 +556,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `warnMark` takes the marker's place as one object (`at`). `CLAUDE.md` and `docs/ARCHITECTURE.md` brought up to date (warning
   `size` / `mark`, PHEW!, thorn draw ranks, itch.io focus, boot textures and dice, close-up pictures).
 
-## 1.61 (12 Nov 2026)
+## 1.62 (12 Nov 2026)
 - Floor one has a hidden room: its plan grew three rows north (every floor-one cell moved 3 down the map: `FLOORS` fields,
   the Geezer's waking line in 24-geezer, the big DEFUK in 52-decor). A tall red curtain hangs in the doorway north of the
   curtain room (`curtainRoom` in `FLOORS`, map letter `c`, `G.curtain`): the doorway is a wall (`solid`) until the first blow
