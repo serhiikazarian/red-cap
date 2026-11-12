@@ -555,3 +555,12 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - Tidy: the thorn textures (`spikeFootTex`, `socketFootTex`) moved from `03-textures.js` to `25-grin.js`, which owns them;
   `warnMark` takes the marker's place as one object (`at`). `CLAUDE.md` and `docs/ARCHITECTURE.md` brought up to date (warning
   `size` / `mark`, PHEW!, thorn draw ranks, itch.io focus, boot textures and dice, close-up pictures).
+
+## 1.61 (12 Nov 2026)
+- Ushers call for help: hurt to `USHER_CALL.hp` of his health a chasing Usher backs off and shouts USHERS! (state `call`); a
+  blow cuts it off (GULP) and he does not try again. Sleeping Ushers in reach are fetched (`usherFetch`): they come round Red
+  Cap's far side (`usherGoal`) and hold their charge while the caller is in his (`usherHolds`). Hint: Hit him before he calls.
+- Shades tell: after its BOO a Shade says TELLIN’ and flies through the walls to the nearest sleeping Usher (`SHADE_TELL`,
+  state `tell`) and wakes him. Popped on the way, it tells no one. Hint: Pop it before it tells.
+- Floor one's quiet rule (`FLOORS .quiet`, `G.announced`, `keepQuiet` in 60-flow): left with no Usher fetched, Red Cap takes a
+  tie and full pockets upstairs, and floor two opens with UNANNOUNCED.
