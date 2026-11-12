@@ -150,20 +150,43 @@ function dreamCorridor(rng, fw, fh) {
   corridorParlours(rng, chevM);
   corridorSpirals(rng);
 }
-// red curtains hung along the walls. On a floor with a curtainHeart (FLOORS: [cell x, cell z, big]) one more hangs on that
-// cell's north wall and hides a heart: the first blow to it (hitCurtain, within CURTAIN_HIT m of its middle) shakes the heart out, CURTAIN_DROP m
-// in front
-const CURTAIN_HIT = 1.1,
-  CURTAIN_DROP = 1;
+// red curtains hung along the walls. On a floor with a curtainRoom (FLOORS: door and heart cells, art) a tall one hangs in the
+// door cell's south side and that cell is a wall (solid, 05-world) until the first blow to the curtain (hitCurtain, within
+// CURTAIN.hit m of its middle): then it draws aside over CURTAIN.open s to CURTAIN.gap of its width. Behind: a big heart, and
+// the painting framed on the far wall
+const CURTAIN = { hit: 1.3, open: 0.7, gap: 0.22, wide: 1.16, tall: 1.7 }; /* wide, tall: times a wall curtain's size */
 function hitCurtain(p, rad) {
   const c = G.curtain;
-  if (!c || c.done || Math.hypot(c.x - p.x, c.z - p.z) > rad + CURTAIN_HIT) return false;
+  if (!c || c.done || Math.hypot(c.x - p.x, c.z - p.z) > rad + CURTAIN.hit) return false;
   c.done = true;
   SFX.pickup();
   floatWord('RUSTLE', new THREE.Vector3(c.x, 2.8 + heightAt(c.x, c.z), c.z), HEX.tie, 1);
   burst(new THREE.Vector3(c.x, 1.6 + heightAt(c.x, c.z), c.z), [COL.tie, COL.cap], 16, 4, 0.16);
-  dropHeart(c.x - c.dx * CURTAIN_DROP, c.z - c.dz * CURTAIN_DROP, c.big);
+  let k = 0;
+  G.anim.push(dt => {
+    if (k >= 1) return;
+    k = Math.min(1, k + dt / CURTAIN.open);
+    const w = lerp(1, CURTAIN.gap, k * k * (3 - 2 * k));
+    c.m.scale.x = CURTAIN.wide * w;
+    c.m.position.x = c.x - (CELL / 2) * (1 - w);
+  });
   return true;
+}
+// the hidden room's curtain (not baked: it moves), its heart and its painting
+function curtainRoom(geo, mat) {
+  const { door, heart, art } = G.F.curtainRoom,
+    x = cellMid(door[0]),
+    z = cellMid(door[1]) + CELL / 2 - 0.1,
+    lift = heightAt(x, cellMid(door[1]) + CELL),
+    m = new THREE.Mesh(geo, mat);
+  m.scale.set(CURTAIN.wide, CURTAIN.tall, 1);
+  m.position.set(x, lift + 1.8 * CURTAIN.tall, z);
+  G.group.add(m);
+  G.curtain = { x, z, m, done: false };
+  keepOut(x, cellMid(door[1]), CELL);
+  spawnPickup(cellMid(heart[0]), cellMid(heart[1]), true);
+  G.pickups[G.pickups.length - 1].hid = true;
+  framed(TEX[art], 1.5, 2, cellMid(heart[0]), lift + 2, cellMid(heart[1]) - CELL / 2 + 0.05, 0, 0, '', false);
 }
 function corridorCurtains(rng) {
   const curtainGeo = new THREE.PlaneGeometry(2.6, 3.6, 26, 1);
@@ -179,12 +202,7 @@ function corridorCurtains(rng) {
     m.rotation.y = yaw;
     G.group.add(m);
   });
-  if (!G.F.curtainHeart) return;
-  const [cx, cz, big] = G.F.curtainHeart,
-    m = still(new THREE.Mesh(curtainGeo, curtainM)); /* its own curtain, always there: on that cell's north wall */
-  m.position.set(cellMid(cx), 1.8 + heightAt(cellMid(cx), cellMid(cz)), cellMid(cz) - CELL / 2 + 0.12);
-  G.group.add(m);
-  G.curtain = { x: m.position.x, z: m.position.z, dx: 0, dz: -1, big, done: false };
+  if (G.F.curtainRoom) curtainRoom(curtainGeo, curtainM);
 }
 // gilt-framed doorways on the walls that never end: a doorway inside a doorway, each turned a little further
 function corridorDroste(rng) {

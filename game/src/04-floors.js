@@ -1,6 +1,6 @@
 // The three floors. Map legend (one character per CELL-metre cell, rows run along z):
 //   # wall   . floor   o block or prop   T pillar, pyramid (floor 2) or totem (floor 3)   P start   X exit door   h heart
-//   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
+//   c the curtain's doorway (a wall until the curtain is struck: curtainRoom)   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
 //   talkers: B Usher  q Shade  Y Geezer  G Grin  R Priest  Z Bruno  U Grump  S Smoker  W Brainless the Second  M Jester
 // Other fields: the look (fog, bg, amb, hemi, lamp, floor and wall paintings, wallH, trail: the paper trail's colour if not words), raised ground (raise, ramps), the drone,
 // deco (which decor set builds the floor), opening (a yellow-box hint as the floor begins, once a game), and tuning: drop odds per talker, hidden hearts and pebble piles, placedHearts (the
@@ -17,12 +17,15 @@ const FLOORS = [
     amb: [0x9aa474, 0.9],
     hemi: [0xb2c07a, 0x1a0c08, 0.45],
     lamp: [0xffd88a, 1.4, 14],
-    raise: [[1, 1, 13, 3]],
+    raise: [
+      [1, 4, 13, 6],
+      [6, 1, 8, 3]
+    ], // the north rooms, and the hidden room behind the curtain with its doorway
     ramps: [
-      [2, 4, 'N'],
-      [6, 4, 'N'],
-      [8, 4, 'N'],
-      [12, 4, 'N']
+      [2, 7, 'N'],
+      [6, 7, 'N'],
+      [8, 7, 'N'],
+      [12, 7, 'N']
     ],
     floor: 't_dark',
     walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble', 't_crack'],
@@ -33,21 +36,26 @@ const FLOORS = [
     plainFloaters: true, // its floaters fade without a contour (56-see-through)
     yaw: Math.PI,
     drone: { notes: [46.25, 69.3], wave: 'sawtooth', cut: 260, lfo: 0.07, gain: 0.1 },
-    firstUsher: [9, 6],
+    firstUsher: [9, 9],
     usherSizes: [
-      [7, 8, 1.28],
-      [12, 2, 1.68, 11]
+      [7, 11, 1.28],
+      [12, 5, 1.68, 11]
     ],
     dropOdds: { B: 0.18, q: 0.05 },
     hiddenHearts: 1, // hidden in quiet corners (hideHearts)
     placedHearts: 0.784,
     hiddenPiles: 3, // and piles of pebbles in the next quiet corners
-    roomPile: [5, 1, 9, 2, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
+    roomPile: [5, 4, 9, 5, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
     quiet: { word: 'UNANNOUNCED', line: 'Nobody was fetched. A tie and full pockets.', ties: 1 }, // left with no Usher fetched: carried up (60-flow)
-    curtainHeart: [7, 1, true], // a curtain on this cell's north wall (the curtain room) hides a big heart: a blow shakes it out
-    roomHeart: [6, 6], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
+    // the hidden room north of the curtain room: a tall curtain hangs in its doorway (the 'c' cell), a wall until a blow parts it;
+    // inside, a big heart (never carried on if left) and a framed painting on the far wall
+    curtainRoom: { door: [7, 3], heart: [7, 1], art: 'paint_job' },
+    roomHeart: [6, 9], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',
+      '######...######',
+      '######...######',
+      '#######c#######',
       '#...#.o.q.#...#',
       '#.P.#.....#.B.#',
       '#...##.#.##...#',

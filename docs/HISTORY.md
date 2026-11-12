@@ -575,5 +575,8 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   more block stacks there.
 - Hittin’ ties: at full health, with room in his pockets, a blow (yo-yo or pebble) breaks a tie into pebbles (`hitTie`,
   `TIE_PEBBLES`: 1 for a tie, 3 for a big heart); hurt or with full pockets the tie stays.
-- Floor one's curtain room always has its own red curtain now (`curtainHeart` in `FLOORS`, `G.curtain`): the first blow to it
-  shakes a big heart out (`hitCurtain`, RUSTLE). The dice-hung curtains are as before.
+- Floor one has a hidden room: its plan grew three rows north (every floor-one cell moved 3 down the map: `FLOORS` fields,
+  the Geezer's waking line in 24-geezer, the big DEFUK in 52-decor). A tall red curtain hangs in the doorway north of the
+  curtain room (`curtainRoom` in `FLOORS`, map letter `c`, `G.curtain`): the doorway is a wall (`solid`) until the first blow
+  to the curtain (`hitCurtain`, RUSTLE), which draws it aside. Inside: a big heart (never carried on if left) and the
+  full-time-job painting in a gold frame. The dice-hung curtains are as before.
