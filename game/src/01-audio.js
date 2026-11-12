@@ -146,6 +146,11 @@ const SFX = {
     playTone({ f: 1900, f2: 1700, dur: 0.25, type: 'triangle', gain: 0.14 });
     playTone({ f: 2850, dur: 0.18, type: 'sine', gain: 0.06 });
   },
+  // a tie hit into pebbles: the cloth snips, then pebbles drop one after another
+  snip() {
+    playNoise({ dur: 0.09, f: 5200, f2: 1800, q: 4, gain: 0.3 });
+    [520, 430, 350].forEach((f, i) => playTone({ f, f2: f * 0.7, dur: 0.07, gain: 0.16, at: 0.1 + i * 0.065, type: 'square' }));
+  },
   tear() {
     playNoise({ dur: 0.5, f: 3000, f2: 400, q: 3, gain: 0.35 });
     playTone({ f: 90, f2: 40, dur: 0.5, type: 'sawtooth', gain: 0.15 });

@@ -28,7 +28,7 @@ const FLOORS = [
       [12, 7, 'N']
     ],
     floor: 't_dark',
-    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble', 't_crack'],
+    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble'],
     wallH: [3.2, 5.5],
     words: COL.paper,
     deco: 'corridor',
@@ -44,36 +44,31 @@ const FLOORS = [
     dropOdds: { B: 0.18, q: 0.05 },
     hiddenHearts: 1, // hidden in quiet corners (hideHearts)
     placedHearts: 0.784,
-    hiddenPiles: 3, // and piles of pebbles in the next quiet corners
+    hiddenPiles: 2, // and piles of pebbles in the next quiet corners
     roomPile: [5, 4, 9, 5, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
-    quiet: { word: 'UNANNOUNCED', line: 'Nobody was fetched. A tie and full pockets.', ties: 1 }, // left with no Usher fetched: carried up (60-flow)
     // the hidden room north of the curtain room: a tall curtain hangs in its doorway (the 'c' cell), a wall until a blow parts it;
     // inside, a big heart (never carried on if left) and a framed painting on the far wall
     curtainRoom: { door: [7, 3], heart: [7, 1], art: 'paint_job' },
     lintels: true, // crooked beams over its doorways (53-architecture)
-    bigArt: [
-      ['paint_scream', 7, 17, 'S'],
-      ['paint_fish', 1, 13, 'W']
-    ], // Serj's paintings, large, on the wall of that side of the cell
     roomHeart: [6, 9], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',
       '######...######',
       '######...######',
       '#######c#######',
-      '#...#.o.q.#...#',
+      '#...#.o...#...#',
       '#.P.#.....#.B.#',
       '#...##.#.##...#',
       '##.#.......#.##',
-      '#...o.T..T.o..#',
-      '#..o.#...Bq...#',
+      '#...o.T.T.o...#',
+      '#........Bq...#',
       '#...###.###...#',
       '##o.q..B....o##',
       '#####.###.#####',
-      '#..oo.......o.#',
-      '#..T...o....T.#',
+      '#.............#',
+      '#..T...o...T..#',
       '#......Y......#',
-      '#..o..T..T.o..#',
+      '#..o..T.T..o..#',
       '#.h.........X.#',
       '###############'
     ]
@@ -113,16 +108,12 @@ const FLOORS = [
       [11, 6, 'G']
     ],
     floor: 't_hatch',
-    walls: ['t_chaos', 't_ember', 't_hatch', 't_chaos', 't_chaos:0x5a3040', 't_ember:0x41305a', 't_hatch:0x3a2626', 't_crack:0x6a3a3a'],
+    walls: ['t_chaos', 't_ember', 't_hatch', 't_chaos', 't_chaos:0x5a3040', 't_ember:0x41305a', 't_hatch:0x3a2626'],
     wallH: [3.4, 6],
     words: COL.bile,
     trail: COL.paper, // the paper trail to the open door is white, not the words' yellow (46-gates)
     deco: 'mouth',
     strayShots: true, // the talkers' shots hurt the small talkers they hit by accident (21-shots)
-    bigArt: [
-      ['paint_fish', 13, 5, 'E'],
-      ['paint_scream', 1, 11, 'W']
-    ],
     pyramids: true, // its 'T' cells are pyramids (44-pyramids): their round body stops sight and pebbles, and they glow
     flatProps: true, // its 'o' cells hold bear traps: flat, nothing to bump into or hide behind
     embers: true, // sparks rise from the floor round Red Cap (64-loop)
@@ -165,20 +156,6 @@ const FLOORS = [
     lowHeart: [2, 2], // the Jester's chamber: a heart here too if Red Cap walks in with fewer than 3
     blockMoved: [[11, 11, 11, 12]],
     lintels: true,
-    bigArt: [
-      ['paint_job', 19, 15, 'E'],
-      ['paint_fish', 1, 15, 'W']
-    ],
-    raise: [
-      [1, 9, 5, 11],
-      [15, 9, 19, 11]
-    ], // two terraces either side of the Grump's room, each climbed by two ramps from the south
-    ramps: [
-      [1, 12, 'N'],
-      [4, 12, 'N'],
-      [16, 12, 'N'],
-      [19, 12, 'N']
-    ],
     floor: 't_smudge',
     walls: ['t_blue', 't_lime', 't_orange', 't_brown', 't_coal', 't_ochre'],
     wallH: [3, 6],
@@ -201,13 +178,13 @@ const FLOORS = [
       '#.....#._.....#.....#',
       '#.W...##.o.o.##.....#',
       '#....o.._..._..o....#',
-      '#..o............#o..#',
-      '#.....o.o.....o.#...#',
-      '#....o.........o....#',
-      '#..o...#....o....o..#',
-      '#..T............T...#',
-      '#.o....o..P..o......#',
-      '#.oo.............o..#',
+      '#...................#',
+      '#.....o.o.....o.....#',
+      '#...................#',
+      '#..o........o....o..#',
+      '#..T.............T..#',
+      '#......o..P..o......#',
+      '#...................#',
       '#####################'
     ]
   }
