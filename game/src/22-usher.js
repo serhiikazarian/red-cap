@@ -131,7 +131,8 @@ function updateUsher(e, dt, dist, ux, uz, mv) {
 const USHER_STATES = {
   idle(e, dt, dist, ux, uz, mv, K, cs, aim) {
     if (animTick) e.head.rotation.z = Math.sin(performance.now() / 400 + e.seed) * 0.1;
-    if ((dist < (e.sight || 20) && clearOfWalls(e.pos, hero.pos)) || dist < 8) {
+    /* he wakes only when he sees Red Cap: never through a wall, however near */
+    if (dist < (e.sight || 20) && clearOfWalls(e.pos, hero.pos)) {
       e.brows.forEach(b => (b.visible = true));
       if (clearOfCover(e.pos, hero.pos, e.r + 0.15)) aim();
       else {

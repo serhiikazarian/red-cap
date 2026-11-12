@@ -578,3 +578,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   curtain room (`curtainRoom` in `FLOORS`, map letter `c`, `G.curtain`): the doorway is a wall (`solid`) until the first blow
   to the curtain (`hitCurtain`, RUSTLE), which draws it aside. Inside: a big heart (never carried on if left) and the
   full-time-job painting in a gold frame. The dice-hung curtains are as before.
+- Breakin’ props: an easel or a stack of blocks (not a flat trap) takes `PROP_BREAK.hits` blows, one a yo-yo throw or a pebble
+  (`hitProp`, `breakProp` in 51-props, `G.breaks`), and falls apart; its cell is open floor after. Such props are baked each on
+  its own (`own` on its see-through entry, 55-bake) so the drawing can be taken away.
+- An Usher wakes only when he sees Red Cap: no longer through a wall within 8 m. (A call still carries through walls.)
