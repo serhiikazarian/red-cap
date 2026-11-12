@@ -66,6 +66,37 @@ function critterRoom(x, z) {
   for (const k of G.keep) if (Math.hypot(k.x - x, k.z - z) < k.r + 0.3) return false;
   return true;
 }
+// Breakin’ props: a prop that blocks the way (an easel, a stack of blocks; never a flat trap) takes PROP_BREAK.hits blows, one a
+// yo-yo throw or a pebble, landing within r m of its middle and below top m, and falls apart: its cell is open floor after
+const PROP_BREAK = { hits: 3, r: 0.8, top: 2.6 };
+function hitProp(p, rad) {
+  const k = cellOf(p.x, p.z).join(),
+    b = G.breaks[k];
+  if (!b || Math.hypot(b.x - p.x, b.z - p.z) > rad + PROP_BREAK.r || p.y - heightAt(b.x, b.z) > PROP_BREAK.top) return false;
+  b.hits++;
+  SFX.tink();
+  burst(FX_AT.set(b.x, heightAt(b.x, b.z) + 1.1, b.z), [COL.paper, COL.smoke, COL.ink], 8, 4, 0.14);
+  if (b.hits >= PROP_BREAK.hits) breakProp(b, k);
+  return true;
+}
+// it is gone: its drawing (baked, or its instanced boxes), its place on the map, its cover
+function breakProp(b, k) {
+  G.group.remove(b.g);
+  if (b.g.userData.boxes) syncBoxes(b.g.userData.boxes, true);
+  const c = G.see.find(s => s.o === b.g);
+  if (c) {
+    c.gone = true;
+    for (const m of c.meshes) m.visible = false;
+  }
+  const [ix, iz] = cellOf(b.x, b.z),
+    y = heightAt(b.x, b.z);
+  G.map[iz] = G.map[iz].slice(0, ix) + '.' + G.map[iz].slice(ix + 1);
+  delete G.breaks[k];
+  if (G.props) delete G.props[k];
+  burst(FX_AT.set(b.x, y + 1, b.z), [COL.paper, COL.smoke, COL.ink], 24, 6, 0.24);
+  for (let p = 0; p < 3; p++) burst(FX_AT.set(b.x + rand(-0.6, 0.6), y + rand(0.4, 1.8), b.z + rand(-0.6, 0.6)), [COL.paper, COL.smoke], 8, 3, 0.2);
+  playNoise({ dur: 0.4, f: 900, f2: 200, q: 0.8, gain: 0.26 });
+}
 // one prop at (cx, cz), turned at random (seeded)
 function buildProp(F, cx, cz, rng) {
   const g = new THREE.Group();
@@ -78,6 +109,8 @@ function buildProp(F, cx, cz, rng) {
   // a bear trap lies flat; an easel and the Grump's sound blocks never fade; the Jester chamber's stacks fade without a contour
   if (F.deco !== 'mouth') G.group.add(seeThru(g, false, F.deco === 'corridor' || iz > 8 ? 'hard' : 'plain'));
   else G.group.add(g);
+  if (!F.flatProps) G.see[G.see.length - 1].own = true; /* baked on its own (55-bake): breakProp takes its drawing away */
+  if (!F.flatProps) G.breaks[cellOf(cx, cz)[0] + ',' + iz] = { g, x: cx, z: cz, hits: 0 };
   if (F.deco === 'blocks' && iz > 8) (G.props ??= {})[cellOf(cx, cz)[0] + ',' + iz] = { g, x: cx, z: cz, hp: 1, flashT: 0, tint: 1 };
 }
 // floor one: an easel holding a painting

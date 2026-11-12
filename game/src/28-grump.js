@@ -285,6 +285,7 @@ function grumpWear(e, w) {
       const [ix, iz] = cellOf(b.x, b.z);
       G.map[iz] = G.map[iz].slice(0, ix) + '.' + G.map[iz].slice(ix + 1);
       delete G.props[k];
+      delete G.breaks[k];
       burst(FX_AT.set(b.x, 1, b.z), [0x4fa9df, 0x9bd12c, 0xf2a35e, 0xe7b84a, COL.ink], 24, 6, 0.26);
       for (let p = 0; p < 6; p++) smokePuff(FX_AT.set(b.x + rand(-0.8, 0.8), rand(0.4, 1.8), b.z + rand(-0.8, 0.8)), rand(1.2, 2), 0.9, 0.6);
       playNoise({ dur: 0.45, f: 900, f2: 200, q: 0.8, gain: 0.3 });
