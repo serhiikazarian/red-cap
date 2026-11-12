@@ -564,3 +564,5 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   state `tell`) and wakes him. Popped on the way, it tells no one. Hint: Pop it before it tells.
 - Floor one's quiet rule (`FLOORS .quiet`, `G.announced`, `keepQuiet` in 60-flow): left with no Usher fetched, Red Cap takes a
   tie and full pockets upstairs, and floor two opens with UNANNOUNCED.
+- Floor three has height: two terraces either side of the Grump's room (`raise`, `ramps` in its `FLOORS` entry), each climbed
+  by two ramps from the south; the east Smoker and the west heart stand on them.

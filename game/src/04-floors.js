@@ -138,6 +138,16 @@ const FLOORS = [
     placedHearts: 0.9,
     lowHeart: [2, 2], // the Jester's chamber: a heart here too if Red Cap walks in with fewer than 3
     blockMoved: [[11, 11, 11, 12]],
+    raise: [
+      [1, 9, 5, 11],
+      [15, 9, 19, 11]
+    ], // two terraces either side of the Grump's room, each climbed by two ramps from the south
+    ramps: [
+      [1, 12, 'N'],
+      [4, 12, 'N'],
+      [16, 12, 'N'],
+      [19, 12, 'N']
+    ],
     floor: 't_smudge',
     walls: ['t_blue', 't_lime', 't_orange', 't_brown', 't_coal', 't_ochre'],
     wallH: [3, 6],
