@@ -569,3 +569,9 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `TIE_PEBBLES`: 1 for a tie, 3 for a big heart) with its own sound (`SFX.snip`); hurt or with full pockets the tie stays.
 - Crooked beams over doorways on floors one and three (`lintels`, `addLintels` in 53-architecture: no dice, each from its
   cell's numbers).
+- Breakin’ props: an easel or a stack of blocks (not a flat trap) takes `PROP_BREAK.hits` blows, one a yo-yo throw or a pebble
+  (`hitProp`, `breakProp` in 51-props, `G.breaks`), and falls apart; its cell is open floor after. Such props are baked each on
+  its own (`own` on its see-through entry, 55-bake) so the drawing can be taken away.
+- A Shade waits in floor one's hidden room. `t_crack` (Serj's cracked wall) is a new wall painting on floor one.
+- Floor three: three wall stubs in the south field, an L of three block stacks by the start, and `root_head` (Serj's
+  upside-down head, a cut-out) hanging and swaying on six wall faces (`ROOT`, `hangRootHeads` in 53-architecture).

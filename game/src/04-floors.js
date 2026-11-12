@@ -28,7 +28,7 @@ const FLOORS = [
       [12, 7, 'N']
     ],
     floor: 't_dark',
-    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble'],
+    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble', 't_crack'],
     wallH: [3.2, 5.5],
     words: COL.paper,
     deco: 'corridor',
@@ -47,14 +47,14 @@ const FLOORS = [
     hiddenPiles: 2, // and piles of pebbles in the next quiet corners
     roomPile: [5, 4, 9, 5, 0.27], // the curtain room (cells x0, z0, x1, z1): a pile of pebbles there, by this chance
     // the hidden room north of the curtain room: a tall curtain hangs in its doorway (the 'c' cell), a wall until a blow parts it;
-    // inside, a big heart (never carried on if left) and a framed painting on the far wall
+    // inside, a big heart (never carried on if left), a framed painting on the far wall, and a Shade
     curtainRoom: { door: [7, 3], heart: [7, 1], art: 'paint_job' },
     lintels: true, // crooked beams over its doorways (53-architecture)
     roomHeart: [6, 9], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [
       '###############',
       '######...######',
-      '######...######',
+      '######q..######',
       '#######c#######',
       '#...#.o...#...#',
       '#.P.#.....#.B.#',
@@ -178,13 +178,13 @@ const FLOORS = [
       '#.....#._.....#.....#',
       '#.W...##.o.o.##.....#',
       '#....o.._..._..o....#',
+      '#...............#...#',
+      '#.....o.o.....o.#...#',
       '#...................#',
-      '#.....o.o.....o.....#',
-      '#...................#',
-      '#..o........o....o..#',
+      '#..o...#....o....o..#',
       '#..T.............T..#',
-      '#......o..P..o......#',
-      '#...................#',
+      '#.o....o..P..o......#',
+      '#.oo................#',
       '#####################'
     ]
   }
