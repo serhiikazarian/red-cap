@@ -53,7 +53,7 @@ function warmUp() {
   warmSet();
   scene.add(WARM);
   const culled = [],
-    texs = new Set([...Object.values(TEX), ...Object.values(canvasTexCache), waveTex, fireTex, glowRed, violetTex, smokeTex]);
+    texs = new Set([...Object.values(TEX), ...Object.values(canvasTexCache), waveTex, fireTex, glowRed, violetTex, spikeTex, socketTex, smokeTex]);
   scene.traverse(o => {
     if (o.frustumCulled) {
       o.frustumCulled = false;
@@ -444,6 +444,9 @@ function beginFloor() {
   hero.iframe = Math.max(hero.iframe, 0.8);
   keys.clear();
   lockPointer();
+  const kept = quietKept;
+  quietKept = null;
+  if (kept) later(QUIET_SAY, () => bigWord(kept.word, HEX.bile, 1, kept.line));
   if (openingsSaid.has(floorIdx)) return;
   openingsSaid.add(floorIdx);
   if (floorIdx === 0)
@@ -451,6 +454,17 @@ function beginFloor() {
       floatWord(OPENING.line, hero.pos.clone().setY(hero.pos.y + OPENING.y), HEX.paper, 1.1, true, OPENING.life, OPENING.rise)
     );
   if (G.F.opening) later(OPENING.hintDelay, () => toast(G.F.opening));
+}
+// a floor with a quiet rule (FLOORS .quiet), left with no Usher fetched (G.announced): its ties and full pockets go up with Red
+// Cap, and the next floor says so QUIET_SAY s into play
+const QUIET_SAY = 1.2;
+let quietKept = null;
+function keepQuiet() {
+  quietKept = G.F.quiet && !G.announced ? G.F.quiet : null;
+  if (!quietKept) return;
+  hero.hp = Math.min(hero.maxHp, hero.hp + quietKept.ties);
+  hero.ammo = hero.maxAmmo;
+  updateAmmo();
 }
 $('#card').addEventListener('pointerdown', e => {
   e.preventDefault();
@@ -460,6 +474,7 @@ $('#card').addEventListener('pointerdown', e => {
 function nextFloor() {
   if (floorIdx + 1 < FLOORS.length) {
     for (const p of G.pickups) if (!p.taken && !p.hid) hero.hp = p.big ? hero.maxHp : Math.min(hero.maxHp, hero.hp + 1); // ties left behind come along
+    keepQuiet();
     drawTies();
     SFX.portal();
     enterFloor(floorIdx + 1, true);

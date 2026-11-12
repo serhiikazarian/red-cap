@@ -159,6 +159,7 @@ function floorState(F, w) {
     clutter: [], // round set dressing to keep clear of
     cages: [],
     piles: [], // pebble piles
+    curtain: null, // the hidden room's curtain: { x, z, m, done } (54-dreamwork); its doorway is a wall until done
     see: [], // see-through things (56-see-through)
     wallWords: [], // where floor two's wall words are painted
     niches: [],
@@ -183,7 +184,10 @@ function floorState(F, w) {
     lastTieT: 0, // how long Red Cap has been on his last tie (an onlooker may shake a heart out of him)
     roomHeartGiven: false, // the floor's heart room has given its heart
     yySide: 1, // the yo-yo's throws alternate sides: the side of the last one
+    announced: false, // an Usher was fetched by a call or a Shade: the floor's quiet is broken (FLOORS .quiet)
     usherHint: false, // hints already shown on this floor
+    callHint: false,
+    tellHint: false,
     npcHint: false,
     mineHint: false,
     wetHint: false,

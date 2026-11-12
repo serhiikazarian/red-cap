@@ -529,7 +529,7 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   the floor's `words` colour), not yellow; its wall doodles stay yellow.
 - Title label `v1.56`.
 
-## 1.57 (9 Nov 2026)
+## 1.58 (9 Nov 2026), after 1.57 was tried as a prerelease only
 - Keys work when the game runs inside itch.io's frame: every click or tap on the game takes keyboard focus for its frame
   (`window.focus()` on `pointerdown`, `62-input.js`), the workaround Serj found and tested.
 - The Geezer's white "!" before his lash is gone; the white glow at the screen edge still warns of it (`mark: false` in his
@@ -537,3 +537,46 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
 - The Jester's "!" before a charge is 30% smaller (`JESTER_MARK` 0.7, `30-jester.js`; any `warn` may now give a `size`).
 - When the Geezer's stare misses Red Cap, a big white PHEW! shows in the middle of the screen (the big MISSED, gone since
   1.49, comes back with new words; `24-geezer.js`). His boss bar still says Winded.
+- Grins are spiky: 12 black ink thorns stick out all round the burning ball, like a sea urchin's, and fade with it when it
+  dies (`grinSpikeGeo`, `GRIN_SPIKE_*`, `25-grin.js`).
+
+## 1.59 (9 Nov 2026)
+- A Grin's thorns melt into the ball: each foot is see-through lavender heating to violet, then solid black ink from 30% of
+  its length (`spikeTex`, `GRIN_SPIKE_INK`); thorns a little longer (`GRIN_SPIKE_LEN` 1.1, was 0.95) so the black part
+  keeps its 1.58 size. Built with `mergeGeos`. The texture is made at the end of start-up, after the ones drawn at random
+  (a new texture's id takes dice: made earlier, it shifted floor three's sky in the seeded pictures).
+- A Grin's thorns stand round the whole ball, not only its rim: 14, uneven in length, thickness and lean (fixed dice,
+  `GRIN_SPIKE_SEED`), spaced evenly round it and a little off their places (never touching), taking turns between a ragged ring
+  round the face (`GRIN_FRONT_TILT`) and the outline (`GRIN_RIM_TILT`); the middle of the face stays clear. Each front thorn
+  sits in a faint scorched socket with a white-hot middle and a thin glowing crack round it (`socketTex`, `GRIN_SOCKET` 2.2).
+
+## 1.60 (9 Nov 2026)
+- A Grin has 12 thorns (`GRIN_SPIKES`, was 14).
+- Tidy: the thorn textures (`spikeFootTex`, `socketFootTex`) moved from `03-textures.js` to `25-grin.js`, which owns them;
+  `warnMark` takes the marker's place as one object (`at`). `CLAUDE.md` and `docs/ARCHITECTURE.md` brought up to date (warning
+  `size` / `mark`, PHEW!, thorn draw ranks, itch.io focus, boot textures and dice, close-up pictures).
+
+## 1.61 (12 Nov 2026)
+- Ushers call for help: hurt to `USHER_CALL.hp` of his health a chasing Usher backs off and shouts USHERS! (state `call`); a
+  blow cuts it off (GULP) and he does not try again. Sleeping Ushers in reach are fetched (`usherFetch`): they come round Red
+  Cap's far side (`usherGoal`) and hold their charge while the caller is in his (`usherHolds`). Hint: Hit him before he calls.
+- Shades tell: after its BOO a Shade says TELLIN’ and flies through the walls to the nearest sleeping Usher (`SHADE_TELL`,
+  state `tell`) and wakes him. Popped on the way, it tells no one. Hint: Pop it before it tells.
+- Floor one's quiet rule (`FLOORS .quiet`, `G.announced`, `keepQuiet` in 60-flow): left with no Usher fetched, Red Cap takes a
+  tie and full pockets upstairs, and floor two opens with UNANNOUNCED.
+- Floor three has height: two terraces either side of the Grump's room (`raise`, `ramps` in its `FLOORS` entry), each climbed
+  by two ramps from the south; the east Smoker and the west heart stand on them.
+- New drawings from Serj: `paint_fish`, `paint_job`, `paint_scream` join `beard_painting` in floor three's gallery (`PAINT_ART`,
+  taken in turn on walls and easels); `root_head`, a cut-out, hangs head down and sways on six wall faces there (`ROOT`,
+  `hangRootHeads`); `t_crack` is a new wall painting on floors one and two.
+- Fuller floor plans, nothing taken away. Floor one: a Shade in the curtain room, an easel in the middle hall, a third hidden
+  pile of pebbles. Floor two: the west room is raised (one ramp at its door), a hump in the east passage with a pyramid on it,
+  two more bear traps. Floor three: a second Smoker on the west terrace, a third totem in the middle of the south field, six
+  more block stacks there.
+- Hittin’ ties: at full health, with room in his pockets, a blow (yo-yo or pebble) breaks a tie into pebbles (`hitTie`,
+  `TIE_PEBBLES`: 1 for a tie, 3 for a big heart); hurt or with full pockets the tie stays.
+- Floor one has a hidden room: its plan grew three rows north (every floor-one cell moved 3 down the map: `FLOORS` fields,
+  the Geezer's waking line in 24-geezer, the big DEFUK in 52-decor). A tall red curtain hangs in the doorway north of the
+  curtain room (`curtainRoom` in `FLOORS`, map letter `c`, `G.curtain`): the doorway is a wall (`solid`) until the first blow
+  to the curtain (`hitCurtain`, RUSTLE), which draws it aside. Inside: a big heart (never carried on if left) and the
+  full-time-job painting in a gold frame. The dice-hung curtains are as before.

@@ -159,11 +159,11 @@ function updateWarn() {
       e.warnCue = w.cue;
       const marked = w.mark !== false;
       if (marked && n >= WARN_N) continue;
-      const { x, y, out } = warnPlace(e, W, H),
-        px = ((x + 1) / 2) * W,
-        py = ((y + 1) / 2) * H;
-      if (marked) warnMark(WARN[n++], w, x, y, px, py, out, W, H, now);
-      if (!edge || w.k > edge.k) edge = { c: w.c, k: w.k, x: px, y: py, out };
+      const at = warnPlace(e, W, H);
+      at.px = ((at.x + 1) / 2) * W;
+      at.py = ((at.y + 1) / 2) * H;
+      if (marked) warnMark(WARN[n++], w, at, W, H, now);
+      if (!edge || w.k > edge.k) edge = { c: w.c, k: w.k, x: at.px, y: at.py, out: at.out };
     }
   for (let k = n; k < WARN.length; k++)
     if (WARN[k].on) {
@@ -177,13 +177,14 @@ function updateWarn() {
     warnEdgeOn = false;
   }
 }
-// one marker over a talker (w.size scales it), pulsing faster as the blow nears; off screen, its arrow points at him
-function warnMark(m, w, x, y, px, py, out, W, H, now) {
+// one marker over a talker (w.size scales it), pulsing faster as the blow nears; off screen, its arrow points at him.
+// at: warnPlace's { x, y, out } and the place in pixels (px, py)
+function warnMark(m, w, at, W, H, now) {
   const pulse = (w.size || 1) * (1 + (0.12 + 0.2 * w.k) * Math.abs(Math.sin(now * (8 + 14 * w.k))));
   m.d.style.setProperty('--wc', w.c);
-  m.d.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) scale(${pulse.toFixed(3)})`;
-  m.arr.style.display = out ? '' : 'none';
-  if (out) m.arr.style.transform = `rotate(${Math.atan2(y * H, x * W).toFixed(3)}rad) translate(30px)`;
+  m.d.style.transform = `translate(${at.px.toFixed(1)}px, ${at.py.toFixed(1)}px) scale(${pulse.toFixed(3)})`;
+  m.arr.style.display = at.out ? '' : 'none';
+  if (at.out) m.arr.style.transform = `rotate(${Math.atan2(at.y * H, at.x * W).toFixed(3)}rad) translate(30px)`;
   if (!m.on) {
     m.d.style.display = 'block';
     m.on = true;
