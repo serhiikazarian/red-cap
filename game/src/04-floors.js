@@ -25,7 +25,7 @@ const FLOORS = [
       [12, 4, 'N']
     ],
     floor: 't_dark',
-    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble'],
+    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble', 't_crack'],
     wallH: [3.2, 5.5],
     words: COL.paper,
     deco: 'corridor',
@@ -91,7 +91,7 @@ const FLOORS = [
       [11, 6, 'G']
     ],
     floor: 't_hatch',
-    walls: ['t_chaos', 't_ember', 't_hatch', 't_chaos', 't_chaos:0x5a3040', 't_ember:0x41305a', 't_hatch:0x3a2626'],
+    walls: ['t_chaos', 't_ember', 't_hatch', 't_chaos', 't_chaos:0x5a3040', 't_ember:0x41305a', 't_hatch:0x3a2626', 't_crack:0x6a3a3a'],
     wallH: [3.4, 6],
     words: COL.bile,
     trail: COL.paper, // the paper trail to the open door is white, not the words' yellow (46-gates)

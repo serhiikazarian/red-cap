@@ -566,3 +566,6 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   tie and full pockets upstairs, and floor two opens with UNANNOUNCED.
 - Floor three has height: two terraces either side of the Grump's room (`raise`, `ramps` in its `FLOORS` entry), each climbed
   by two ramps from the south; the east Smoker and the west heart stand on them.
+- New drawings from Serj: `paint_fish`, `paint_job`, `paint_scream` join `beard_painting` in floor three's gallery (`PAINT_ART`,
+  taken in turn on walls and easels); `root_head`, a cut-out, hangs head down and sways on six wall faces there (`ROOT`,
+  `hangRootHeads`); `t_crack` is a new wall painting on floors one and two.

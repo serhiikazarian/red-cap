@@ -235,17 +235,23 @@ function webMesh({ pos, uv }) {
   });
   return new THREE.Mesh(g, m);
 }
-// Serj's painting (beard_painting, 3:4): HUNG on wall faces, on EASELS in open cells against a wall, facing away from it
-const PAINT = { hung: 4, easels: 3, gap: 9 };
+// Serj's paintings (PAINT_ART, 3:4, taken in turn): HUNG on wall faces, on EASELS in open cells against a wall, facing away
+// from it. Then the root heads (root_head, a cut-out): ROOT.n of them hang head down on wall faces, size m across, their top at
+// the block's top or ROOT.top m if that is higher, gap m from each other and from a painting, swaying by sway rad
+const PAINT = { hung: 4, easels: 3, gap: 9 },
+  PAINT_ART = ['beard_painting', 'paint_fish', 'paint_job', 'paint_scream'],
+  ROOT = { n: 6, size: 2.2, top: 4.2, gap: 7, sway: 0.07, rate: 0.9 };
 function addPaintings(w) {
   const r = mulberry(5150 + w),
     used = [],
-    M = { art: new THREE.MeshLambertMaterial({ map: TEX.beard_painting }), wood: new THREE.MeshLambertMaterial({ color: 0x2a1d14 }) },
+    arts = PAINT_ART.map(a => new THREE.MeshLambertMaterial({ map: TEX[a] })),
+    M = { art: arts[0], wood: new THREE.MeshLambertMaterial({ color: 0x2a1d14 }) },
     spots = paintSpots(w, r),
     far = (px, pz) => !used.some(([ux, uz]) => Math.hypot(ux - px, uz - pz) < PAINT.gap);
   let hung = 0,
     easels = 0;
   for (const [x, z, dx, dz] of spots) {
+    M.art = arts[(hung + easels) % arts.length];
     const base = G.blockBase[x + dx + (z + dz) * w] || 0,
       fx = cellMid(x) + dx * (CELL / 2 - 0.05),
       fz = cellMid(z) + dz * (CELL / 2 - 0.05);
@@ -262,6 +268,27 @@ function addPaintings(w) {
       used.push([ex, ez]);
       easels++;
     }
+  }
+  hangRootHeads(w, r, spots, used);
+}
+// the root heads, on the wall faces the paintings left free
+function hangRootHeads(w, r, spots, used) {
+  const mat = new THREE.MeshBasicMaterial({ map: TEX.root_head, transparent: true, alphaTest: 0.2 }),
+    geo = new THREE.PlaneGeometry(ROOT.size, ROOT.size).translate(0, -ROOT.size / 2, 0); /* hung by its top edge */
+  let n = 0;
+  for (const [x, z, dx, dz] of spots) {
+    if (n >= ROOT.n) break;
+    const fx = cellMid(x) + dx * (CELL / 2 - 0.06),
+      fz = cellMid(z) + dz * (CELL / 2 - 0.06);
+    if (used.some(([ux, uz]) => Math.hypot(ux - fx, uz - fz) < ROOT.gap)) continue;
+    used.push([fx, fz]);
+    n++;
+    const m = new THREE.Mesh(geo, mat),
+      ph = r() * 6.28;
+    m.position.set(fx, Math.max(G.blockBase[x + dx + (z + dz) * w] || 0, ROOT.top) + heightAt(cellMid(x), cellMid(z)), fz);
+    m.rotation.y = Math.atan2(-dx, -dz);
+    G.group.add(m);
+    G.anim.push((dt, t) => (m.rotation.z = Math.sin(t * ROOT.rate + ph) * ROOT.sway));
   }
 }
 // every open cell's side against a wall, past the Jester's chamber, in a seeded shuffle: [x, z, dx, dz, key]
