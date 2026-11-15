@@ -1,4 +1,5 @@
 // The Geezer (Y): floor one's boss. Stares people mad, mostly himself, in mirrors.
+const GEEZER_ARENA_Z = 13; // his arena's first row of cells: he wakes when Red Cap is in the doorways above it, and blinks no further north
 const GEEZER_WARN_AGAIN = 2; // stares in a row that catch Red Cap before GAZING / Take cover! is called again (always on the first)
 
 // his stare: walls and pillars hide Red Cap from it; an easel is too small to (though he still blinks round one, to spook)
@@ -69,7 +70,7 @@ function geezerWarn(e) {
 // his states, one step each (updateGeezer runs the one he is in)
 const GEEZER_STATES = {
   idle(e, dt, dist, ux, uz, mv, now, p2, seenK) {
-    if (hero.pos.z > 12 * CELL && clearOfWalls(e.pos, hero.pos)) {
+    if (hero.pos.z > (GEEZER_ARENA_Z - 1) * CELL && clearOfWalls(e.pos, hero.pos)) {
       e.st = 'drift';
       e.t = 1.8;
       SFX.growl();
@@ -186,7 +187,7 @@ const GEEZER_STATES = {
           x = hero.pos.x + Math.cos(a) * r,
           z = hero.pos.z + Math.sin(a) * r,
           [ix, iz] = cellOf(x, z);
-        if (iz >= 10 && !solid(ix, iz) && !propRadius(cellAt(ix, iz)) && clearOfWalls(new THREE.Vector3(x, 0, z), hero.pos)) {
+        if (iz >= GEEZER_ARENA_Z && !solid(ix, iz) && !propRadius(cellAt(ix, iz)) && clearOfWalls(new THREE.Vector3(x, 0, z), hero.pos)) {
           e.pos.set(x, 0, z);
           break;
         }

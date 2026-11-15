@@ -1,4 +1,18 @@
 // The Usher (B): shows you to your seat, then charges at it.
+// A lunge that gained less than USHER_LUNGE.short of its run and left him out of touch got nowhere (a corner, an easel, a ledge
+// in the way; one cut short by Red Cap's blow does not count). He remembers it (e.fail) and walks on, with no new wind-up and
+// no warning, until he is USHER_LUNGE.away m from where it failed or Red Cap has moved USHER_LUNGE.moved m: he comes round
+// instead of warning on the spot
+const USHER_LUNGE = { speed: 8, short: 0.4, away: 3, moved: 1 },
+  USHER_TOUCH = 0.15; // m between his edge and Red Cap's: nearer, his touch hurts
+// his last lunge failed, and neither he nor Red Cap has moved enough since for another to fare better
+function lungeBarred(e) {
+  const f = e.fail;
+  if (!f) return false;
+  if (Math.hypot(e.pos.x - f[0], e.pos.z - f[1]) < USHER_LUNGE.away && heroDist(f[2], f[3]) < USHER_LUNGE.moved) return true;
+  e.fail = null;
+  return false;
+}
 // a cone body in a dark coat, his bow-tied face, brows that drop when he sees you, glowing eyes for the charge, two arms
 function makeUsher(e, add) {
   Object.assign(e, { name: 'Usher', hp: 4.5, maxHp: 4.5, r: 0.7, hgt: 3, y1: 3, palette: [COL.cap, COL.ink, 0xe8c628, 0x58622e] });
@@ -25,6 +39,7 @@ function makeUsher(e, add) {
     return b;
   });
   e.chargeCd = 0;
+  e.fail = null; // where his last lunge got nowhere: [his x, z, Red Cap's x, z]
   e.root.scale.setScalar(1.25);
   e.eyes = [
     [-0.233, 0.725],
@@ -82,7 +97,7 @@ function updateUsher(e, dt, dist, ux, uz, mv) {
     if (s.visible) s.scale.setScalar(0.34 + Math.random() * 0.08);
   });
   e.mom = Math.max(0, (e.mom || 0) - dt);
-  if (dist < e.r + hero.r + 0.15 && e.stagger <= 0 && hurtHero(e.st === 'charge' || (K > 1 && (e.st === 'lunge' || e.mom > 0)) ? 2 : 1, e.pos))
+  if (dist < e.r + hero.r + USHER_TOUCH && e.stagger <= 0 && hurtHero(e.st === 'charge' || (K > 1 && (e.st === 'lunge' || e.mom > 0)) ? 2 : 1, e.pos))
     hero.knock.multiplyScalar(K); // a big one's charge and lunge take two hearts
 }
 // his states, one step each (updateUsher runs the one he is in)
@@ -107,7 +122,7 @@ const USHER_STATES = {
     [mv.x, mv.z] = steer(e);
     mv.sp = 4.8 - (K - 1) * 1.1;
     if (animTick) e.arms.forEach((a, i) => (a.rotation.z = Math.sin(performance.now() / 160 + i * 3) * 0.3));
-    if (dist < 2.8 * K && e.stagger <= 0) {
+    if (dist < 2.8 * K && e.stagger <= 0 && !lungeBarred(e)) {
       e.st = 'wind';
       e.t = 0.3 * Math.sqrt(K);
     } else if (dist > 3.2 * K && dist < 14 + (K - 1) * 8 && e.chargeCd <= 0 && e.stagger <= 0 && clearOfCover(e.pos, hero.pos, e.r + 0.15)) aim();
@@ -183,18 +198,25 @@ const USHER_STATES = {
     e.arms.forEach((a, i) => (a.rotation.z = (i ? -1 : 1) * 2.6));
     if (e.t <= 0) {
       e.st = 'lunge';
-      e.t = 0.26 * Math.sqrt(K);
+      e.t = e.lungeT0 = 0.26 * Math.sqrt(K);
       e.lx = ux;
       e.lz = uz;
+      e.cx0 = e.pos.x;
+      e.cz0 = e.pos.z;
+      e.cut = false;
       SFX.growl();
     }
   },
   lunge(e, dt, dist, ux, uz, mv, K, cs, aim) {
     mv.x = e.lx;
     mv.z = e.lz;
-    mv.sp = 8;
+    mv.sp = USHER_LUNGE.speed;
     e.arms.forEach(a => (a.rotation.z *= 0.8));
+    if (e.stagger > 0) e.cut = true;
     if (e.t <= 0) {
+      const gained = Math.hypot(e.pos.x - e.cx0, e.pos.z - e.cz0);
+      if (!e.cut && gained < USHER_LUNGE.short * USHER_LUNGE.speed * e.lungeT0 && dist > e.r + hero.r + USHER_TOUCH)
+        e.fail = [e.pos.x, e.pos.z, hero.pos.x, hero.pos.z];
       e.st = 'recover';
       e.t = 0.55;
       e.tilt.position.set(0, 0, 0);

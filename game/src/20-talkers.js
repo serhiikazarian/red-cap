@@ -193,7 +193,8 @@ function updateDazed(e, T, dt) {
   }
   e.root.position.copy(e.pos);
 }
-// pushed apart from the other talkers, then off walls, clutter and cages (a flier ignores the ground and the clutter)
+// pushed apart from the other talkers, then off walls, clutter (not in a doorway: 52-decor) and cages (a flier ignores the ground
+// and the clutter)
 function keepClear(e) {
   for (const o of G.enemies) {
     if (o === e || o.dead || o.still) continue;
@@ -211,6 +212,7 @@ function keepClear(e) {
   collide(e.pos, e.r, ey, e);
   if (e.fly == null)
     for (const c of G.clutter) {
+      if (c.door) continue;
       const ox = e.pos.x - c.x,
         oz = e.pos.z - c.z,
         od = Math.hypot(ox, oz);

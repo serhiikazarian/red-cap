@@ -33,7 +33,7 @@ function frame(now) {
     playT += dt;
     playStep(dt);
     tickLater(Math.min(raw / 1000, 0.25));
-  }
+  } else if (state === 'descend') descentStep(dt);
   if (state === 'play' || state === 'dead' || state === 'intro') {
     updateGrins(dt);
     updateParts(dt);
@@ -43,7 +43,8 @@ function frame(now) {
   if (state === 'play' && !locked && mouse.in && !touchUI) edgeTurn(dt);
   ambience(dt, now / 1000);
   G.lamp.position.set(hero.pos.x, 2.6, hero.pos.z);
-  updateCamera(dt);
+  if (G.descent) descentCamera();
+  else updateCamera(dt);
   finaleShock(realDt);
   camera.updateMatrixWorld();
   updateWarn();

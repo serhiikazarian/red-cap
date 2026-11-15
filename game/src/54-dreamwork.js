@@ -6,7 +6,7 @@ function wallTops(rng, n, gap) {
   // wall cells that face open floor, spread apart
   const cand = [],
     out = [];
-  for (let z = 1; z < G.h - 1; z++)
+  for (let z = G.z0 + 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) if (G.map[z][x] === '#' && DIRS4.some(([a, b]) => !solid(x + a, z + b))) cand.push([cellMid(x), cellMid(z)]);
   for (let t = 0; t < n * 40 && out.length < n && cand.length; t++) {
     const c = cand[(rng() * cand.length) | 0];
@@ -18,7 +18,7 @@ function openSpots(rng, n, gap) {
   // open floor cells, spread apart, for things that hang in the air above the player
   const cand = [],
     out = [];
-  for (let z = 1; z < G.h - 1; z++)
+  for (let z = G.z0 + 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++)
       if (!solid(x, z) && cellAt(x, z) !== 'g' && kindAt(x, z) === 0 && clearOf(cellMid(x), cellMid(z), 1.5)) cand.push([cellMid(x), cellMid(z)]);
   for (let t = 0; t < n * 40 && out.length < n && cand.length; t++) {
@@ -159,9 +159,8 @@ const CURTAIN = {
   open: 0.7,
   gap: 0.22,
   wide: 1.16,
-  tall: 1.7,
-  fewer: 1 / 3
-}; /* wide, tall: times a wall curtain's size; fewer: the share of idle curtains replaced */
+  tall: 1.7
+}; /* wide, tall: times a wall curtain's size */
 function hitCurtain(p, rad) {
   const c = G.curtain;
   if (!c || c.done || Math.hypot(c.x - p.x, c.z - p.z) > rad + CURTAIN.hit) return false;
@@ -202,25 +201,14 @@ function corridorCurtains(rng) {
     for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(p.getX(i) * 9) * 0.09);
     curtainGeo.computeVertexNormals();
   }
-  const curtainM = new THREE.MeshLambertMaterial({ color: 0x8a1018, side: THREE.DoubleSide, emissive: 0x2a0306 }),
-    hung = [];
+  const curtainM = new THREE.MeshLambertMaterial({ color: 0x8a1018, side: THREE.DoubleSide, emissive: 0x2a0306 });
   wallFaces(rng, 0.035, (x, z, yaw, dx, dz) => {
     const m = still(new THREE.Mesh(curtainGeo, curtainM));
     m.position.set(x - dx * 0.12, 1.8, z - dz * 0.12);
     m.rotation.y = yaw;
     G.group.add(m);
-    hung.push({ m, dx, dz });
   });
-  if (!G.F.curtainRoom) return;
-  curtainRoom(curtainGeo, curtainM);
-  /* a share of the idle curtains, those nearest the hidden room's, gives way to a framed drawing (wallFaces has lifted each) */
-  const near = c => Math.hypot(c.m.position.x - G.curtain.x, c.m.position.z - G.curtain.z);
-  hung.sort((a, b) => near(a) - near(b));
-  G.curtain.idle = hung.length; /* how many idle curtains the dice hung, before the share below gives way */
-  for (const { m, dx, dz } of hung.slice(0, Math.ceil(hung.length * CURTAIN.fewer))) {
-    G.group.remove(m);
-    framed(TEX.t_crack, 1.2, 1.2, m.position.x + dx * 0.1, m.position.y, m.position.z + dz * 0.1, m.rotation.y, 0, '', false);
-  }
+  if (G.F.curtainRoom) curtainRoom(curtainGeo, curtainM);
 }
 // gilt-framed doorways on the walls that never end: a doorway inside a doorway, each turned a little further
 function corridorDroste(rng) {

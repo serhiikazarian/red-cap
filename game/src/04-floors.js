@@ -2,6 +2,8 @@
 //   # wall   . floor   o block or prop   T pillar, pyramid (floor 2) or totem (floor 3)   P start   X exit door   h heart
 //   c the curtain's doorway (a wall until the curtain is struck: curtainRoom)   g fog gate   _ an empty spot that still draws a block's random numbers (so the layout after it stays the same)
 //   talkers: B Usher  q Shade  Y Geezer  G Grin  R Priest  Z Bruno  U Grump  S Smoker  W Brainless the Second  M Jester
+// annex: { rows, walls }: the map's first rows were added to a floor already laid out. They roll dice of their own and take no dice-placed
+//   decor, so the rest of the floor is laid out as it was before them; their walls wear these paintings too (50-level: G.z0, buildCells)
 // Other fields: the look (fog, bg, amb, hemi, lamp, floor and wall paintings, wallH, trail: the paper trail's colour if not words), raised ground (raise, ramps), the drone,
 // deco (which decor set builds the floor), opening (a yellow-box hint as the floor begins, once a game), and tuning: drop odds per talker, hidden hearts and pebble piles, placedHearts (the
 // chance each heart lying in the level, an 'h' or a hidden one, is there: fresh each time the floor starts), cages, sizes.
@@ -28,7 +30,8 @@ const FLOORS = [
       [12, 7, 'N']
     ],
     floor: 't_dark',
-    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble', 't_crack'],
+    walls: ['t_green', 't_red', 't_corr', 't_green', 't_dark', 't_crapwords', 't_column', 't_selling', 't_crapgrey', 't_scribble'],
+    annex: { rows: 3, walls: ['t_crack'] }, // the hidden room's rows, added on top of the map: see annex above
     wallH: [3.2, 5.5],
     words: COL.paper,
     deco: 'corridor',
@@ -49,6 +52,8 @@ const FLOORS = [
     // the hidden room north of the curtain room: a tall curtain hangs in its doorway (the 'c' cell), a wall until a blow parts it;
     // inside, a big heart (never carried on if left), a framed painting on the far wall, and a Shade
     curtainRoom: { door: [7, 3], heart: [7, 1], art: 'paint_job' },
+    openDoorways: true, // clutter set down in a doorway does not stop a talker: it wedged the biggest Usher (52-decor)
+    stairs: 't_column', // the exit door is a stairway down, its steps in this painting (46-gates)
     beam: [8, 6], // one beam on posts over this doorway (the curtain room's east door): it stops the biggest Usher's charge once (53-architecture)
     roomHeart: [6, 9], // the middle room: a heart appears here the first time Red Cap is near it with 2 hearts or fewer
     map: [

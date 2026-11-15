@@ -580,3 +580,22 @@ renamed 6.0), 6.1 … 7.2; its own "v1.0" (= 10.3) and "v3.0" are unrelated to t
   `addBeam`, `beamStops`, `G.beam`): only the biggest Usher is too tall for it; his first charge into it is stopped (BONK, the
   beam sags), the second breaks it. Floor three keeps its beams.
 - A prop breaks at two blows (`PROP_BREAK.hits`). The tie sound (`SFX.snip`) is shorter and higher.
+
+## 1.63 (15 Nov 2026)
+- Floor one is laid out as in 1.60 again, the boss arena first of all (same props, wall paintings, clutter and decor in the same
+  places): its three new rows are an annex (`annex` in `FLOORS`, `G.z0`): they roll dice of their own (`ANNEX_SEED`) after the
+  rest and take no dice-placed decor, and the passes that walk the map or roll a place start at `G.z0` (`buildCells`,
+  `wallFaces`, `floorSpots`, `doodleDecals`, `wallTops`, `openSpots`, `placeBystanders`, `hideHearts`). The curtain's doorway
+  still draws a wall's dice (`wallRolls`) and counts as a wall to them (`wallCell`); the onlooker they put in it stands at the
+  far end of the next wall (`offDoorway`). `t_crack` is painted on the hidden room's walls only (`annex.walls`).
+- Curtains as in 1.60, one in the curtain room, plus the hidden room's: the dice no longer hang extra ones, and none gives
+  way to a framed drawing (`CURTAIN.fewer` is gone).
+- The Geezer blinks only inside his arena (`GEEZER_ARENA_Z`: the row number had stayed behind when the map grew).
+- An Usher no longer warns again and again with no blow after it: a lunge that got nowhere is remembered (`e.fail`,
+  `USHER_LUNGE`, `lungeBarred`) and he walks on, without a wind-up, until he has left that spot or Red Cap has moved; and
+  clutter the dice set down in a doorway no longer stops a talker on floor one (`openDoorways`, `door` on a `G.clutter`
+  entry): two newspaper stacks had wedged the biggest Usher in the curtain room's west door.
+- Floor one's exit is a descent (`stairs` in `FLOORS`, `STAIRS` in 46-gates): the door's hole shows red steps going down
+  (`stepsPicture`), and walking into it (`leaveByDoor`, state `descend`) takes Red Cap down a stairway built under the floor
+  (`buildStairs`, `G.stairs`, `G.descent`; `descentStep` and `descentCamera` in the main loop), his lamp dying, a red glow below,
+  echoing steps (`SFX.stairStep`) and a rumble (`SFX.descent`); then the next floor as before.
