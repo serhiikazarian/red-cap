@@ -1,5 +1,5 @@
 // Gates and doors: floor three's fog wall over the gate to the Jester (it lifts when the Grump is beaten), the exit door that
-// opens once a floor is clear, and the paper trail that then leads Red Cap to it.
+// opens once a floor is clear (floor one's with stairs down: STAIRS), and the paper trail that then leads Red Cap to it.
 const TRAIL_N = 32, // scraps at most
   TRAIL_STEP = 2, // metres between scraps
   TRAIL_SIZE = 0.8; // a scrap is about 0.8 m by 0.55 m
@@ -264,15 +264,18 @@ function trailLay() {
   }
   return pts;
 }
-// the exit door: a black frame round a red hole, hidden until the floor is clear
+// the exit door: a black frame round a red hole, hidden until the floor is clear. On a floor with stairs (FLOORS) the hole shows
+// red steps going down into the dark, and a stairway is built under the floor for the way out (buildStairs)
 function buildDoor(cx, cz) {
   const g = new THREE.Group();
   g.position.set(cx, 0, cz);
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.4, 0.25), new THREE.MeshBasicMaterial({ color: COL.ink }));
+  const ink = new THREE.MeshBasicMaterial({ color: COL.ink }),
+    frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.4, 0.25), ink);
   frame.position.y = 1.7;
   g.add(frame);
   const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 3), new THREE.MeshBasicMaterial({ color: COL.tie, fog: false }));
   hole.position.set(0, 1.6, 0.14);
+  if (G.F.stairs) stepsPicture(hole, ink);
   g.add(hole);
   const hole2 = hole.clone();
   hole2.position.z = -0.14;
@@ -281,6 +284,139 @@ function buildDoor(cx, cz) {
   g.visible = false;
   G.group.add(g);
   G.portal = { g, x: cx, z: cz, open: false, hole };
+  if (G.F.stairs) buildStairs(cx, cz);
+}
+
+// Floor one's way out (FLOORS .stairs): a descent. The door's hole shows steps going down (stepsPicture). Walking into it
+// (leaveByDoor) sets state 'descend': the page dips to ink for STAIRS.dip s, then Red Cap is on a stairway STAIRS.deep m under
+// the floor (buildStairs: made with the floor, so nothing new is drawn for the first time here) and walks down it by himself at
+// STAIRS.speed for STAIRS.walk s, the camera behind him (descentCamera, in place of the camera), the fog black, his lamp dying,
+// a red glow far below, each step echoing; the ink closes STAIRS.out s before the end and the next floor follows (nextFloor)
+const STAIRS = {
+  rise: 0.34,
+  run: 0.52, // one step
+  wide: 2.6,
+  tall: 3.6, // the stairway
+  deep: 12, // its landing under the floor
+  back: 4, // the landing's length, behind the first step
+  more: 12, // steps beyond where he stops, into the dark
+  tint: 0x8a8a8a, // its walls wear the floor's own wall paintings, darker; its steps the first of them, as they are
+  dip: 0.35,
+  walk: 3.2,
+  out: 0.45,
+  speed: 2.3,
+  pace: 0.36, // seconds between footfalls
+  cam: { side: 0.8, back: 3.3, up: 3, ahead: 3.5, drop: 1.9 }, // beside, behind and above him, looking this far ahead and this far down
+  glow: 3.4, // the red glow at the foot, m across
+  fog: [2, 15],
+  lamp: 0.15 // the share of his lamp left at the bottom
+};
+// the door's picture of the stairs, drawn over the hole h: all dark but the treads, each smaller and higher than the last
+// (they pulse red with the hole: its own material)
+function stepsPicture(h, ink) {
+  const dark = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 3), ink);
+  dark.position.z = 0.02;
+  h.add(dark);
+  for (let i = 0, y = -1.42, k = 1; i < 9; i++, k *= 0.8) {
+    const tread = new THREE.Mesh(new THREE.PlaneGeometry(1.5 * k, 0.26 * k), h.material);
+    tread.position.set(0, y + 0.13 * k, 0.04);
+    h.add(tread);
+    y += 0.33 * k;
+  }
+}
+// how high the stairway's ground is at z (the landing, then the steps as a slope)
+const stairsY = z => -STAIRS.deep - (Math.max(0, z - G.stairs.z) / STAIRS.run) * STAIRS.rise;
+// the stairway under the door at (cx, cz), going down to the south: a landing, the steps, walls in 3 m lengths wearing the
+// floor's wall paintings, a sloped dark ceiling, a red glow at the foot
+function buildStairs(cx, cz) {
+  const S = STAIRS,
+    F = G.F,
+    n = Math.ceil((S.speed * S.walk) / S.run) + S.more,
+    zEnd = cz + n * S.run,
+    paint = t => new THREE.MeshLambertMaterial({ map: TEX[t.split(':')[0]], color: S.tint }),
+    steps = [[BOX, M4(cx, -S.deep - 0.5, cz - S.back / 2, 0, 0, 0, S.wide, 1, S.back)]];
+  G.stairs = { x: cx, z: cz };
+  for (let i = 0; i < n; i++) steps.push([BOX, M4(cx, -S.deep - (i + 1) * S.rise - 0.5, cz + (i + 0.5) * S.run, 0, 0, 0, S.wide, 1, S.run)]);
+  G.group.add(still(new THREE.Mesh(mergeGeos(steps), new THREE.MeshLambertMaterial({ map: TEX[F.stairs] }))));
+  for (let za = cz - S.back, k = 0; za < zEnd; za += CELL)
+    for (const side of [-1, 1]) {
+      const top = stairsY(za) + S.tall + 0.5,
+        foot = stairsY(za + CELL) - 0.5,
+        m = new THREE.Mesh(BOX, paint(F.walls[k++ % F.walls.length]));
+      m.scale.set(1, top - foot, CELL);
+      m.position.set(cx + side * (S.wide / 2 + 0.5), (top + foot) / 2, za + CELL / 2);
+      G.group.add(still(m));
+    }
+  const roof = new THREE.Mesh(BOX, new THREE.MeshLambertMaterial({ color: 0x1a1612 })),
+    len = zEnd - cz + S.back,
+    zMid = (zEnd + cz - S.back) / 2;
+  roof.scale.set(S.wide + 2, 0.6, Math.hypot(len, (len / S.run) * S.rise) + 2);
+  roof.position.set(cx, -S.deep - ((zMid - cz) / S.run) * S.rise + S.tall + 0.3, zMid);
+  roof.rotation.x = Math.atan2(S.rise, S.run);
+  G.group.add(still(roof));
+  const glow = glowSprite(glowRed, { fog: false });
+  glow.position.set(cx, stairsY(zEnd) + 1.6, zEnd);
+  glow.scale.setScalar(S.glow);
+  G.group.add(glow);
+}
+// Red Cap walks into the open door: down the stairs where the floor has them, else straight to the next floor
+function leaveByDoor() {
+  if (!G.stairs) return nextFloor();
+  state = 'descend';
+  G.descent = { t: 0, on: false, out: false, done: false, stepT: 0, lamp: G.lamp.intensity };
+  $('#veil').classList.add('on');
+  $('#reticle').hidden = true;
+  toastOff();
+  SFX.portal();
+}
+// a step of the descent (the main loop runs it in place of play)
+function descentStep(dt) {
+  const d = G.descent,
+    S = STAIRS;
+  if (d.done) return;
+  d.t += dt;
+  if (!d.on) {
+    if (d.t < S.dip) return;
+    d.on = true;
+    d.t = 0;
+    veilOff();
+    scene.background = new THREE.Color(COL.ink);
+    scene.fog.color.setHex(COL.ink);
+    [scene.fog.near, scene.fog.far] = S.fog;
+    inkPass.uniforms.far.value = S.fog[1];
+    cam.yaw = Math.PI; /* he walks south, his back to us */
+    hero.vel.set(0, S.speed);
+    hero.root.visible = true;
+    SFX.descent();
+  }
+  const z = G.stairs.z + d.t * S.speed;
+  hero.pos.set(G.stairs.x, stairsY(z), z);
+  hero.walk += dt * S.speed * 2.1;
+  heroPose(S.speed, -1, 0);
+  hero.root.position.copy(hero.pos);
+  G.lamp.intensity = d.lamp * lerp(1, S.lamp, clamp(d.t / S.walk, 0, 1));
+  d.stepT -= dt;
+  if (d.stepT <= 0) {
+    d.stepT = S.pace;
+    SFX.stairStep();
+  }
+  if (!d.out && d.t >= S.walk - S.out) {
+    d.out = true;
+    $('#veil').classList.add('on');
+  }
+  if (d.t >= S.walk) {
+    d.done = true;
+    nextFloor();
+  }
+}
+// the camera on the stairs: behind and above him, looking down them (and his lamp with him)
+function descentCamera() {
+  const C = STAIRS.cam;
+  if (!G.descent.on) return;
+  G.lamp.position.set(hero.pos.x, hero.pos.y + 2.6, hero.pos.z);
+  camera.position.set(hero.pos.x + C.side, hero.pos.y + C.up, hero.pos.z - C.back);
+  camera.lookAt(hero.pos.x - C.side * 0.4, hero.pos.y + C.up - C.drop, hero.pos.z + C.ahead);
+  camera.updateMatrixWorld();
 }
 // the exit door appears once the floor is clear, and stays shown whatever else happens. Its two lines (DOOR_LINES) hold
 // DOOR_HOLD s each, one after the other; Red Cap within DOOR_NEAR of the door cuts them short

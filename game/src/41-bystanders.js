@@ -52,10 +52,10 @@ function makeBystander(kind, x, z, wallYaw) {
 function placeBystanders(rng, count) {
   const spots = [],
     [px, pz] = cellOf(hero.pos.x, hero.pos.z);
-  for (let z = 1; z < G.h - 1; z++)
+  for (let z = G.z0 + 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) {
       if (G.map[z][x] !== '.' || Math.abs(x - px) + Math.abs(z - pz) < 3 || kindAt(x, z) === 2) continue;
-      const walls = DIRS4.filter(([a, b]) => G.map[z + b][x + a] === '#');
+      const walls = DIRS4.filter(([a, b]) => wallCell(x + a, z + b));
       if (walls.length === 1) spots.push([x, z, walls[0]]);
     }
   const kinds = ['npc_hat', 'npc_spike', 'npc_hair'];
@@ -65,9 +65,25 @@ function placeBystanders(rng, count) {
     const cx = cellMid(x) + wx * 1.05 + wz * side,
       cz = cellMid(z) + wz * 1.05 + wx * side;
     if (!clearOf(cx, cz, 0.5)) continue;
-    makeBystander(kinds[k % 3], cx, cz, Math.atan2(-wx, -wz));
+    makeBystander(kinds[k % 3], ...offDoorway(x, z, wx, wz, cx, cz), Math.atan2(-wx, -wz));
     k++;
   }
+}
+// where the onlooker the dice put at (cx, cz) stands: there, unless the wall behind him is the curtain's doorway (a wall when the
+// dice were cast). Then his place stays kept clear, as the later rolls knew it, and he stands by the next wall along, at its far
+// end (ASIDE m past its middle): clear of the curtain and of what hangs in the middle of that wall
+const ASIDE = 1.1;
+function offDoorway(x, z, wx, wz, cx, cz) {
+  if (cellAt(x + wx, z + wz) !== 'c') return [cx, cz];
+  keepOut(cx, cz, 0.6);
+  for (const s of [1, -1]) {
+    const nx = x + s * wz,
+      nz = z + s * wx,
+      px = cellMid(nx) + wx * 1.05 + s * wz * ASIDE,
+      pz = cellMid(nz) + wz * 1.05 + s * wx * ASIDE;
+    if (cellAt(nx, nz) === '.' && cellAt(nx + wx, nz + wz) === '#' && clearOf(px, pz, 0.5)) return [px, pz];
+  }
+  return [cx, cz];
 }
 function updateBystanders(dt) {
   const now = performance.now() / 1000;

@@ -70,6 +70,8 @@ function solid(ix, iz) {
   const c = cellAt(ix, iz);
   return c === '#' || (c === 'g' && G.gateClosed) || (c === 'c' && !(G.curtain && G.curtain.done));
 }
+// a wall to the layout dice: also the curtain's doorway, a wall when its floor was laid out
+const wallCell = (ix, iz) => cellAt(ix, iz) === '#' || cellAt(ix, iz) === 'c';
 // how far a pillar or prop in a cell reaches from the cell's centre (0: nothing to bump into)
 const BUMP_R = { T: 0.5, o: 0.6 }; // metres: a pillar, a prop (a floor with pyramids or flatProps has its own)
 function propRadius(c) {

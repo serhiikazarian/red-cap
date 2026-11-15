@@ -220,7 +220,10 @@ function clutter(F, rng) {
     const pick3 = rng();
     if (F.deco === 'corridor') (pick3 < 0.55 ? paperStack : clutterChair)(g, rng, M);
     else (pick3 < 0.5 ? rubbleHeap : pick3 < 0.8 ? stakeBundle : clutterBarrel)(g, rng, M);
-    G.clutter.push({ x: px, z: pz, r: 0.38 });
+    /* door (on a floor with openDoorways): it stands in a doorway (open floor between two walls), where it would wedge a big
+       talker: only Red Cap bumps into it */
+    const door = !!F.openDoorways && ((wallCell(ix - 1, iz) && wallCell(ix + 1, iz)) || (wallCell(ix, iz - 1) && wallCell(ix, iz + 1)));
+    G.clutter.push({ x: px, z: pz, r: 0.38, door });
   });
 }
 // 2-5 bundles of newspaper, printed on top
@@ -290,11 +293,11 @@ function clutterBarrel(g, rng, M) {
 }
 // calls fn(x, z, yaw, dx, dz) for wall faces beside open floor, each with chance prob (lifted with raised ground)
 function wallFaces(rng, prob, fn) {
-  for (let z = 1; z < G.h - 1; z++)
+  for (let z = G.z0 + 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) {
       if (solid(x, z) || cellAt(x, z) === 'g') continue;
       for (const [dx, dz] of DIRS4)
-        if (cellAt(x + dx, z + dz) === '#' && rng() < prob) {
+        if (wallCell(x + dx, z + dz) && rng() < prob) {
           const n0 = G.group.children.length,
             h = kindAt(x, z) === 1 ? LIFT : 0;
           fn(cellMid(x) + dx * (CELL / 2 - 0.04), cellMid(z) + dz * (CELL / 2 - 0.04), Math.atan2(-dx, -dz), dx, dz);
@@ -306,7 +309,7 @@ function wallFaces(rng, prob, fn) {
 function floorSpots(rng, n, fn, r = 0.6) {
   for (let k = 0, tries = 0; k < n && tries < n * 8; tries++) {
     const x = rng() * G.w * CELL,
-      z = rng() * G.h * CELL,
+      z = (G.z0 + rng() * (G.h - G.z0)) * CELL,
       [ix, iz] = cellOf(x, z);
     if (solid(ix, iz) || cellAt(ix, iz) === 'g' || cellAt(ix, iz) === 'o' || cellAt(ix, iz) === 'T' || kindAt(ix, iz) === 2 || !clearOf(x, z, r))
       continue;
@@ -540,7 +543,7 @@ function doodleDecals(rng, tint) {
   const mat = flat(new THREE.MeshBasicMaterial({ map: TEX.doodles, transparent: true, opacity: 0.5, depthWrite: false, color: tint }));
   for (let k = 0; k < 14; k++) {
     const x = (1 + rng() * (G.w - 2)) | 0,
-      z = (1 + rng() * (G.h - 2)) | 0;
+      z = G.z0 + ((1 + rng() * (G.h - G.z0 - 2)) | 0);
     if (solid(x, z) || propRadius(cellAt(x, z))) continue;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1), mat);
     m.rotation.x = -Math.PI / 2;

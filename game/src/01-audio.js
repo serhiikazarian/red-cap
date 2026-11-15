@@ -162,6 +162,15 @@ const SFX = {
   step() {
     playNoise({ dur: 0.06, f: 300 + Math.random() * 120, q: 2, gain: 0.07, type: 'lowpass' });
   },
+  // a footfall on the stairs down, with its echoes
+  stairStep() {
+    [0.11, 0.05, 0.022].forEach((gain, i) => playNoise({ dur: 0.09, f: 210 + Math.random() * 60, q: 2, gain, type: 'lowpass', at: i * 0.17 }));
+  },
+  // the stairway's low rumble, for the whole walk down
+  descent() {
+    playTone({ f: 46, f2: 31, dur: 3.6, type: 'sawtooth', gain: 0.1, a: 0.7, filt: [190, 80] });
+    playNoise({ dur: 3.6, f: 120, f2: 60, q: 0.7, gain: 0.07, type: 'lowpass', a: 0.9 });
+  },
   dodge() {
     playNoise({ dur: 0.22, f: 600, f2: 2600, q: 1, gain: 0.2 });
   },

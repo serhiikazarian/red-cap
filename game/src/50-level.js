@@ -133,6 +133,7 @@ function floorState(F, w) {
   return {
     F,
     map,
+    z0: F.annex ? F.annex.rows : 0, // the first row the floor's layout dice know: the rows above it are an annex (FLOORS)
     w,
     h: map.length,
     group: new THREE.Group(),
@@ -161,7 +162,9 @@ function floorState(F, w) {
     piles: [], // pebble piles
     breaks: {}, // props Red Cap can break, by cell 'x,z': { g, x, z, hits } (51-props)
     beam: null, // the gate beam while it holds: { x, z, m, hits } (53-architecture)
-    curtain: null, // the hidden room's curtain: { x, z, m, done, idle } (54-dreamwork); its doorway is a wall until done
+    stairs: null, // the stairway under the exit door: { x, z } of its first step (46-gates)
+    descent: null, // the walk down it, while it runs: { t, on, out, done, stepT, lamp }
+    curtain: null, // the hidden room's curtain: { x, z, m, done } (54-dreamwork); its doorway is a wall until done
     see: [], // see-through things (56-see-through)
     wallWords: [], // where floor two's wall words are painted
     niches: [],
@@ -231,13 +234,18 @@ function floorGround(F, w) {
 // floating block now and then), the gate, pillars, pyramids and totems, props, the start, talkers, hearts and the exit door.
 // Things on raised ground are lifted with it.
 function buildCells(F, w, box, rng) {
-  const B = { F, w, box, rng, mats: wallMaterials(F), cornice: [], webFaces: [], movedFrom: {}, movedTo: new Set() };
+  const B = { F, w, box, rng, mats: wallMaterials(F, F.walls), cornice: [], webFaces: [], movedFrom: {}, movedTo: new Set() };
   // B.cornice: floor two's wall tops (corniceGeo), merged after the walls; B.webFaces: the faces under them, for the webs (addWebs)
   for (const [fx, fz, tx, tz] of F.blockMoved || []) {
     B.movedFrom[fx + ',' + fz] = [tx, tz];
     B.movedTo.add(tx + ',' + tz);
   }
-  for (let z = 0; z < G.h; z++) for (let x = 0; x < w; x++) buildCell(B, x, z);
+  for (let z = G.z0; z < G.h; z++) for (let x = 0; x < w; x++) buildCell(B, x, z);
+  if (F.annex) {
+    /* the annex after the rest, with its own dice and its own wall paintings among the floor's */
+    const A = { ...B, rng: mulberry(ANNEX_SEED), mats: [...B.mats, ...wallMaterials(F, F.annex.walls)] };
+    for (let z = 0; z < G.z0; z++) for (let x = 0; x < w; x++) buildCell(A, x, z);
+  }
   if (B.cornice.length)
     G.group.add(still(new THREE.Mesh(mergeGeos(B.cornice), new THREE.MeshLambertMaterial({ color: 0x24100c, emissive: 0x1a0402 }))));
   if (F.deco === 'mouth') addWebs(w, B.webFaces);
@@ -245,9 +253,10 @@ function buildCells(F, w, box, rng) {
   if (F.lintels) addLintels(F);
   if (F.beam) addBeam(F);
 }
-// the floor's wall materials, one per wall texture; a tint after the colon (floor two's darker walls)
-function wallMaterials(F) {
-  return F.walls.map(t => {
+// wall materials, one per wall texture in the list; a tint after the colon (floor two's darker walls)
+const ANNEX_SEED = 394; // an annex's own layout dice (this one paints the cracked wall on both sides of the hidden room)
+function wallMaterials(F, list) {
+  return list.map(t => {
     const [k, c] = t.split(':');
     const m = new THREE.MeshLambertMaterial({ map: TEX[k], color: c ? +c : 0xffffff });
     if (F.deco === 'mouth') m.onBeforeCompile = wallShade;
@@ -275,7 +284,9 @@ function buildCell(B, x, z) {
     G.group.add(m);
     G.gate.push(m);
     if (F.deco === 'blocks') m.visible = false;
-  } else if (c === 'T') standing(F, x, z, cx, cz, rng);
+  } else if (c === 'c')
+    wallRolls(rng); // the curtain's doorway was a wall when the floor was laid out
+  else if (c === 'T') standing(F, x, z, cx, cz, rng);
   else if (c === 'o') {
     if (!B.movedTo.has(x + ',' + z)) buildProp(F, cx, cz, rng);
   } else if (c === '_') for (let k = 0; k < 13; k++) rng();
@@ -331,6 +342,12 @@ function tallWall({ F, w, box, rng, mats, cornice, webFaces }, x, z) {
     G.group.add(f);
     G.deco.push({ m: f, spin: (rng() - 0.5) * 0.3, bob: rng() * 6, y: f.position.y });
   }
+}
+// the numbers tallWall draws, for a cell that was a wall once: the floor's later rolls stay as they were
+function wallRolls(rng) {
+  rng();
+  rng();
+  if (rng() < 0.25) for (let k = 0; k < 12; k++) rng();
 }
 // a T cell: a totem on floor three (unlit in the Jester's chamber), a pyramid on floor two, a dark pillar elsewhere
 function standing(F, x, z, cx, cz, rng) {

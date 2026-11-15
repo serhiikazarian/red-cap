@@ -111,7 +111,7 @@ function hideHearts(n, piles = 0) {
   const rng = mulberry(floorIdx * 31 + 5),
     cand = [],
     got = [];
-  for (let z = 1; z < G.h - 1; z++)
+  for (let z = G.z0 + 1; z < G.h - 1; z++)
     for (let x = 1; x < G.w - 1; x++) {
       if (cellAt(x, z) !== '.' || kindAt(x, z) === 2) continue;
       const px = cellMid(x),

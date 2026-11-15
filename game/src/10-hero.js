@@ -278,7 +278,7 @@ function updateHero(dt) {
   updateNiches(dt);
   heroHeat(dt);
   updatePickups(dt);
-  if (G.portal && G.portal.open && heroDist(G.portal.x, G.portal.z) < 1.3) nextFloor();
+  if (G.portal && G.portal.open && heroDist(G.portal.x, G.portal.z) < 1.3) leaveByDoor();
 }
 function heroTimers(dt) {
   hero.iframe = Math.max(0, hero.iframe - dt);
