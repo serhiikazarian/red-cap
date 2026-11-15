@@ -45,6 +45,8 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
 - Refactors keep every random roll in order (seeded replays). Layout rng: `mulberry(seed)` per floor; per-start picks
   `Math.random`; a look with fixed randomness uses its own `mulberry`. A texture or material made at boot takes dice for its
   id: make it after `makeFogNoise()`.
+- A laid-out floor grows only by an `annex` (`FLOORS`: rows on top of the map with their own dice, no dice-placed decor); a
+  pass that walks the map or rolls a place starts at `G.z0`; a cell that was a wall keeps a wall's dice (`wallRolls`, `wallCell`).
 - No `//` mid-line before code (use `/* */`). GLSL: no names `flat`, `smooth`, `in`, `out`, `sample`; `smoothstep(a,b,x)`
   needs a < b.
 - Player text: -ing as -in’ (not Sling/Ring/String). Censored: SH#T, F#CK.
@@ -57,7 +59,8 @@ Deeper rules, file map, tests, unverified-by-play list: `docs/ARCHITECTURE.md` (
   motion in `G.anim`. Every `G` field is declared in `floorState` (50-level).
 
 ## Game
-Floors: 1 *Newsroom* (Ushers B, Shades q, Geezer Y); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged,
+Floors: 1 *Newsroom* (Ushers B, Shades q, Geezer Y; a hidden room behind a curtain; the exit is stairs down, state
+`descend`); 2 *The Mouth* (Grins G, Priest R, Bruno Z caged,
 pyramids: bombs, empties, hearts; stray fire and blood hurt Grins, at most to reeling); 3 *Stop Talkin’ Sh#t* (Grump U, Smokers S/W, Jester M behind the fog gate, totems,
 hidden boss L). Red Cap: 5 ties, yo-yo (heavy third only within `YOYO_CHAIN` 0.85 s), slingshot (7–10 pebbles), dodge.
 Camera: `CAM_EASE`, `CAM_TURN`. `CELL` = 3 m. HISTORY: open only when asked why/when, or for a likely regression; search it.

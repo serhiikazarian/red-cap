@@ -31,7 +31,7 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   and mouth were in Serj's older project folders; they are not here.
 
 ## World and placement (05-world, 04-floors)
-- Grid `CELL = 3` m; `solid()` ('#', and 'g' while `G.gateClosed`); raised floor `LIFT = 1.5` (things built inside a raised
+- Grid `CELL = 3` m; `solid()` ('#', 'g' while `G.gateClosed`, 'c' until the hidden room's curtain is struck); raised floor `LIFT = 1.5` (things built inside a raised
   cell are lifted automatically: don't add height twice); `heightAt` for ground height. `cellOf(x, z)` gives the cell at a
   point, `cellMid(i)` the middle of cell i in metres.
 - Random set dressing must pass `clearOf(x, z, r)`; story things claim ground with `keepOut(x, z, r)`; `storyGround()` lays
@@ -39,8 +39,16 @@ Read the section you need when a task touches it. File names are in `game/src/`.
 - Map legend and per-floor settings live in `FLOORS` (04-floors); the optional fields `start` and `pitch` set the opening view,
   `camThruFloaters` (floor one: drifting things never push the camera in), `plainFloaters` (floor one's floaters fade without
   a contour), `strayShots` (floor two: see Talkers), `pyramids`, `flatProps` and `embers` (floor two), `trail` (floor two: the paper
-  trail's colour, else `words`). Shared code reads these,
+  trail's colour, else `words`), and floor one's `curtainRoom` (the hidden room), `beam`, `annex`, `stairs` (the exit is a
+  descent: see Loading and flow) and `openDoorways` (clutter in a doorway does not stop a talker). Shared code reads these,
   never `F.deco` (that only picks what the floor builder makes). Obstacle sizes: `propRadius`, `BUMP_R`.
+- Growing a floor that is already laid out (floor one's hidden room): the new rows go on top of the map as an `annex`
+  (`FLOORS`: `rows`, `walls`). They are built after the rest with dice of their own (`ANNEX_SEED`) and get no dice-placed
+  decor; `G.z0` is the first row the floor's dice know, and every pass that walks the map or rolls a place starts there
+  (`buildCells`, `wallFaces`, `floorSpots`, `doodleDecals`, `wallTops`, `openSpots`, `placeBystanders`, `hideHearts`), so
+  the old cells roll exactly as before. A cell that was a wall when the dice were cast still draws a wall's dice
+  (`wallRolls`) and is a wall to them (`wallCell`); what they put against it steps aside (`offDoorway`). Proof: count the
+  floor's rolls and list `G.group` in both builds (an old version: `tools/build-at.sh`); they must match.
 - "Can he see you?" has two answers; pick the one the rule means: `clearOfWalls` counts walls only; `clearOfCover` also pillars and props, or pillars only with `props = false` (the Geezer's stare:
   `geezerSees`; his blink still treats an easel as cover, to spook).
 
@@ -121,6 +129,11 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   faces are drawn plain yellow (`RING_INSIDE_GLSL`) so the words never read mirrored. The Grump's adds the tear where blocks
   and walls stand (`waveCompile`: `waveWallGLSL`, `waveBlocksGLSL`); both have `warmSet` stand-ins.
 
+- An Usher's lunge that got nowhere (under `USHER_LUNGE.short` of its run, out of touch, not cut short by a blow) is kept
+  in `e.fail`; `lungeBarred` holds back the next wind-up, and so its warning, until he is `away` m from there or Red Cap has
+  `moved`. Known gap: the 1.28 Usher can still wedge, silently, between an easel and a wall corner (the flow field takes
+  him through a gap too narrow for him).
+
 ## Sound (01-audio)
 - Synth: `playTone`, `playNoise`, `SFX.*`. Recorded clips: `playClip(name)` → `{ s, g }` (null before decoding; `AUDIO.buf` is filled
   by `initAudio` on the first click). Clips live in `game/assets/sfx/`.
@@ -144,7 +157,10 @@ Read the section you need when a task touches it. File names are in `game/src/`.
   (under 520 px tall) get compact paged sheets (catalogue, win); `catLayout` fits whole rows of cards per page.
 - Menu buttons and the exit door enter a floor in steps: `state` `'leave'` (the ink veil, 0.36 s) → `'build'` (the paper scrap
   while the floor is built: planned 1.4 s for floor one, 0.7 s for two, 3 s for three) → `'intro'`. Plain `startGame()` /
-  `enterFloor(i)` still build at once.
+  `enterFloor(i)` still build at once. Floor one's door (`stairs`) goes `'descend'` first (`leaveByDoor`, 46-gates): the
+  veil dips, Red Cap walks down a stairway built with the floor 12 m under it (`buildStairs`: the floor's own paintings on
+  Lambert, so no new program), `descentStep` in place of play and `descentCamera` in place of the camera while `G.descent`
+  is set, then `nextFloor()`. No pause and no input during it.
 - Floating words live in `wordScene` (02-render), drawn after the ink pass straight onto the page: never put a word sprite
   in `scene` (the pass would cut it with edge lines, darken it, and the see-through mask would catch its quad).
 - Red Cap's first words on a new game: `OPENING` (60-flow), in marker font (`HERO_WORDS`), rising slowly (`floatWord`'s
@@ -216,4 +232,5 @@ fog wall), the 1.38 camera speeds and the 1.40 wall wait (0.28 s). By ear: volum
 feel: the yo-yo's hit-stop in slow motion, the 0.85 s chain, see-through fades in motion, Grump ring cracks, hologram gaze
 timing, Bruno's circle, talkers breaking pyramids, floor one's floaters passing through the camera, floor two's stray
 shots (how often Grins reel), Spike's pebble odds, the boss bar's fade at wall corners, how the Grins' thorns read at fighting
-distance (1.59–1.60). On itch.io: the keys after a click (1.58; the test browser gives a framed page focus on a click anyway). Touch on a real phone; controller on hardware.
+distance (1.59–1.60), floor one's descent (its length, the glow, the echo and rumble by ear), the Geezer's arena against
+1.60 and the biggest Usher coming through doorways and round easels (1.63). On itch.io: the keys after a click (1.58; the test browser gives a framed page focus on a click anyway). Touch on a real phone; controller on hardware.
